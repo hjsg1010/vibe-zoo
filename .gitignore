@@ -1,0 +1,35 @@
+# Local credentials and environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+auth.json
+
+# Local browser state and raw observations
+.local/
+.private/
+browser-profile/
+browser-profiles/
+playwright/.auth/
+storage-state*.json
+*.har
+raw-traces/
+
+# Generated dependencies/build outputs
+node_modules/
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.log
+.DS_Store
+Thumbs.db
