@@ -150,9 +150,12 @@
 
 정량 지연·자원 목표, 초기 관찰 지원 행렬, 사용 기술은 [constraints.md](constraints.md)의 미정 항목을 설계·기술검증에서 구체화한다. 부차 기능의 규모를 조정해야 하면 핵심 경험을 보존하며 변경 근거와 사용자 결정을 기록한다.
 
-## 6. 기능 시안과 Zoo 콘셉트
+## 6. 참고 시안과 Zoo 콘셉트
 
-[사용자 경험 HTML](../prototypes/vibe-zoo-experience/index.html)과 [시스템 구조 HTML](../prototypes/vibe-zoo-experience/architecture.html)은 승인된 검토 참고 자료다. 세부 디자인을 그대로 구현해야 한다는 뜻은 아니며 실제 연동 완료의 증거도 아니다.
+- [사용자 경험 HTML](../reference/mockups/index.html)
+- [시스템 구조 HTML](../reference/mockups/architecture.html)
+
+두 HTML은 기능·화면·흐름을 설명하는 모의 시안이다. 실제 Extension, Agent, MCP 서버와 연결되지 않으며 제품 구현 완료의 증거가 아니다. 새 제품의 요구사항과 설계를 이해하기 위한 참고 자료로 사용한다.
 
 | 제품 요소 | Zoo 표현 |
 |---|---|
