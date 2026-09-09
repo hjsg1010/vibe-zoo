@@ -1,18 +1,10 @@
 {
   "manifest_version": 3,
   "name": "Vibe Zoo Keeper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "현재 탭에서 도구와 Skill을 만들고 검증하는 Keeper",
-  "permissions": [
-    "sidePanel",
-    "activeTab",
-    "scripting",
-    "storage"
-  ],
-  "optional_host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ],
+  "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
@@ -26,8 +18,5 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
-  "host_permissions": [
-    "https://localhost/*",
-    "https://127.0.0.1/*"
-  ]
+  "host_permissions": ["https://localhost/*", "https://127.0.0.1/*"]
 }

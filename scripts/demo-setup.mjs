@@ -68,7 +68,20 @@ const extensionId = Array.from(
 const local = (await exists(".local/config.json"))
   ? JSON.parse(await readFile(".local/config.json", "utf8"))
   : {};
-local.extensionIds = [extensionId];
+const releasePublicKey = (
+  await readFile("config/release-extension-public-key.txt", "utf8")
+).trim();
+const releaseExtensionId = Array.from(
+  createHash("sha256")
+    .update(Buffer.from(releasePublicKey, "base64"))
+    .digest()
+    .subarray(0, 16),
+)
+  .map((b) => String.fromCharCode(97 + (b >> 4), 97 + (b & 15)))
+  .join("");
+local.extensionIds = [
+  ...new Set([...(local.extensionIds ?? []), extensionId, releaseExtensionId]),
+];
 await writeFile(".local/config.json", JSON.stringify(local, null, 2) + "\n", {
   mode: 0o600,
 });

@@ -1,0 +1,24 @@
+name: Release Keeper Extension
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck && npm run lint && npm test
+      - run: npm run release:extension
+      - run: npm run check:public
+      - name: Publish installable ZIP and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          gh release create "v${version}" dist/releases/* --target "$GITHUB_SHA" --title "Vibe Zoo Keeper ${version}" --notes-file docs/release-notes.md

@@ -2,6 +2,16 @@
 
 현재 웹앱을 관찰해 도구와 Skill을 만들고, 사용자의 로그인된 탭에서 실행하는 해커톤 데모입니다. **Keeper Extension**은 Side Panel·관찰·Record·브라우저 조작을 맡고, **Backend**는 Bedrock 모델·실제 MCP·작업 조정·SQLite·자산 Store를 제공합니다.
 
+## 바로 체험하거나 설치하기
+
+- **평가자용 [Live Demo](https://hjsg1010.github.io/vibe-zoo/)**: 설치·계정 없이 MinIO와 WaferSight를 체험합니다. Backend를 호출하지 않는 합성 시뮬레이션입니다. 실제 실행 증거는 데모의 별도 링크에서 확인합니다.
+- **실제 Extension [최신 Release 다운로드](https://github.com/hjsg1010/vibe-zoo/releases/latest)**: `vibe-zoo-keeper-*.zip`을 받아 압축을 푼 뒤 Chrome 개발자 모드에서 `manifest.json`이 있는 폴더를 로드합니다. 자동 생성 Source code ZIP은 설치용이 아닙니다. ZIP을 Chrome에 직접 끌어넣는 방식은 지원하지 않습니다.
+- **Backend 운영자**: 아래 설치·설정 절차를 따릅니다. `git pull`만으로 빌드 파일이나 키·접속 환경이 준비되지는 않습니다. 설치자는 공용 Backend에 연결할 수 있고, 각자 Backend를 실행하려면 자신의 설정과 키가 필요합니다.
+
+Release ZIP은 고정된 공개 Extension ID를 사용합니다. `npm run demo:setup`은 기존 로컬 ID와 데이터는 보존하고 이 Release ID도 허용합니다. 이미 운영 중이라면 setup 후 Backend를 재시작하세요. `VIBE_ZOO_ALLOWED_EXTENSION_IDS`를 직접 지정한 환경은 Release의 `INSTALL.txt`에 있는 ID를 목록에 추가해야 합니다.
+
+개발용 빌드는 기존대로 `dist/extension`입니다. `npm run release:extension`은 별도 `dist/release-extension`과 `dist/releases`에 설치 ZIP·체크섬·설치 안내를 만들며 현재 설치된 개발 폴더를 덮어쓰지 않습니다. Git에는 소스만, 설치 파일은 Release에 보관합니다. 패키징 명령에는 `zip`이 필요합니다(WSL/Ubuntu: `sudo apt install zip`).
+
 ## 구현과 검증 상태
 
 | 기능 | 구현 | 실제 검증과 출처 |

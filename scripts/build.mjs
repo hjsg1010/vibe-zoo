@@ -12,7 +12,9 @@ const selected = targets.length ? targets : ["backend", "extension", "store"];
 for (const target of selected) {
   if (!["backend", "extension", "store"].includes(target))
     throw new Error("Unknown build target");
-  const out = `dist/${target}`;
+  const release =
+    process.env.VIBE_ZOO_RELEASE_BUILD === "1" && target === "extension";
+  const out = release ? "dist/release-extension" : `dist/${target}`;
   await mkdir(out, { recursive: true });
   if (target === "backend") {
     await build({
@@ -53,10 +55,15 @@ for (const target of selected) {
     );
     try {
       manifest.key = (
-        await readFile(".local/extension-public-key.txt", "utf8")
+        await readFile(
+          release
+            ? "config/release-extension-public-key.txt"
+            : ".local/extension-public-key.txt",
+          "utf8",
+        )
       ).trim();
     } catch (error) {
-      if (error.code !== "ENOENT") throw error;
+      if (release || error.code !== "ENOENT") throw error;
     }
     await writeFile(`${out}/manifest.json`, JSON.stringify(manifest, null, 2));
     await copyFile("src/extension/panel/index.html", `${out}/panel/index.html`);

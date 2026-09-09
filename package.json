@@ -1,6 +1,6 @@
 {
   "name": "vibe-zoo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -15,7 +15,8 @@
     "demo": "node scripts/demo.mjs",
     "demo:cleanup": "node scripts/demo-cleanup.mjs",
     "demo:stop": "node scripts/demo-stop.mjs",
-    "check:public": "node scripts/check-public-artifacts.mjs"
+    "check:public": "node scripts/check-public-artifacts.mjs",
+    "release:extension": "node scripts/package-extension.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "3.1128.0",
