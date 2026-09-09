@@ -650,3 +650,630 @@ requirements.md를 승인합니다.
 **Context**: 질문을 제시하기 전에 기록한다. Bedrock API 선택과 합성 응답 확인은 설치·접속 환경을 해소하지 않으므로 계획 Q2 한 개만 다음에 묻는다. 이미 승인받은 모델 선택이나 제한 API 확인을 다시 승인 요청하지 않는다. Q3는 아직 제시/답변 전이며 이번 API 요청 허용을 실제 페이지·Record 데이터 전송의 포괄 허용으로 해석하지 않는다.
 
 ---
+
+## NFR Requirements — Question 2 Answer: Shared Demo Backend
+**Timestamp**: 2026-09-09T00:32:12Z
+**User Input — Complete Raw Text**:
+
+```text
+네. 첫 데모는 개발자 모드로 설치한 Extension과 참여자들이 접속할 수 있는 팀 공용 Backend를 기준으로 진행해주세요.
+
+  역할은 다음과 같습니다.
+
+  - Extension: Side Panel UI, 현재 페이지 관찰, 사용자 행동 기록, 실제 브라우저 조작.
+  - Backend: preset 조회, 도구/MCP 및 Skill 생성, 모델 호출과 Agent 실행 흐름, 자산 저장·공유.
+  - 브라우저 작업은 요청한 사용자의 로그인 세션과 대상 탭에서 수행합니다. 공용 Backend가 관리자 브라우저나 다른 사용자의 세션으로 대신 실행하면 안 됩니다.
+
+  사용자는 별도 CLI나 하네스 앱을 직접 켜지 않고 Extension에서 핵심 흐름을 완료할 수 있어야 합니다.
+
+  Backend 언어·Agent 엔진·구체적인 배포 방식은 아직 미정입니다. 위 기능을 충족하는 가벼운 구성을 제안해주세요. 사용자별 컨테이너나 Kubernetes가 필요한 것으로 가정하지
+  는 말아주세요.
+
+  실제 서버 자원·접속 주소와 참여자 브라우저에서 Backend로 연결 가능한지는 확인이 필요합니다.
+
+  Chrome Web Store 배포는 이번 MVP에서 제외합니다. Vibe Zoo의 자산 공유 Store는 별개의 기존 요구사항으로 유지해주세요.
+```
+
+**AI Response**: 개발자 모드 Extension과 팀 공용 Backend를 첫 데모 기준으로 기록하겠습니다. 브라우저 작업은 요청한 사용자의 세션과 탭에서 수행하도록 유지하고, Chrome Web Store 배포 제외와 Vibe Zoo 자산 Store 유지를 구분하겠습니다. 이 범위에 맞는 가벼운 기술 구성을 검토하면서 남은 데이터 전송 조건을 확인하겠습니다.
+**Decision and Scope**: Q2 A 답변으로 설치·접속의 목표 범위를 확정했다. Extension은 C-01/C-02의 UI·관찰·기록·실행, Backend는 C-03~06의 preset·생성·모델/Agent 흐름·자산 저장/공유를 맡는다. C-07의 자산 Store는 유지한다. 요청 사용자·Extension·대상 탭/문서·origin·작업의 결합을 보존하고 사용자 CLI/하네스 실행을 요구하지 않는다. 관리자나 다른 사용자의 세션으로 대체하지 않는다.
+**Change Assessment**: 승인된 역할·사용자/대상 경계와 일치한다. 미정이던 Chrome Web Store 배포를 이번 MVP에서 제외한 범위 구체화이며 자산 Store 삭제가 아니다. 개발자 설치에서도 적용되는 실제 MV3/CSP 제약은 검증 대상으로 유지한다. 중복 승인을 요청하지 않는다.
+**Unresolved**: 실제 서버 자원·접속 주소·참여자 브라우저 연결 가능 여부는 미확인이다. Backend 언어·SDK·Agent 엔진·배포는 이번 답변으로 선택되지 않았다. 가벼운 구성을 추천하되 사용자별 컨테이너/Kubernetes를 전제하지 않는다. Q3 데이터 전송 범위는 아직 답변 전이다. 기존 두 합성 Bedrock 확인 외 추가 API 호출이나 제품 구현을 수행하지 않는다.
+**Workflow**: NFR Requirements의 정보 수집·기술 비교를 계속한다. 새로운 NFR 산출물 및 이후 설계·구현·배포 승인은 별도다. Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A. 기본 시크릿·입력·오류·사용자/대상 경계는 유지한다.
+
+---
+
+## NFR Requirements — Q2 Lightweight Proposal and Question 3
+**Timestamp**: 2026-09-09T00:36:44Z
+**AI Response Summary**: Q2 결정과 미확인 접속 조건을 NFR 계획·상태·실행 계획에 반영했다. 기존 계획 10절에 TypeScript/Node.js 공유 애플리케이션, AWS JavaScript SDK의 제한 Converse 루프, 공식 SDK를 통한 실제 MCP Client/Server 연결, Extension이 시작하는 HTTPS/WSS, 단일 호스트 지속 SQLite 구성을 미승인 추천으로 정리했다. Python/FastAPI와 저장/배포 조건에 따른 대안도 간략히 비교했다. 이 추천을 사용자 기술 선택으로 기록하지 않는다.
+**Evidence and Review**: 공식 AWS SDK/API 키 지원·Converse 도구 호출, MCP SDK/transport, Chrome WebSocket/네트워크, SQLite 사용 범위를 확인하고 계획 10절에 링크했다. 독립 검토에서 사용자 문맥·도구 루프 제어·MCP 버전 혼용·SQLite 쓰기 경합을 확인하고 반영했다. 최종 독립 검토에서 Q2/Q3 및 미승인 기술안 상태에 추가 지적이 없었다. 네 문서의 Markdown 표·코드 블록·로컬 참조·비공개 절대경로 부재, Q1/Q2 답변 및 Q3 미응답, 최종 NFR 산출물 미생성을 검사해 통과했다.
+**Execution and Secret Boundary**: 이번 Q2 작업에서 .env를 읽거나 변경하지 않았다. Git ignored/untracked 상태만 재확인했다. 키/설정값의 복사·출력, 추가 Bedrock 요청, 제품 구현·MCP/Extension 실행·서버 연결 시험은 수행하지 않았다. 실제 서버 자원·주소·참여자 연결 가능 여부는 여전히 UNKNOWN이다. 현재 단계는 NFR Requirements이며 이후 승인 상태는 바뀌지 않았다.
+**Recommendation for Q3**: 합성 버킷·파일·업무명으로 데모를 구성하고 비밀번호·토큰·쿠키·인증 헤더를 제외한 필요한 DOM/행동 요약만 선택 모델에 전달한다. 글로벌 추론은 요청 리전 밖에서 처리될 수 있으므로 해당 합성 데모 범위의 전송 조건을 확인한다. 모델/공급자를 바꾸거나 실제 사내 자료의 포괄 전송을 허용받는 질문이 아니다.
+**Question — Complete Text**:
+
+```text
+첫 MinIO 데모는 합성 업무 데이터로 구성하고, 민감정보를 제외한 최소 관찰·시연 근거만 글로벌 추론을 사용하는 Bedrock 모델로 전송해도 될까요?
+```
+
+**Context**: Q3 한 개를 사용자에게 제시하기 전에 기록했다. 이전 요청의 제한 합성 API 호출 허용과 Q2 공용 Backend 선택만으로 실제 페이지/Record 전송 범위를 결정할 수 없다. 사용자 답변을 대화에서 받아 계획의 [Answer]에 기록한다. 추가 계획 승인 질문이나 이미 답변한 모델·설치 범위 재승인은 요청하지 않는다. 필요한 답변을 확인한 뒤 NFR Requirements 규칙 Step 5~6에 따라 두 필수 산출물을 작성하고 그 산출물 승인으로 이어간다.
+
+---
+
+## NFR Requirements — Q3 Answer, Intentional Model Change and Integration Verification
+**Timestamp**: 2026-09-09T00:39:01Z
+**User Input — Raw Text with Configuration Values Omitted**:
+
+```text
+Q3는 제안한 방향으로 승인합니다. 아래 모델 변경 요청까지 함께 반영해주세요.
+
+  1. 데모 데이터와 모델 전송 범위
+
+  첫 MinIO 데모는 합성 업무 데이터로 구성해주세요.
+
+  도구/MCP 생성, Skill 학습과 실행 검증에 필요한 최소한의 페이지 관찰·시연 근거를 Bedrock 모델로 전송하는 것을 허용합니다. 글로벌 추론으로 요청 리전 밖에서 처리될 수
+  있다는 점도 이해하고 있습니다.
+
+  비밀번호, 토큰, 쿠키, 인증 헤더 등 민감정보는 전송 대상에서 제외해주세요. 이번 전송 허용 범위는 합성 데이터로 구성한 MinIO 데모입니다.
+
+  2. 제품 Backend 모델 변경
+
+  기존 Claude Haiku 4.5에서 Claude Opus 4.8로 기본 모델을 변경해주세요. 이는 의도적인 변경 요청입니다.
+
+  프로젝트 루트 .env에는 다음 설정이 반영되어 있습니다.
+
+  AWS_REGION=[설정값 기록 생략]
+  BEDROCK_MODEL_ID=[설정값 기록 생략]
+  ANTHROPIC_MODEL=[설정값 기록 생략]
+
+  기존 AWS_BEARER_TOKEN_BEDROCK 값도 유지되어 있습니다.
+
+  Backend는 BEDROCK_MODEL_ID를 읽어 도구/MCP 생성, 기본·개인 Skill 생성, 채팅과 Agent 실행에 Opus 4.8을 사용해주세요.
+
+  ANTHROPIC_MODEL의 [1m]은 Claude Code용 설정입니다. Bedrock API의 modelId에는 포함하지 마세요. Backend 엔진은 아래 기술검증을 통해 결정합니다.
+
+  개발 에이전트는 기존대로 Codex / gpt-6-astra / ultra입니다.
+
+  3. 추천 기술 구성의 검증
+
+  추천한 다음 구성을 초기 기술검증안으로 사용해주세요.
+
+  - TypeScript/Node.js 공용 Backend 하나에 역할별 모듈 구성
+  - Bedrock Converse 기반 도구 호출 루프
+  - 공식 MCP SDK
+  - Extension과 Backend의 HTTPS/WSS 연결
+  - 단일 서버의 지속 디스크에 SQLite 저장
+
+  먼저 작은 전체 흐름으로 실제 연결과 실행 가능성을 확인하고, 결과를 근거로 기술 선택을 정리해주세요.
+
+  특히 실제 MCP tools/list·tools/call이 요청한 사용자의 로그인된 대상 탭에서 브라우저 작업으로 이어지고, 실행 후 상태까지 검증되는지 확인해야 합니다.
+
+  4. 모델 검증과 AI-DLC 기록
+
+  Opus로 짧은 일반 응답과 도구 호출 응답을 최소한으로 실제 검증해주세요. 기존 Haiku 검증 기록은 보존하고 Opus 결과를 별도로 기록해주세요.
+
+  모델 접근이나 호출이 실패하면 원인을 보고하고, Haiku로 자동 대체하지 마세요. 짧은 API 응답 성공과 실제 MCP·브라우저 실행 성공은 구분해서 기록해주세요.
+
+  이번 Q3 답변, 모델 변경과 검증 결과를 현재 AI-DLC 계획·상태·감사 기록 및 관련 기술 결정에 반영해주세요. 키 값은 출력하거나 문서·로그·Git에 남기지 말고 .env의 Git 제
+  외 상태를 유지해주세요.
+
+  현재 단계에서 필요한 검토·검증을 마친 뒤 NFR 산출물을 제시해주세요. 이후 단계는 기존 AI-DLC 승인 절차에 따라 진행합니다.
+```
+
+**Recording Boundary**: 기존 사용자 지시의 설정 기록 최소화를 유지해 세 환경변수의 값만 생략했다. 실제 API 키는 메시지에 없으며 출력·복사하지 않는다. 나머지 문구와 줄바꿈을 보존했다.
+**AI Response**: Q3의 합성 MinIO 데이터 전송 허용과 의도적인 Opus 4.8 변경을 기록하겠습니다. 기존 Haiku 검증은 보존하고, 현재 단계의 검증 범위를 갱신한 뒤 Opus 응답과 MCP→요청자 탭→실행 후 상태를 따로 확인하겠습니다. 실제 브라우저·서버 환경에서 확인할 수 없는 항목은 미검증으로 남겨 NFR 산출물에 반영하겠습니다.
+**Decisions**: Q3 A — 합성 데이터로 구성한 MinIO 데모의 도구/MCP 생성·Skill 학습·실행 검증에 필요한 최소 관찰/시연 근거의 글로벌 Bedrock 전송만 허용한다. 민감정보를 제외하며 다른 사이트/실제 사내 자료의 모델 전송 허용으로 확대하지 않는다. 제품 기본 모델은 Haiku 4.5에서 Opus 4.8로 의도적으로 변경한다. 변경 의도를 이미 명시했으므로 같은 변경의 중복 재확인은 요청하지 않는다. 과거 Haiku 결과는 보존하며 자동 대체는 금지한다.
+**Impact**: 제품 생성·Skill·채팅/Agent의 모델 선택은 BEDROCK_MODEL_ID에 통일한다. ANTHROPIC_MODEL과 [1m]은 Backend modelId에 사용하지 않는다. 새 모델의 권한·응답·토큰/지연은 별도로 검증하며 Haiku 결과를 이전하지 않는다. Codex / gpt-6-astra / ultra 지정은 유지한다.
+**Verification Authorization**: 이번 직접 요청에 한해 NFR 단계에서 Opus 최소 응답 검사와 추천 구성의 제한된 통합 기술검증을 수행한다. 저장소 밖 임시 코드로 실제 MCP/HTTPS/WSS/SQLite 연결을 확인하고, 접근 가능한 요청자 브라우저 대상이 있을 때만 해당 탭의 실행과 사후 상태를 확인한다. 합성 프로토콜 클라이언트나 새 테스트 브라우저를 요청자의 로그인된 MinIO 세션으로 표현하지 않는다. 전체 제품 구현·기능 완료·다음 설계/구현 단계 승인은 아니다.
+**Initial Configuration Check**: AWS_BEARER_TOKEN_BEDROCK, AWS_REGION, BEDROCK_MODEL_ID, ANTHROPIC_MODEL — present/nonempty. 요청된 리전/Opus 설정과 일치하며 Backend 모델 식별자에 bracket suffix 없음. .env — ignored/untracked, 파일 미수정. 존재 여부 확인은 호출·권한·유효기간·잔여 크레딧의 증거가 아니다.
+**Workflow and Skills**: NFR Requirements를 계속한다. 실제 브라우저 접근 가능 여부를 확인하기 위해 computer-use 스킬을 읽고 적용했다. 데스크톱 sandbox 차단으로 상태/제어 가능 여부 확인의 네트워크/데스크톱 권한을 도구로 요청했다. Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A. 이후 승인 경계는 유지한다.
+
+---
+
+## NFR Requirements — Runtime Prerequisite Question
+**Timestamp**: 2026-09-09T00:43:12Z
+**Finding**: 데스크톱 제어 연결은 가능하지만 실행 중인 앱 목록에서 Chrome을 찾지 못했다. 다른 브라우저를 Chrome 지원 증거나 요청자의 합성 MinIO 세션으로 가정하지 않는다. 모델·프로토콜·저장 검증은 독립 진행한다.
+**Question — Complete Text**:
+
+```text
+실제 MCP·브라우저 검증에 사용할 합성 MinIO 데모가 본인 계정으로 로그인된 Chrome 탭에 준비되어 있나요?
+```
+
+**Context**: 실제 실행 대상의 준비 여부를 한 개의 대화식 질문으로 확인한다. 계정·키·쿠키·스크린샷 전송이나 추가 기술 선택 승인을 요청하지 않는다. 대상이 준비되지 않았다면 해당 외부 조건과 미검증 범위를 NFR에 명시하며 일반 API/합성 프로토콜 결과를 실제 사용자 탭 성공으로 바꾸지 않는다.
+
+---
+
+## NFR Requirements — Opus Results, Component Verification and Review Drafts
+**Timestamp**: 2026-09-09T00:51:03Z
+**Opus Verification**: AWS SDK for JavaScript Bedrock Runtime 3.1128.0으로 일반 응답 1회와 합성 도구 호출 응답 1회를 실제 요청했다. 둘 다 HTTP 200과 해당 응답 검사를 통과했다. 일반 응답의 지정 문구도 일치했다. usage 합계 입력 526 / 출력 41 / 총 567 토큰이며 개별 지연은 984ms·1173ms였다. 출력은 환경변수 이름·존재 여부·정제 결과로 제한했다. toolUse 식별자 존재만 확인했고 원문/값은 보존하지 않았다. 실제 도구 실행·toolResult 왕복은 이 두 요청에 포함하지 않았다.
+**Pre-Request Findings**: 첫 SDK 시도의 인증 우선순위 설정 오류로 HTTP 전송 전에 자격정보 선택이 실패했다. 설치된 SDK의 올바른 설정 형식을 확인해 수정했다. 네트워크 없는 직렬화 점검으로 실제 Bearer와 로컬 키의 일치를 불리언만 확인했다. 이후 sandbox DNS 전송 전 차단은 정식 네트워크 권한 승인 후 이어갔다. 실제 모델 요청은 총 2회이고 자동 재시도·Haiku fallback·관리 API 호출은 없었다. 키 만료·잔여 크레딧·지속 사용량은 UNKNOWN이다.
+**Component Verification**: 저장소 밖 임시 TypeScript/Node 애플리케이션에서 공식 MCP SDK 2.0.0의 실제 tools/list·tools/call, 검증된 TLS의 HTTPS/WSS, 합성 프로토콜 클라이언트의 응답, SQLite 저장과 실제 서버 재시작 조회가 PASS였다. 합성 사용자/세션/탭 불일치 전달 차단, 중복 무재전달, 취소 후 늦은 근거 보존과 완료/반영 차단도 통과했다. 내장 node:sqlite의 실험적 API 경고를 기록했다. 이 테스트는 모델 호출을 하지 않았고 임시 서버는 종료했다.
+**Evidence Boundary**: 합성 프로토콜 클라이언트는 실제 브라우저가 아니다. 고정 도구·페이지 마커·합성 신원·단순 반영 플래그는 제품 생성·학습·자산 활성화 구현이 아니다. MV3 Extension과 브라우저 helper는 준비됐으나 실제 Chrome/MinIO 세션에서 실행하지 않았다. 데스크톱 제어 접근은 확인했지만 실행 앱 목록에서 Chrome을 찾지 못했다. 로그인된 합성 MinIO Chrome 탭 준비 여부의 질문은 아직 미응답이다. 실제 공용 서버 자원/주소·참여자 연결도 미확인이다.
+**Artifacts and Decisions**: nfr-requirements.md와 tech-stack-decisions.md 검토안을 작성했다. 초기 작업 예산·데이터 보존/삭제는 해커톤 제안으로 표시하고 공통 규칙은 기존 NFR/CC/BR을 참조했다. 기술 선택·실제 버전·근거·검증 결과는 기술 결정 문서에 집중하고 계획의 중복 추천 표를 참조로 줄였다. 기본 모델 Opus는 사용자 결정으로 유지하며 Backend 엔진/어댑터는 실제 요청자 탭 전체 흐름 확인 전 조건부 선택으로 남겼다. NFR 단계 완료나 산출물 승인·이후 단계 진입을 선언하지 않는다.
+**Review and Checks**: 요구사항/스토리/기능 설계 대조 검토와 probe 증거 대조의 두 독립 검토에서 실질적 지적이 없었다. 6개 문서의 표·코드 블록·로컬 참조·비공개 절대경로 부재, Q1~Q3 답변/Q4 실행 환경 대기, audit append-only와 후속 단계 미시작, git diff 공백 검사를 통과했다. Git 대상 파일·staged diff·임시 probe 산출물에서 키 값이 없음을 불리언 검사로 확인했다. .env는 ignored/untracked이며 사용자 파일을 수정하지 않았다.
+**Next Interaction**: 준비된 NFR 검토안과 통과/미검증 결과를 제시한다. 미응답인 동일 실행 환경 질문 한 개를 유지하며 추가 기술 승인 질문을 겹쳐 묻지 않는다. 실제 사용자 탭 검증과 기술 선택 검토를 마친 뒤 기존 NFR 산출물 승인 절차로 이어간다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A. 기본 시크릿·입력·오류·사용자/대상 경계는 유지한다.
+
+---
+
+## NFR Requirements — Runtime Question 4 Answer: Existing MinIO Tabs
+**Timestamp**: 2026-09-09T00:52:35Z
+**User Input — Raw Text with Private Address Omitted**:
+
+```text
+응 준비되어있어. orca tab에도 잇고 chrome에도 있고 whale에도 있어. ([비공개 데모 접속 주소 기록 생략])
+```
+
+**Recording Boundary**: 최초 제약의 비공개 호스트/주소 기록 금지에 따라 접속 주소만 생략했다. 주소는 로컬 임시 검증 설정에서만 사용하며 public 문서·로그·Git에 복사하지 않는다.
+**AI Response**: 준비된 MinIO 탭을 확인하겠습니다. Chrome에 있는 요청자 세션을 기준으로 연결하고, 먼저 변경 없는 관찰로 대상과 로그인 상태를 확인한 뒤 작은 MCP 실행과 사후 상태 검증을 이어가겠습니다. 접속 주소와 페이지 원문은 공개 문서·감사 기록에 남기지 않겠습니다.
+**Decision**: Q4 A — 요청자는 합성 MinIO 데모의 로그인된 탭이 Chrome·Orca·Whale에 준비되어 있음을 확인하고 접속 대상을 제공했다. 우선 기존 Chrome 탭을 사용한다. 직접 관찰로 현재 대상/로그인을 다시 확인하며 관리자·별도 테스트 브라우저 세션으로 대체하지 않는다.
+**Scope**: Q3에서 이미 허용된 제한 NFR 검증을 계속한다. 먼저 읽기 관찰과 데이터 변경 없는 UI 동작/사후 상태로 작은 실제 MCP 연결을 확인한다. 자산 생성·게시·삭제나 모델/후속 단계 변경을 이 답변으로 승인받은 것으로 기록하지 않는다. 실제 MCP 결과와 모델 toolResult 왕복은 이전 일반/도구 응답 검사와 별도로 기록한다.
+**Instructions and Skills**: 교체된 AGENTS.md를 읽었고 CLAUDE.md·최초 constraints의 AWS AI-DLC v1.0.1 경계를 유지한다. computer-use와 orca-cli의 해당 CLI 안내를 확인했다. Chrome은 데스크톱 computer-use, Orca 내장 탭을 사용할 경우에는 orca-cli로 조작한다. 비밀정보·원문 페이지 수집은 계속 제외한다.
+**Extensions**: Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A.
+
+---
+
+---
+
+## NFR Requirements — Existing Chrome Observation and User-Managed Probe Installation
+**Timestamp**: 2026-09-09T01:03:07Z
+**Observation**: 사용자가 준비한 기존 Chrome에서 MinIO Object Browser와 Sign Out 표시를 확인했다. 실제 MCP 실행 없이 데스크톱 접근성 트리를 읽은 준비 확인이다. 페이지 원문·실제 주소·계정·브라우저 프로필·런타임 식별자는 공개 기록하지 않는다. 계획한 실제 검증은 Buckets 화면으로 이동하고 Object Browser로 복귀하는 읽기 전용 흐름이다. MinIO 데이터 변경은 하지 않았다.
+**Probe Preparation**: 저장소 밖 임시 Extension/Backend에 제한된 inspect_minio, open_minio_buckets, open_minio_browser 경로와 공식 MCP helper를 준비했다. 결과는 허용된 일반 UI 레이블·개수·화면 enum·로그인 표시 여부만 포함한다. 기존 합성 프로토콜 회귀, 타입/구문, 비허용 결과 필드 필터 검사를 통과했다. 실제 브라우저 실행과 구분하며 추가 Bedrock 요청은 아직 없다.
+**Desktop Setup Finding**: Chrome의 읽기와 새 탭/확장 프로그램 화면 열기는 가능했다. 창 ID 조작 오류는 창 index 선택으로 해소했지만 기본 파일 선택 창이 다른 앱 뒤에 가려진 상태에서는 입력하지 못했다. 도구의 foreground 제약이며 제품 Extension/Bedrock 실패로 분류하지 않는다. 인증서 신뢰 변경·Extension 설치 완료를 주장하지 않는다.
+**Assistant Question — Complete Text**:
+
+```text
+Chrome의 ‘확장 프로그램 디렉터리를 선택합니다’ 창을 맨 앞으로 가져온 뒤 그대로 두실 수 있나요? 현재 Windows 조작 도구가 뒤에 가려진 Chrome의 파일 선택 창에 입력하지 못합니다. Chrome을 앞으로 둔 상태에서 “준비됐어”라고 답해주시면 설치·검증을 이어가겠습니다.
+```
+
+**User Input — Complete Raw Text**:
+
+```text
+extension 위치 알려주면 extension설치까지는 내가할게.
+```
+
+**AI Response**: 설치 폴더의 Windows 경로를 사용자에게 직접 안내했다. 로컬 임시 경로 값은 공개 감사 기록에서 생략한다. Chrome의 chrome://extensions에서 압축해제된 확장 프로그램 로드로 해당 폴더를 선택하고, 표시 이름 Vibe Zoo isolated integration probe를 확인하도록 안내한다. 이는 NFR 검증용 임시 패키지이며 제품 구현 완료가 아니다.
+**Next Action**: 사용자가 Extension 설치를 맡았다. 설치 후 로컬 TLS 신뢰·Side Panel 연결·현재 대상 binding과 실제 MCP/MinIO 사후 상태/Opus toolResult 왕복을 이어간다. 설치 준비 질문을 추가 승인 gate로 취급하지 않는다. NFR 산출물/이후 설계·구현 승인 경계와 공용 Backend 미검증 상태는 유지한다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·준수 N/A.
+
+---
+
+## NFR Requirements — User Reports Extension Installed
+**Timestamp**: 2026-09-09T01:04:27Z
+**User Input — Complete Raw Text**:
+
+```text
+extension설치하고 minio에 띄워놨어.
+```
+
+**AI Response**: 설치된 Extension과 MinIO 대상 연결을 확인하겠습니다. 읽기 전용 MCP 실행으로 화면 이동과 사후 상태를 확인한 뒤, 그 결과를 Opus에 전달하는 왕복 검증을 이어가겠습니다.
+**Scope**: 설치 완료 답변을 받았으며 기술 검증을 계속한다. 실제 연결·실행 결과는 직접 확인하고 이후 단계 승인으로 해석하지 않는다.
+
+---
+
+## NFR Requirements — Local Chrome TLS Prerequisite
+**Timestamp**: 2026-09-09T01:06:50Z
+**Findings**: 기존 MinIO 탭에서 설치된 임시 Extension의 Side Panel을 직접 확인했다. 로컬 Backend는 TLS 검증을 켠 Node 클라이언트에 정상 응답했으나 Chrome은 NET::ERR_CERT_AUTHORITY_INVALID를 표시했다. Extension binding은 아직 0건이다. 인증/모델 접근 오류로 오분류하지 않으며 추가 Bedrock 호출은 하지 않았다.
+**Action**: Chrome의 로컬 인증서 → 사용자가 설치 → 신뢰할 수 있는 인증서 가져오기 화면을 열었다. 가져올 대상은 CA가 아닌 localhost 서버 leaf 인증서 한 개이며 CA:FALSE·localhost/loopback SAN·서버 용도를 확인했다. Chrome 프로필 범위의 임시 신뢰로 한정하고 검증 뒤 삭제한다. 시스템 Root CA 추가나 TLS 검증 해제를 사용하지 않는다.
+**Assistant Question — Text with Local Path Omitted**:
+
+```text
+현재 Chrome의 ‘열기’ 창에서 아래 인증서 파일을 선택해 가져온 뒤 알려주시겠어요?
+
+[로컬 임시 서버 인증서 경로 기록 생략]
+
+로컬 검증 서버의 인증서가 Chrome에서 신뢰되지 않아 연결이 차단된 상태입니다. 이 파일은 localhost용 서버 인증서 한 개이며 현재 Chrome 프로필에만 추가합니다. 검증 후 제가 제거하겠습니다. Windows 기본 파일 선택 창은 조작 도구가 입력하지 못해 이 단계만 도움이 필요합니다.
+```
+
+**Boundary**: 사용자의 설치 답변은 수신했다. 현재 도움 요청은 도구의 기본 파일 선택 창 입력 제약을 해소하기 위한 것이며 AI-DLC 산출물 승인 또는 기술 변경 질문이 아니다. 실제 MCP/MinIO/모델 왕복 검증은 대기한다.
+
+---
+
+## NFR Requirements — Local Certificate Import Reported
+**Timestamp**: 2026-09-09T01:08:57Z
+**User Input — Complete Raw Text**:
+
+```text
+했어.
+```
+
+**AI Response**: 인증서 등록 상태와 Extension 연결을 다시 확인하겠습니다. 연결되면 같은 MinIO 탭에서 읽기 전용 MCP 실행과 Opus 결과 왕복을 검증하겠습니다.
+**Interpretation**: 직전 요청의 로컬 서버 인증서 가져오기 완료 답변이다. 이후 AI-DLC 단계 승인으로 해석하지 않는다.
+
+---
+
+## NFR Requirements — Actual Requester Chrome / MCP / Opus Roundtrip
+**Timestamp**: 2026-09-09T01:13:27Z
+**Result**: PASS — 요청자의 기존 로그인된 MinIO Chrome 탭에 설치한 MV3 Side Panel을 명시적으로 연결했다. 공식 MCP SDK의 실제 tools/list 뒤 inspect_minio → open_minio_buckets → inspect_minio → open_minio_browser 네 호출을 수행했다. Opus가 요청한 단일 빈 인자 도구 호출이 MCP → HTTPS/WSS → Extension의 실제 DOM 클릭으로 이어졌고 예상 경로·보이는 화면 표제·Sign Out 표시를 관찰했다. 정제한 관찰만 같은 toolUseId의 toolResult로 돌려보내 짧은 Opus 완료 응답을 확인했다. 도구 요청 자체나 데스크톱 자동화 결과를 사후 상태의 대용으로 사용하지 않았다.
+**Actual Model Requests**: 이번 왕복의 추가 요청은 정확히 2회이며 모두 HTTP 200, SDK attempt 1이었다. 도구 요청 입력 832 / 출력 11 / 총 843 토큰, 1263ms·tool_use. 결과 왕복 입력 887 / 출력 10 / 총 897 토큰, 2170ms·end_turn. 합계 입력 1719 / 출력 21 / 총 1740 토큰이다. 초기 Opus 응답 검사 2회·567 토큰 및 과거 Haiku 검증과 별도로 보존한다. Opus 누계는 4회·2307 토큰이며 자동 재시도·Haiku 대체·관리/Billing API 호출은 없다. 키 만료·잔여 크레딧은 여전히 UNKNOWN이다.
+**Persistence and Binding**: 실제 SQLite 저장 결과에서 네 호출이 각각 completed·dispatch 1이며 같은 actor/session/connection/tab/document/origin임을 값 출력 없이 확인했다. 관찰 화면은 browser → buckets → buckets → browser였다. 원래 Object Browser 복귀와 표시를 확인했으며 버킷/객체 생성·삭제·수정은 하지 않았다. 임시 고정 신원은 제품 신원 발급·두 참여자 검증의 증거가 아니다.
+**Setup Findings**: 최초 Chrome TLS 거절은 로컬 신뢰 문제였고 사용자 도움으로 프로필의 사용자 인증서에 localhost 서버 leaf 한 개를 등록했다. UI 해시와 서버 인증서 SHA-256을 대조했고 TLS 검증 해제 없이 HTTPS/WSS binding과 실제 왕복에 성공했다. Side Panel로 줄어든 화면에서 관찰한 고정 aria-label 세 종류만 임시 관찰/탐색 코드에 추가해 새로고침했다. 이는 생성 모델이 어댑터를 만든 증거가 아니다.
+**Cleanup**: 실행 뒤 대상 프로세스의 cwd/명령을 대조해 임시 서버를 종료했고 프로세스 부재를 확인했다. 같은 leaf 해시를 다시 대조한 뒤 Chrome 프로필에서 삭제했고 세 사용자 인증서 구역의 빈 상태를 확인했다. 검증용 Extension은 사용 안함 상태로 전환하고 기존 MinIO 탭을 다시 표시했다. 다른 Extension·OS 신뢰 저장소·MinIO 로그인 상태는 변경하지 않았다.
+**Evidence Limits**: 강제로 선택한 고정 읽기 도구의 성공 경로와 관찰 근거 왕복을 확인했다. 자율 도구 선택·ToolBundle 여섯 요소/Skill 생성·Record 학습·다른 입력의 변경 실행·실패 판별 품질·제품 인증/Store의 두 사용자 흐름·실제 공용 Backend 배포/접속·제품 AC 완료는 미검증이다. 제한 검증을 근거로 NFR 기술안을 정리하며 미검증 조건을 삭제하지 않는다.
+**Independent Review**: 별도 검토자가 runner·MCP helper·Extension·정제 결과를 대조해 제한된 실제 왕복 PASS와 증거 범위에 모순이 없음을 확인했다. 이후 NFR Design·Infrastructure Design·Code Generation의 승인은 받지 않았고 진행하지 않는다.
+
+---
+
+## NFR Requirements — Artifacts Ready for Explicit Review
+**Timestamp**: 2026-09-09T01:15:07Z
+**Artifacts**: U-01 nfr-requirements.md와 tech-stack-decisions.md의 최종 검토안을 준비했다. NFR-01~08·CC·BR 참조를 유지하며 기본 모델/데이터 전송 사용자 결정, 제한된 실제 연결 근거, 초기 보존/작업 예산과 제품 구현 후 검증 조건을 구분했다. 계획·상태·실행 계획도 갱신했다. 산출물의 사용자 승인은 아직 받지 않았다.
+**Review**: 두 NFR 산출물과 실행 증거의 독립 검토에서 차단급 기능/승인 경계 문제가 없었다. 과거 상태 문구(Chrome 검증 대기·유닛/검증 결과 미확보)는 최신 결과와 일치하도록 수정했다. 6개 문서의 표·코드 블록·로컬 참조와 비공개 경로 부재를 확인했고 audit는 HEAD 대비 append-only다. .env ignored/untracked와 공개 Git 대상의 키/비공개 대상 부재를 값 출력 없이 재확인한다.
+**AI Completion Response**: NFR Requirements 평가와 두 산출물 작성이 완료됐다. 공식 MCP를 통한 기존 사용자 Chrome/MinIO의 제한된 읽기 실행·사후 상태·Opus toolResult·원래 화면 복귀가 통과했다. 제품 생성/학습과 공용 Backend/참여자 접속은 미검증이다. 임시 서버·인증서를 정리하고 검증용 Extension을 사용 중지했다. 두 산출물 링크를 제시하고 수정 요청 또는 승인 후 NFR Design 진행을 안내한다.
+**Approval Question**: 두 산출물을 승인하고 NFR Design으로 진행할까요?
+**Approval Boundary**: .aidlc-rule-details/construction/nfr-requirements.md Step 8의 명시적 NFR 산출물 승인 전에는 NFR Design을 시작하지 않는다. 현재 단계 체크박스는 승인 대기 상태로 유지한다. 별도 계획 승인 gate나 새로운 질문은 추가하지 않는다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — 모두 Enabled No, 전문 미로드·준수 N/A. 기본 인증·입력·오류·사용자와 실행 대상 구분은 유지한다.
+
+---
+
+## NFR Requirements Approval / NFR Design Start — U-01
+**Timestamp**: 2026-09-09T01:15:35Z
+**User Input — Complete Raw Text**:
+
+```text
+승인완료.
+```
+
+**AI Response**: NFR 산출물 승인을 기록하고 NFR Design으로 진행하겠습니다. 승인된 경량 기술 구성에 사용자·대상 구분, 작업 상태, 취소·재접속, 데이터 전송 경계를 반영하겠습니다.
+**Approval Scope**: 직전 제시한 nfr-requirements.md와 tech-stack-decisions.md 및 NFR Design 진행의 명시적 승인이다. 초기 TypeScript/Node.js·Converse·공식 MCP·HTTPS/WSS·단일 호스트 SQLite와 초기 NFR 조건을 설계 기준으로 채택한다. 실제 공용 자원·제품 생성/학습·다른 입력·두 사용자 기능의 미검증 사실은 유지한다. NFR Design의 아직 작성하지 않은 산출물이나 Infrastructure Design·Code Generation의 사전 승인은 아니다.
+**Workflow**: NFR Requirements 완료를 기록하고 AWS AI-DLC v1.0.1 NFR Design 규칙을 읽었다. 다섯 질문 범주를 승인 NFR/기능 규칙과 대조하고, 미해결 사용자 결정만 질문한다. 기존 답변으로 해결된 항목은 반복 승인받지 않는다. 이번 단계는 논리 설계이며 모델/브라우저 호출이나 제품 코드를 추가하지 않는다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — 모두 Enabled No, 전문 미로드·미적용, 준수 N/A.
+
+---
+
+## NFR Design — Verification Scope Steering
+**Timestamp**: 2026-09-09T01:21:59Z
+**User Input — Complete Raw Text**:
+
+```text
+이전 스텝에서 진행한 extension설치 및 chrome(minio)에서의 동작 검증은 지금 다시 진행하지않아도됨. 동료 환경에서 검증 완료. 필요하다면, 문서/코드상으로만 확인.
+```
+
+**AI Response**: 알겠습니다. 이번 NFR Design에서는 Extension 설치나 Chrome·MinIO 동작을 다시 실행하지 않고, 기존 기록과 문서·코드만 대조하겠습니다. 동료 환경의 검증 완료는 사용자 보고로 감사 기록에 추가하고 설계 검토를 이어가겠습니다.
+**Interpretation**: 현재 단계에서 이전 설치/실행 검증을 반복하지 말라는 작업 범위 지시다. 기존 실제 제한 검증 결과는 보존하고 동료 환경의 완료는 사용자 보고로 추가한다. 제공되지 않은 실행 상세나 제품 생성/학습·모든 AC 성공을 추정하지 않는다. 문서/코드 대조로 NFR Design을 계속하며 새 산출물 승인이나 제품 구현 완료로 해석하지 않는다.
+
+
+---
+
+## NFR Design — Artifacts Ready for Explicit Review
+**Timestamp**: 2026-09-09T01:26:39Z
+**Artifacts**: U-01의 nfr-design-patterns.md와 logical-components.md를 작성하고 검토했다. 수행 계획은 construction/plans/vibe-zoo-mvp-nfr-design-plan.md에 두었다. 승인된 NFR·BR·CC·AC를 참조하며 새 기능 요구나 제품 구현 완료를 선언하지 않는다. 계획·상태·실행 계획을 산출물 승인 대기로 맞췄다.
+**Question Assessment**: Resilience / Scalability / Performance / Security / Logical Components 다섯 범주를 모두 평가했다. 기존 NFR 답변과 승인된 기능 규칙으로 사용자 의도가 해소되어 중복 질문·별도 계획 승인 gate를 추가하지 않았다. 초기 모델 슬롯/메시지 상한 등 논리 구현 선택은 이번 검토안에 명시하며 실제 공용 서버·주소·TLS 종료·지속 디스크는 다음 Infrastructure Design의 확인 대상으로 남겼다.
+**Design Review**: 검증된 참여자와 대상 탭, Job별 현재 제어와 짧은 SQLite 조건부 쓰기, 전달·취소·늦은 근거·버전 반영 순서, 재접속/Worker 종료, 제한 모델 루프/예산, 생성 계획과 실제 MCP 검증, 개인/모델/공유 투영을 C-01~07에 배치했다. 취소 뒤 관찰도 승인 예산 안에서만 수행하고, 미확인 변경의 자동 재실행을 막으며, 공유 투영에서 선택 버전의 실행 의미를 조용히 변경하지 않도록 대조했다. 공통 조건은 원본 참조를 유지한다. 기존 읽기 probe의 Panel 연결과 제품 Service Worker 연결의 미검증 수명 차이를 기록했다.
+**Evidence and Scope**: 이번 단계의 검토는 문서와 정적 설계 대조다. Extension 설치·Chrome/MinIO 실행·추가 Bedrock 요청은 수행하지 않았다. 동료 환경 완료는 사용자의 보고로 별도 보존하고 기존 실제 제한 probe 및 과거 Haiku/Opus 결과를 수정하지 않는다. 생성/학습·전체 AC·공용 서버 연결의 성공으로 확대 해석하지 않는다. 운영 HA/DR·사용자별 컨테이너·Kubernetes·외부 큐·제품 소스는 추가하지 않았다.
+**Validation**: 관련 9개 문서의 표·코드 블록·로컬 참조·비공개 경로 부재와 Git diff 공백 검사를 통과했다. audit.md는 HEAD 대비 append-only다. AWS_BEARER_TOKEN_BEDROCK / AWS_REGION / BEDROCK_MODEL_ID / ANTHROPIC_MODEL의 비어 있지 않은 설정 존재 여부만 확인했고 값을 출력하지 않았다. .env ignored=true, tracked=false이며 Git 기록 대상 파일에서 API 키 부재를 값 출력 없이 확인했다. 키 유효기간·잔여 크레딧은 계속 UNKNOWN이다.
+**AI Completion Response**: 두 설계 문서 링크와 사용자/탭 구분·취소/복구·예산/데이터 경계 요약을 제시한다. Extension·Chrome 재검증을 반복하지 않았고 동료 검증 보고와 문서/감사 갱신을 설명한다. 수정 요청을 받을 수 있으며 승인된 경량 구성을 실제 공용 환경에 연결하는 Infrastructure Design 진행을 추천한다.
+**Approval Question — Complete Text**: 두 산출물을 승인하고 Infrastructure Design으로 진행할까요?
+**Approval Boundary**: .aidlc-rule-details/construction/nfr-design.md Step 8은 NFR Design 산출물의 명시적 승인을 요구한다. 현재 단계 체크박스는 승인 대기로 유지하고 Infrastructure Design·Code Generation은 시작하지 않았다. 기존 NFR Requirements 승인을 이번 새 산출물 승인으로 재사용하지 않는다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — 모두 Enabled No, 전문 미로드·미적용, 준수 N/A. 기본 시크릿 분리·입력 검증·오류 처리·사용자/대상 구분은 유지한다.
+
+
+---
+
+## NFR Design Approval / Infrastructure Design Start — U-01
+**Timestamp**: 2026-09-09T01:27:56Z
+**User Input — Complete Raw Text**:
+
+```text
+검토 완료. 진행하자.
+```
+
+**AI Response**: NFR Design 승인을 기록하고 Infrastructure Design으로 진행하겠습니다. 사용 가능한 서버와 연결 설정을 먼저 확인한 뒤, 공용 Backend·HTTPS/WSS·SQLite를 실행할 최소 구성을 정리하겠습니다.
+**Approval Scope**: 직전 제시한 nfr-design-patterns.md와 logical-components.md의 명시적 승인 및 Infrastructure Design 진행 지시다. NFR Design을 완료 처리한다. 아직 만들지 않은 인프라 산출물·Code Generation 계획/구현·실제 서버 배포의 사전 승인은 아니다.
+**Workflow**: AGENTS.md·CLAUDE.md와 AWS AI-DLC v1.0.1 Infrastructure Design 규칙, 공통 재개/콘텐츠/질문 규칙을 확인했다. Minimal 범위로 일곱 질문 범주를 평가하고 실제 미해결 환경만 한 번에 하나씩 대화로 묻는다. 이전 Extension 설치·Chrome/MinIO 실행은 반복하지 않고 기존 검증 범위를 유지한다.
+**Initial Evidence**: 저장소에는 제품 구현이나 배포 manifest가 아직 없다. .env에서 AWS_BEARER_TOKEN_BEDROCK / AWS_REGION / BEDROCK_MODEL_ID / ANTHROPIC_MODEL의 변수 이름만 확인했으며 서버/배포 설정은 확인되지 않았다. Bedrock 사용 승인을 다른 AWS 자원 생성 또는 배포 환경 확정으로 해석하지 않는다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A.
+
+## Infrastructure Design — Question 1 Presented
+**Timestamp**: 2026-09-09T01:27:56Z
+**Assistant Question — Complete Text**:
+
+```text
+Vibe Zoo Backend를 실행할 팀 공용 서버가 이미 준비돼 있나요? 사용할 수 있다면 기존 Linux 서버 1대를 재사용하는 방향을 추천합니다. 승인된 Node.js·SQLite 구성을 유지하면서 새 인프라 준비를 줄일 수 있습니다. 실제 주소나 접속 키 없이 준비 상태만 알려주세요.
+```
+
+**Suggested Answers**: 사용 가능한 기존 Linux 서버가 있음 (추천) / 새 서버를 준비해야 함 / 서버 준비 상태를 아직 모름. 자유 입력도 가능하다.
+**Interpretation Boundary**: 모델 인증 성공이나 MinIO 접속 대상이 공용 Backend 설치 권한·자원·참여자 연결 가능성을 보장하지 않는다. 현재 개발 환경이나 MinIO 호스트를 임의의 배포 대상으로 고정하지 않는다. 답변 대기 중 기존 논리 구성의 자원 매핑·설정/저장·배포 확인 항목을 정리한다.
+
+
+---
+
+## Infrastructure Design — Q1 Current WSL Development Server
+**Timestamp**: 2026-09-09T01:31:48Z
+**User Input — Complete Raw Text**:
+
+```text
+개발 서버는 지금 이 환경(wsl)에서 진행.
+```
+
+**AI Response**: 개발 서버는 현재 WSL 환경으로 반영하겠습니다. WSL의 실행·저장 조건과 기존 HTTPS 연결 수단을 확인하고, 참여자들이 이 Backend에 접속할 경로를 이어서 정하겠습니다.
+**Decision**: 개발 Backend 실행 환경은 현재 WSL로 지정됐다. 새로운 VM 생성은 추진하지 않는다. 기존 공용 Backend 요구는 유지하며 이 답변만으로 참여자 접속 경로·인증서·공용 배포 완료를 확정하지 않는다.
+**Read-only Findings**: WSL/Ubuntu 24.04.1 LTS, PID 1 systemd, Node 22.14.0과 쓰기 가능한 ext4를 확인했다. 가용 CPU/메모리/디스크도 읽었으나 제품 최소 사양·부하 처리량으로 채택하지 않는다. WSL의 Tailscale은 NeedsLogin/오프라인이며 Windows 호스트의 Tailscale은 Running/온라인, DNS 이름 존재를 값 출력 없이 확인했다. 양쪽 Serve 설정은 비어 있고 Caddy/nginx는 WSL에 설치되어 있지 않다. 기존 개발 포트 두 개가 사용 중이므로 제품 포트는 충돌을 피하도록 정한다. 주소·계정·peer 식별자·키는 출력/기록하지 않았다. 서버/네트워크 설정 변경·모델/브라우저 호출은 없다.
+**Question 2 — Complete Text**:
+
+```text
+첫 데모 참여자 모두가 현재 Windows 호스트의 Tailscale 네트워크에 접속할 수 있나요? 가능하다면 Windows의 기존 Tailscale Serve로 WSL Backend를 HTTPS로 연결하는 구성을 추천합니다. 새 서버·도메인 준비를 줄일 수 있습니다.
+```
+
+**Suggested Answers**: 모두 접속 가능 (이 경우 Serve 추천) / Tailscale 없는 참여자도 있어 공개 HTTPS 필요 / 참여자 접속 환경이 아직 미정. 자유 입력도 가능하다.
+**Reason and Boundary**: 공식 Serve 문서의 tailnet 접근/HTTPS 조건과 Microsoft의 Windows→WSL localhost 접근 설명을 근거로 한 조건부 제안이다. 실제 제품 HTTPS/WSS 경로·tailnet HTTPS 사용 가능 여부·접근 정책은 미검증이다. 사용자 답변 전 Serve/Funnel·TLS·방화벽·Tailscale 로그인/네트워크 공개 설정을 변경하지 않는다. Vibe Zoo 참여자 인증은 프록시 신원 헤더로 대체하지 않는다.
+
+
+---
+
+## Infrastructure Design — Prioritize Current-Environment Demo
+**Timestamp**: 2026-09-09T01:32:50Z
+**User Input — Complete Raw Text**:
+
+```text
+실제 서비스보다는 이 환경에서 데모 구현이 우선이기 때문에 실제 서비스를 위한 접속경로 설정은진행하지않아도됨.
+```
+
+**AI Response**: 현재 WSL에서 데모를 구현하는 데 필요한 구성으로 인프라 산출물을 작성하겠습니다. 외부 접속 경로·공용 도메인 설정은 보류하고, 로컬 실행·SQLite 저장·Extension과 Backend 연결을 구체화하겠습니다.
+**Decision**: 현재 구현/시연 대상은 지정된 WSL이다. 공용 서비스의 DNS·TLS 프록시·Tailscale/터널·포트 공개·참여자 외부 접속 경로 설정을 이번 작업의 선행 조건으로 요구하지 않는다. 외부 연결 미확인을 이유로 이 환경의 데모 설계/구현 준비를 지연하지 않는다.
+**Scope Interpretation**: 배포 준비의 우선순위와 이번 작업 범위를 구체화한 지시로 반영한다. 단일 Backend의 사용자 구분, 요청자의 브라우저 실행, 실제 MCP, 자산 Store·공유 기능을 삭제하라는 지시로 해석하지 않는다. 기존 HTTPS/WSS 모델을 유지한 로컬 연결 구성을 설계하며 외부 참여자 접속 성공은 주장하지 않는다. 기존 승인 요구와 충돌하는 기능/프로토콜 변경이 필요하면 그때 차이와 영향을 확인한다.
+**Question Disposition**: 직전 기록에 준비한 Q2(Tailscale 참여자 접근)는 사용자에게 제시하기 전에 이 지시를 받았다. Q2를 미해결 필수 질문에서 제외한다. Tailscale Serve 추천을 승인으로 기록하거나 실제 설정하지 않는다. 새 산출물 승인 전 구현/배포도 시작하지 않는다.
+**Evidence Boundary**: 현재 환경의 OS·Node·로컬 파일시스템·설정 존재 확인은 읽기 전용이다. 이전 Extension 설치/Chrome MinIO 재검증과 추가 Bedrock 요청은 계속 수행하지 않는다. 로컬 제품 TLS의 인증서·브라우저 신뢰는 구현 후 연결 조건으로 표시하며 현재 검증 완료로 쓰지 않는다.
+
+
+---
+
+## Infrastructure Design — Current WSL Demo Artifacts Ready
+**Timestamp**: 2026-09-09T01:36:58Z
+**Artifacts**: U-01 infrastructure-design.md와 deployment-architecture.md를 작성했고 공유 자원 소유/수명은 construction/shared-infrastructure.md에 한 번만 작성했다. 실행 계획·상태·Infrastructure Design 계획 및 기술 결정의 후속 환경 참조를 갱신했다. NFR Design의 두 산출물/계획은 명시적 승인 완료 상태다.
+**Design Result**: 현재 WSL에 Node 프로세스 하나, 내부 실제 MCP Streamable HTTP listener, loopback HTTPS/WSS, 같은 origin의 Store, WSL ext4의 지속 SQLite를 배치했다. 개발자가 명령으로 시작/정지하고 참여자는 Extension·Store를 사용한다. Actor/탭·개인/공유·취소/예산·데이터 전송 규칙은 승인 NFR/BR을 참조한다. 실제 서비스의 DNS·Tailscale/터널·프록시·공개 포트 설정은 사용자의 데모 우선 지시에 따라 보류했다.
+**Runtime Proposal**: 설치된 Node 22.14.0 / SQLite 3.47.2는 관찰 사실로만 기록했다. 검토안은 공식 릴리스/해당 버전 API 문서를 근거로 프로젝트 한정 Node 24.20.0 LTS와 내장 node:sqlite를 제안한다. 내장 API는 Release candidate이며 제품 저장/경합·SDK 호환성을 확인한 것으로 쓰지 않는다. 전역 Node/개발 에이전트를 변경하거나 새 런타임을 설치하지 않았다.
+**Remaining Implementation Conditions**: 로컬 인증서·Chrome 신뢰, 새 제품의 Windows→WSL HTTPS/WSS, 정확한 의존성/lockfile, 실제 생성·학습·새 입력·두 Actor/Store 검증은 Code Generation 계획에 연결했다. 이전 Extension 설치/Chrome MinIO probe는 재실행하지 않았다. Bedrock 요청·실제 네트워크 설정 변경·제품 소스/테스트 생성·배포도 없다. 원격 참여자 접속이나 모든 제품 AC 성공을 주장하지 않는다.
+**Review and Validation**: 요구 범위/증거 차이와 실행 종료/저장/재시작 경계를 대조했고 추가 사용자 결정은 필요하지 않았다. 13개 변경/신규 문서의 표·fence·로컬 링크/anchor와 비공개 경로 부재를 확인했다. 새 배포 그림은 6개 노드의 제한 Mermaid 구문과 텍스트 대체 설명을 검사했다. git diff --check 통과, audit.md HEAD 대비 append-only, .env ignored=true/tracked=false, Git 대상에서 Bedrock 키 부재를 값 출력 없이 확인했다. 최종 승인 대기 상태를 반영했으며 단계 완료 체크는 사용자 승인 전까지 보류한다.
+**AI Completion Response**: WSL 데모 기준의 인프라 설계와 실행 순서·공유 자원 문서를 제시한다. 외부 접속 설정을 보류한 사실과 로컬 제품 TLS/연결의 구현 후 확인 조건을 설명하며 Code Generation 계획 수립을 추천한다. 수정 요청도 받을 수 있다.
+**Approval Question — Complete Text**: 이 인프라 설계를 승인하고 Code Generation 계획 수립으로 진행할까요?
+**Approval Boundary**: .aidlc-rule-details/construction/infrastructure-design.md Step 8에 따라 인프라 산출물의 명시적 승인을 받은 뒤 Code Generation Part 1로 진행한다. 실제 코드 작성은 다음 Code Generation 계획 승인을 받은 뒤 수행한다. 사용자의 현재 WSL/데모 우선 지시는 아직 작성하지 않았던 산출물이나 코드 계획의 사전 승인이 아니다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — 모두 Enabled No, 전문 미로드·미적용, 준수 N/A. 기본 시크릿 분리·입력 검증·오류 처리·사용자/실행 대상 구분은 유지한다.
+
+
+---
+
+## Infrastructure Design Approval / Code Generation Planning Start — U-01
+**Timestamp**: 2026-09-09T01:37:45Z
+**User Input — Complete Raw Text**:
+
+```text
+code generation 계획 수립 진행.
+```
+
+**AI Response**: 인프라 산출물 승인을 기록하고 Code Generation 계획을 작성하겠습니다. 현재 WSL에서 핵심 흐름을 먼저 구현하고, 개인 Skill·Store·개선 기능까지 이어지는 순서로 코드 작업과 검증 항목을 연결하겠습니다.
+**Approval Scope**: 직전 인프라 산출물 검토 요청에 대한 다음 단계 진행 지시로, infrastructure-design.md·deployment-architecture.md·shared-infrastructure.md를 승인하고 Code Generation Part 1 계획 수립을 시작한다. 현재 WSL/프로젝트 한정 Node 24.20.0/로컬 HTTPS·WSS/SQLite와 외부 서비스 경로 보류를 기준으로 삼는다. 아직 작성하지 않은 코드 계획·제품 소스 생성·설치·실행은 사전 승인하지 않는다.
+**Workflow**: AWS AI-DLC v1.0.1 construction/code-generation.md를 읽었다. 단일 U-01의 정확한 루트 코드 경로, 번호와 체크박스가 있는 실행 순서, US-01~09·AC 연결, 필요한 테스트·계층별 요약·문서·로컬 실행 산출물을 한 계획에 작성한다. 기존 사용자 결정은 재질문하지 않으며 이전 Extension/Chrome MinIO probe·모델 검증을 반복하지 않는다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A. 기본 실행 경계·시크릿 분리·입력 검증과 핵심 테스트는 유지한다.
+
+
+---
+
+## Code Generation Part 1 — U-01 Plan Ready for Approval
+**Timestamp**: 2026-09-09T01:44:46Z
+**Artifact**: construction/plans/vibe-zoo-mvp-code-generation-plan.md를 작성했다. 단일 U-01의 16개 순차 구현 단계와 정확한 루트 코드/설정/테스트/스크립트 경로, 서비스·인터페이스·DB 소유권, 전체 US-01~09·AC-01~10 연결을 담는다. 계획은 Code Generation의 단일 실행 기준이며 모든 구현 체크박스는 미완료로 유지한다.
+**Sequence and Scope**: 프로젝트/계약 → SQLite와 Repository 테스트/요약 → 업무 조정/제어와 단위 테스트/요약 → API·인증/연결과 테스트/요약 → Extension 관찰/실행 → Bedrock 생성/Agent·공식 MCP·사후 검증 → 핵심 UI → Step 10의 첫 실제 생성 도구/기본 Skill 제품 흐름 → 개인 학습/설정 → 다른 사용자 Store 설치 → 검증된 개선/명시 적용 → 로컬 명령/CI/README와 실제 화면 증거 → 유닛 결과 검토 순서다. Repository·업무·API·Frontend 요약과 AC 증거는 하나의 implementation-summary.md에 모으도록 계획했다.
+**Implementation Choices**: 승인된 WSL/프로젝트 Node 24.20.0/Converse·Opus/공식 MCP v2/HTTPS·WSS/SQLite를 유지한다. 미정이었던 UI/빌드/테스트 도구는 React+CSS, esbuild, Vitest와 필요한 DOM 테스트 도구를 계획안에 명시했다. 공식 문서를 확인했고 실제 패키지 호환/버전 고정은 승인 후 Step 1에서 수행한다. 운영용 UI 서버·클라우드·외부 접속 경로를 추가하지 않는다.
+**Evidence Boundary**: 이전 Extension/Chrome MinIO probe와 일반 모델 응답 검증을 반복하지 않는다. 이후 새 제품의 실제 생성/학습/실행 결과를 별도로 확인하며 테스트 대역·정적 JSON·시안/가짜 Preset을 실제 성공으로 사용하지 않는다. 브라우저 작업은 요청자의 로그인된 탭과 제품 변경 확인을 따르고, 다른 Actor/세션 검증·합성 MinIO 전송 범위·키 비노출을 유지한다. 이번 계획 단계에는 코드·런타임/의존성 설치·이미지 생성·브라우저/모델 호출을 수행하지 않았다.
+**Review and Validation**: 16단계 연속 번호/미완료 체크, 원본 스토리 맵과 9개 US의 모든 AC 연결 동일성/10개 AC 전체, 단계 의존성과 정확한 코드 위치를 대조했다. 관련 14개 문서의 표·fence·로컬 링크/anchor·비공개 경로 부재와 git diff --check를 통과했다. audit.md는 HEAD 대비 append-only, .env ignored=true/tracked=false다. 계획은 추가 설명 질문 없이 검토할 만큼 구체화됐으며 인프라 승인/Code Generation 승인 대기 메타데이터를 동기화했다.
+**AI Completion Response**: 계획 링크와 16단계·첫 제품 실행/개인화/공유/개선 순서·통합 요약/검증 방식을 제시하고, 이 순서로 구현 진행을 추천한다. 수정 요청 또는 전체 계획 승인 후 구현 시작을 안내한다.
+**Approval Question — Complete Text**: 이 16단계 Code Generation 계획을 승인하고 구현을 시작할까요?
+**Approval Boundary**: .aidlc-rule-details/construction/code-generation.md Part 1 Step 7에 따라 계획 전체와 생성 순서의 명시적 승인 전에는 Part 2를 시작하지 않는다. 승인 답변 수신 후 Part 1 완료를 기록하고 Step 1부터 실행한다. 현재 요청은 계획 수립 지시이며 해당 계획/구현의 사전 승인이 아니다.
+**Extension Compliance**: Security Baseline / Resiliency Baseline / Property-Based Testing — Enabled No, 전문 미로드·미적용, 준수 N/A. 기본 시크릿 분리·입력 검증·오류·사용자/탭 경계와 핵심 테스트는 유지한다.
+
+
+---
+
+## Code Generation Part 1 Approval / Part 2 Start
+**Timestamp**: 2026-09-09T01:46:19Z
+**User Input**:
+```text
+계획 승인. 구현 시작!
+```
+**Decision**: 16단계 계획 전체와 순서를 명시 승인했다. Part 1 완료, Part 2 Step 1부터 구현한다. 이후 코드 산출물 승인 및 Build and Test 승인은 포함하지 않는다. 현재 WSL 데모, 비밀정보 제외, 기존 probe 재실행 제외를 유지한다.
+**Extension Compliance**: 세 확장 Enabled No; 전문 미로드·준수 N/A.
+
+
+---
+
+## Code Generation — Product Extension Loaded
+**Timestamp**: 2026-09-09T02:04:41Z
+**User Input**:
+```text
+vibe zoo keeper 0.1.0 extension 로드완료. minio에 띄워뒀음.
+```
+**Decision**: 새 제품 Extension 로드와 사용자 MinIO 탭의 Panel을 확인했다. 연결 오류가 표시되어 제품 인증/TLS/WSS 경계를 확인한다. 기존 NFR probe를 재실행하지 않으며 제품 전체 흐름 성공으로 기록하지 않는다.
+
+
+---
+
+## Code Generation — Product Connection Error Report
+**Timestamp**: 2026-09-09T02:05:10Z
+**User Input**:
+```text
+demo-access.json 값을 넣어도 연결에 성공하진 못했음. [Image #1]
+```
+**Attachment**: 제품 연결 오류 화면을 확인했다. 접근 코드는 마스킹되어 있으며 이미지 원본이나 개인 경로를 저장소에 복사하지 않는다.
+**Finding**: Backend 세션/Job 접수 0건. 접근 코드 값은 조회·출력하지 않고 인증 전 HTTPS/권한 구간을 조사한다.
+
+
+---
+
+## Code Generation — Local TLS Confirmed / Extension CORS Fix
+**Timestamp**: 2026-09-09T02:06:51Z
+**User Input**:
+```text
+인증서 등록하고 health 뜬느것 확인. extension에선 여전히 연결안됨.
+```
+**Finding/Action**: 사용자가 로컬 인증서 신뢰 등록 및 health 접속을 확인했다. Extension 인증 요청의 credentials 포함 CORS 응답 헤더 누락을 수정했다. 세션/대상 handshake 실패와 인증서·접근 코드 오류를 구분하는 표시를 추가하고 새 제품 연결을 계속 검사한다.
+
+
+---
+
+## Code Generation — Steps 1–9 / First Product Connection
+**Timestamp**: 2026-09-09T02:14:00Z
+**Implementation**: 프로젝트 Node·계약·SQLite/Repository·업무 제어·HTTPS/WSS·Extension·Bedrock/실제 MCP·Keeper/Store 기본 화면을 구현했다. 25개 합성/단위 검사와 typecheck/lint/세 대상 빌드를 확인했다. 공통 구현 요약에 계층별 책임과 실제/합성 범위를 기록했다.
+**Actual Product Result**: 사용자 로드·TLS 준비 후 CORS/activeTab 결함을 수정하여 기존 MinIO 로그인 탭의 제품 인증·WSS·페이지 관찰을 확인했다. 첫 Opus 생성 응답 1회/4,203 tokens, 후보 확정 실패로 브라우저 도구 실행은 수행되지 않았다. 구조화된 후보 스키마 반환과 오류 분류를 보강한다. 이전 probe와 별개이며 전체 AC 완료가 아니다.
+**State**: Step 10 진행 중. 후속 개인 Skill/Store/개선 단계는 최초 제품 흐름 검증 이후 실행한다. 비밀 값·실제 주소·runtime ID·원시 페이지/모델 응답을 기록하지 않는다.
+
+
+---
+
+## Code Generation — Product Connection and Candidate Validation
+**Timestamp**: 2026-09-09T02:27:35Z
+**Action/Result**: 사용자 기존 MinIO 탭에서 새 제품 Extension의 인증·WSS 연결 성공을 다시 확인했다. localhost host permission, 툴바 activeTab 부여, CORS credentials 처리를 보완했으며 인증서 재등록은 필요하지 않다. MV3 연결 유지 heartbeat와 문서 이동 checkpoint 처리를 보강했다.
+**Actual Model/MCP Evidence**: 첫 요청 이후 Opus 생성 2회(보고 usage 각각 5,213 / 5,420 tokens)로 고정 도구·기본 Skill 후보를 만들었다. 실제 MCP 호출이 동일 사용자 탭의 페이지 이동까지 이어졌지만 필수 라벨 비교와 문서 이동 후 이전 문서로 명령이 전달되는 결함으로 업무 사후 검증은 실패했다. 전체 실제 모델 요청은 3회/14,836 tokens이며 모델 대체·무한 재시도는 없다. 생성 후보 재검증은 새 입력과 읽기 전용 미확인 상태 확인을 사용하고 완료된 변경의 재실행을 차단한다. 추가 모델 호출 없이 실행기 검증을 이어간다.
+**Validation/State**: 26개 검사 통과, typecheck 및 빌드 통과. Step 10은 계속 미완료이며 업무 실행 성공으로 기록하지 않는다. 원시 응답·키·실제 주소·런타임 ID는 기록하지 않았다.
+
+
+---
+
+## Code Generation — Connection Fix Verified
+**Timestamp**: 2026-09-09T02:31:32Z
+**Result**: 새 제품 Extension을 다시 로드한 뒤 동일 사용자 MinIO 탭 재연결 성공을 확인했다. 읽기 전용 reconcile 후 새 합성 입력으로 고정 후보 검증을 접수했고 추가 모델 호출 없이 실제 MCP navigation/wait/input이 성공했다. Create 동작은 중복 텍스트 ambiguous 판정으로 실행하지 않았다. 텍스트 클릭을 실제 상호작용 요소로 해석하는 수정과 중복 버튼 보호 회귀 검사를 추가했다.
+**Validation**: 27개 검사, typecheck/lint/세 대상 빌드 통과. 고정 후보 재검증이 모델을 추가 호출하거나 후보를 재생성하지 않는 합성 MCP 검사도 통과했다. 연결 오류는 해결했으며 전체 업무 검증 및 Code Generation 완료는 아직 아니다.
+**Data**: 키/접근 코드/실제 주소/런타임 ID를 기록하지 않았다. .env Git 제외 유지.
+
+
+---
+
+## Code Generation — Desktop Verification Limit
+**Timestamp**: 2026-09-09T02:32:02Z
+**Result**: 최신 빌드 후 제품 Extension 재로드를 수행했으나 마지막 툴바 재열기에서 Windows UIA가 accessibility_error/FromHandle 오류를 반환했다. 동일 동작을 반복하지 않았다. 앞서 확인한 실제 연결·재연결·입력 성공과 구분하며 최신 패널 재열기 상태는 미확인이다. 마지막 후보 검증은 ambiguous 실패로 종료됐고 미확인 동작은 없다. 사용자는 MinIO 탭에서 제품 툴바 아이콘을 눌러 패널을 열고 연결할 수 있다. Step 10 전체 업무 검증은 미완료로 유지한다.
+
+
+---
+
+## Code Generation — Product Reconnected
+**Timestamp**: 2026-09-09T02:32:58Z
+**User Input**: "연결완료."
+**Action**: 사용자 제품 재연결 확인을 기록하고 승인된 Step 10의 고정 후보 실제 MCP·브라우저 사후 검증을 재개한다. 이후 단계 승인을 미리 받은 것으로 처리하지 않는다.
+
+
+---
+
+## Code Generation — Focus Lifecycle / Explicit Nonexecution Review
+**Timestamp**: 2026-09-09T02:42:57Z
+**Actual Evidence**: 재연결된 Actor는 이전 Actor와 달랐고, 빈 개인 영역에서 Opus 생성 요청 1회/5,483 tokens가 자동 수행됐다. 누적 실제 생성은 4회/20,319 tokens. 현재 Actor의 실제 MCP input 뒤 Create 호출은 사후 상태 미확인으로 끝났다. 개인 영역은 분리되며 다른 로그인 문맥의 Store 검증으로 간주하지 않는다.
+**Diagnosis**: 현재 MinIO의 공개 정적 JavaScript만 인증정보 없이 읽어, onFocus의 dirty 표시가 없으면 생성 버튼이 비활성인 조건을 확인했다. 실제 화면에서도 비활성 버튼을 확인했고 진단용 네이티브 포커스·합성 텍스트 입력 후 활성 상태가 됐다. 그 수동 입력은 MCP 성공 증거가 아니다. 실행기에 focus/beforeinput/input/change/blur와 disabled 검사·관찰 표시를 추가했다. 공개 번들은 비공개 임시 파일에만 두며 제품 코드로 복사하지 않는다.
+**Recovery**: BR-09의 미실행 근거 확인 경로를 구현했다. 새 읽기 전용 근거와 현재 대상·revision을 요구하며 명시 검토 기록은 interrupted이고 원래 unknown receipt를 유지한다. 이 경로로 이전 성공/활성화를 만들지 않는다. 검토 후 서로 다른 새 입력의 연결된 검증 Job만 허용하며 모델·후보 재생성은 없다. 자동 재전송은 없다.
+**Validation**: 30개 합성/프로토콜 검사 통과. 실제 도구·기본 Skill 완주는 계속 미완료다. 최신 Backend/Extension 빌드를 반영하며 현재 Actor를 유지한다.
+
+
+---
+
+## Code Generation — Actual Tool Result / Independent Skill Validation
+**Timestamp**: 2026-09-09T02:55:46Z
+**Actual Result**: 현재 요청자 탭에서 새 합성 버킷 생성이 관찰됐다. 모델이 결과 요소를 cell로 예상했지만 실제 페이지에는 같은 업무 입력의 heading이 나타났다. 해당 버킷 생성은 반복하지 않았다. Opus의 한정 검증 역할 수정 요청 1회/2,030 tokens로 새 불변 후보를 만들고 기존 MCP 동작 참조+읽기 전용 사후 관찰로 도구를 검증·준비했다. 이전 실패/unknown receipt와 후보는 보존한다. 누적 실제 모델 요청은 5회/22,349 tokens다.
+**Boundary**: 수정은 미준비 후보의 동일 업무 입력·visible 조건·관찰된 비편집 결과 역할만 허용한다. 실제 실행 동작열/입력이 원본과 일치해야 하며 일반 문구로의 완화·변경 재생은 거절한다. 이미 활성인 버전의 개선으로 전용하지 않는다.
+**Remaining Fix**: 기본 Skill의 새 문서 입력 후 버튼은 비활성으로 차단됐고 생성하지 않았다. Side Panel 포커스에서 명시 focusin 전달을 추가했고 기본 Skill만 새 입력으로 검증하는 제품 경로를 연결했다. 모델/통과 도구를 재생성하지 않는다. 자동 활성화는 각 자산의 새 보고서 통과에만 연결된다.
+**Validation**: 33개 검사 통과. 실제 기본 Skill·같은 채팅·최초 스크린샷은 아직 미완료다. 이전 미실행 검토 UI는 개발 에이전트가 관찰한 화면 및 코드 근거로 승인된 데모 범위에서 조작했으며 새로운 사용자 발언으로 기록하지 않는다.
+
+## Code Generation — Step 10 실제 제품 검증 완료
+**Timestamp**: 2026-09-09T03:06:38.602319+00:00
+**AI Response**: "기존 사용자 탭에서 도구와 기본 Skill을 각각 검증하고 같은 채팅의 준비 자산 재사용을 확인했다. 실제 합성 버킷 세 개, 채팅 모델 2회/브라우저 동작 4회, 제품 전체 모델 누계 7회/25,731 tokens. 실제 전체 화면 캡처를 screenshots/01-generation-execution.png에 저장하고 Step 10을 완료 표시했다. Step 11을 이어간다."
+**Context**: 비공개 주소가 있는 초기 캡처는 Git 제외 임시 영역에만 보존. 실제 성공과 단위/합성 검사, 이전 probe를 구분. 이후 단계 승인으로 처리하지 않음.
+
+---
+
+## Code Generation — 구현 우선순위 유지
+**Timestamp**: 2026-09-09T03:11:53.812995+00:00
+**User Input**:
+> 현재 진행 중인 Record·개인 Skill 구현을 계속해주세요.
+>
+>   목표는 승인된 전체 제품을 완성한 뒤 각 기능별 시연 영상을 촬영하는 것입니다. 기존 기능
+>   범위와 AI-DLC 절차는 유지해주세요.
+>
+>   속도를 위해 기존 모듈과 검증된 도구·Skill을 재사용하고, 남은 기능마다 대표 사용자 시나리
+>   오를 실제로 완주하는 데 집중해주세요. 변경 영향이 없는 성공 검증은 반복하지 말고, 추가적
+>   인 복구 UI·추상화·리팩터링·지원 범위 확대는 완주 이후로 미뤄주세요.
+>
+>   개발 중 필요한 실행 증거는 남기되, 발표용 촬영 준비와 화면 다듬기에 오래 머물지 말고 남
+>   은 기능 구현을 우선해주세요
+**AI Response**: 구현 우선 유지. Record/개인 Skill 및 41개 합성 검사 통과; 변경 없는 성공 경로를 반복하지 않음. BR-10의 명시적 의도 확인을 위해 첫 개인 Skill의 업무를 한 질문으로 요청. 발표용 영상은 전체 제품 완주 뒤 진행.
+
+---
+
+## Code Generation — Step 11 코드·합성 검사
+**Timestamp**: 2026-09-09T03:15:20.699970+00:00
+**AI Response**: "Record/Stop/직접 의도/불변 개인 Skill/새 입력 검증 흐름 구현, 41개 합성 검사와 typecheck/lint/build 통과. 실제 학습은 사용자 의도 답변 전 미수행. 기존 성공 검증은 반복하지 않음. Backend와 Extension 빌드를 갱신했다."
+**Context**: Step 11 실제 대표 시나리오 미완주로 완료 표시하지 않음. 후속 승인과 발표용 촬영은 선취하지 않음.
+
+---
+
+## Code Generation — 실제 학습 의도 확인 대기
+**Timestamp**: 2026-09-09T03:16:03.038026+00:00
+**AI Response**: "Record·개인 Skill 구현과 41개 검사가 통과했습니다. 첫 실제 학습 의도를 ‘이름을 입력받아 MinIO 버킷 하나 만들기’로 지정할까요? 검증된 기존 도구를 재사용하는 추천입니다. BR-10에 따라 사용자가 정한 의도를 연결한 뒤 실제 학습 검증을 진행합니다."
+**Context**: 업무 의도 확인이며 새 단계 승인 요청이 아님. Extension 갱신 후 패널은 닫힌 상태이고 Backend는 최신 빌드로 실행 중. Chrome 전체 화면 복원/패널 열기는 남아 있음. 개인 Skill 실제 실행이나 단계 완료를 주장하지 않음.
+
+---
+
+## Code Generation — 개인 Skill 의도 확정
+**Timestamp**: 2026-09-09T03:17:33.080442+00:00
+**User Input**: "응 진행해."
+**AI Response**: "첫 개인 Skill 의도는 이름을 입력받아 MinIO 버킷 하나 만들기로 확정. 실제 Record와 새 입력 검증을 이어간다."
+**Context**: 기존 추천 업무 의도에 대한 답변. 이후 단계 산출물 승인으로 처리하지 않음.
+
+---
+
+## Code Generation — Keeper 준비
+**Timestamp**: 2026-09-09T03:19:52.932612+00:00
+**User Input**: "keeper 패널 열었음. 로그인까찌했음."
+**AI Response**: 기존 로그인/대상을 유지해 Record 시연을 시작한다.
+
+---
+
+## Code Generation — 브라우저 대기 중 독립 코드 구현
+**Timestamp**: 2026-09-09T03:20:48.179683+00:00
+**AI Response**: "Step 12 개인 설정의 기존 자산 CAS·기본값 계약·off 선택 제외·고정 스냅샷과 MCP 기본값 전달을 구현했다. 44개 검사 통과. Step 11 실제 검증과 Step 12 후속 실제 채팅은 순서대로 수행하며 완료 체크는 보류한다."
+**Context**: 사용자 구현 우선 지시에 따라 브라우저 준비와 독립적인 코드만 진행. 발표용 촬영/추가 복구 UI/범위 확대 없음.
+
+---
+
+## Code Generation — Step 11 실제 완주
+**Timestamp**: 2026-09-09T03:23:49.298581+00:00
+**AI Response**: "실제 Record와 의도 접수에서 개인 Skill을 생성했다. 원본 시연 버킷을 재생하지 않고 새 합성 이름으로 실제 MCP/대상 탭 실행 및 사후 검증을 통과했다. 모델 추가 1회/7,150 tokens, 누계 8회/32,881 tokens. Step 11 완료 표시, Step 12 후속 채팅 검증으로 진행."
+**Context**: 사람이 먼저 진행한 시연/Stop/의도 접수의 실제 상태를 확인해 기존 기록을 재사용했다. 자동 UI 명령이 컨트롤 부재로 중단된 경우는 성공 증거로 쓰지 않음.
+
+---
+
+## Code Generation — Whale 연결 확인
+**Timestamp**: 2026-09-09T03:31:09.770395+00:00
+**User Input**: "whale 셋업했는데, colleague key로 로그인이안됨."
+**AI Response**: "Whale은 별도 사용자 검증용 demo-keeper 코드를 사용하도록 안내하고 로그인 실패 원인을 확인한다. 코드 값은 요청하지 않는다."
+
+---
+
+## Code Generation — Step 12 실제 완주 / 증거 취합 순서
+**Timestamp**: 2026-09-09T03:34:32.416955+00:00
+**AI Response**: "개인 이름/기본값 저장 후 입력을 생략한 채팅에서 실제 개인 Skill 실행과 새 버킷 사후 확인을 통과했다. 모델 추가 2회/4,866 tokens, 누계 10회/37,747 tokens. Step 12 완료 표시. 사용자 구현 우선 지시에 따라 후속 스크린샷 취합은 Step 15로 모으고 실제 DB/Action 결과는 즉시 보존한다."
+**Context**: 제품/검증 범위 및 단계 승인 절차 유지. 별도 발표용 영상은 전체 제품 완주 뒤.
+
+---
+
+## Code Generation — 두 번째 사용자 검증 브라우저 전환
+**Timestamp**: 2026-09-09T03:40:04.462625+00:00
+**User Input**: "whale이 문제인거면 크롬의 별토 창이라던가, 시크릿탭처럼 다른 곳에서 진행해도되."
+**AI Response**: "기존 Chrome의 demo-colleague 연결을 유지하고, 별도 Chrome 프로필에 같은 Extension을 설치해 demo-keeper로 연결하는 방향을 선택했다. Whale 원인은 확정되지 않았으며 추가 호환성 조사는 중단한다. 새 프로필 준비 후 실제 Store 설치 검증을 이어간다."
+**Context**: 기존 사용자·로그인 세션 분리 요구를 유지하는 검증 환경 선택. 시크릿 모드 지원 확대나 이후 AI-DLC 단계 승인으로 처리하지 않음.
+
+---
+
+## Code Generation — Store 시연 환경 제약
+**Timestamp**: 2026-09-09T03:40:24.605632+00:00
+**User Input**: "별도 크롬 프로필 현재 준비 불가. 기존 keeper logout 아니면 다른 방법 고려 필요. 필요하다면 store창만 따로 보여주는거로 store 구현완료 해도됨. chrome guest 프로필은 확장프로그램 설치 불가."
+**AI Response**: "별도 프로필 준비를 생략하고 기존 Keeper 연결을 유지한다. Store 별도 탭의 게시·목록·설치를 확인하고 두 번째 사용자 브라우저 실행 검증은 보류한다. 구현 완료와 실제 교차 사용자 브라우저 검증 완료를 구분해 기록하며 남은 승인 구현을 이어간다."
+**Context**: 사용자 지정 시연 증거 축소를 수용. 격리·설치 후 자체 검증 요구를 코드에서 제거하지 않으며 미실행 검증을 통과로 기록하지 않음. 이후 단계 승인은 유지.
+
+---
+
+## Code Generation — Step 13 제한된 실제 검증 완료
+**Timestamp**: 2026-09-09T03:46:38.070433+00:00
+**AI Response**: "Keeper에서 개인 Skill과 의존 도구 2개를 명시 게시했다. 공개 투영에서 개인 기본값·원본 시연 값·로그인 필드 제외를 확인했다. 별도 Store UI 로그인은 로컬 자동화 stdin 전달 문제 및 이후 창 부재로 완주하지 못했으며 제품 인증 실패로 단정하지 않는다. 실제 HTTPS API로 demo-keeper 인증·catalog·개인 설치를 확인했다. 설치된 두 버전은 자체 검증 전 상태로 유지된다. Store/repository/UI 검사 11개 및 세 빌드 통과. 추가 모델·MinIO 변경 호출 없음."
+**Context**: 사용자 지정 시연 축소에 따라 Step 13 구현 완료 표시. API 설치와 실제 UI/다른 사용자 브라우저 실행을 구분한다. 다음 Step 14 구현으로 진행 가능하며 이후 단계 승인은 별도다.
+
+---
+
+## Code Generation — Step 14 구현 계속
+**Timestamp**: 2026-09-09T03:47:14.440422+00:00
+**User Input**: "다음 구현 진행"
+**AI Response**: "승인된 Step 14 개선 후보·회귀·명시 적용·이전 버전 복구를 기존 모듈로 구현한다. 실제 재현 근거와 합성 검사를 구분한다."
+
+---

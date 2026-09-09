@@ -1,3 +1,17 @@
 .env
 .env.*
 !.env.example
+
+# Local runtime, dependencies, private state and build outputs
+.local/
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+*.db
+*.db-*
+*.sqlite*
+*.pem
+*.key
+*.crt
+test-results/

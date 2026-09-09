@@ -1,0 +1,16 @@
+CREATE TABLE actors(id TEXT PRIMARY KEY, credential_hash TEXT NOT NULL UNIQUE, created_at INTEGER NOT NULL);
+CREATE TABLE sessions(hash TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, expires_at INTEGER NOT NULL);
+CREATE TABLE jobs(id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, request_key TEXT NOT NULL, fingerprint TEXT NOT NULL, active_key TEXT, revision INTEGER NOT NULL, cancelled INTEGER NOT NULL DEFAULT 0, data TEXT NOT NULL, UNIQUE(owner,request_key));
+CREATE UNIQUE INDEX jobs_active_key ON jobs(owner,active_key) WHERE active_key IS NOT NULL;
+CREATE TABLE actions(id TEXT PRIMARY KEY, job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, step INTEGER NOT NULL, state TEXT NOT NULL, data TEXT NOT NULL, UNIQUE(job_id,step));
+CREATE TABLE assets(id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, revision INTEGER NOT NULL, data TEXT NOT NULL);
+CREATE TABLE versions(id TEXT PRIMARY KEY, asset_id TEXT NOT NULL REFERENCES assets(id) ON DELETE CASCADE, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, data TEXT NOT NULL);
+CREATE TABLE validations(id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE, version_id TEXT NOT NULL REFERENCES versions(id) ON DELETE CASCADE, status TEXT NOT NULL, data TEXT NOT NULL);
+CREATE TABLE publications(id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, version_id TEXT NOT NULL, data TEXT NOT NULL, UNIQUE(owner,version_id));
+CREATE TABLE installations(id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, publication_id TEXT NOT NULL REFERENCES publications(id), data TEXT NOT NULL, UNIQUE(owner,publication_id));
+CREATE TABLE messages(id TEXT PRIMARY KEY, owner TEXT NOT NULL REFERENCES actors(id) ON DELETE CASCADE, conversation_id TEXT NOT NULL, created_at INTEGER NOT NULL, data TEXT NOT NULL);
+CREATE INDEX jobs_owner ON jobs(owner);
+CREATE INDEX actions_job ON actions(job_id);
+CREATE INDEX assets_owner ON assets(owner);
+CREATE INDEX validations_version ON validations(owner,version_id);
+CREATE INDEX messages_conversation ON messages(owner,conversation_id,created_at);
