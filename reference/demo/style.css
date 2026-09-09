@@ -1365,3 +1365,31 @@ tbody tr:last-child td {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+.discovery-progress {
+  padding: 16px;
+  background: #f0f5ed;
+  border: 1px solid #d5e2d1;
+  border-radius: 12px;
+  margin: 0 0 16px;
+  font-size: 12px;
+}
+.discovery-progress .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.discovery-progress progress {
+  width: 100%;
+  height: 9px;
+  accent-color: var(--green);
+  margin: 14px 0 8px;
+}
+.discovery-progress p {
+  font-size: 11px;
+  margin: 0 0 8px;
+}
+.discovery-progress small {
+  font-size: 9px;
+  color: var(--muted);
+}

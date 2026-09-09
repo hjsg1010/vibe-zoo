@@ -26,7 +26,7 @@ it("completes Discover, trial, chat, Record and Skill reuse with matching busine
   vi.useFakeTimers();
   start();
   click("#discover");
-  vi.advanceTimersByTime(600);
+  vi.advanceTimersByTime(2700);
   click("#tool-detail");
   fill("#trial-name", "test-trial");
   submit("#validate-form");
@@ -69,7 +69,7 @@ it("rejects duplicate names, supports previous checkpoints and keeps keys scoped
   vi.useFakeTimers();
   start();
   click("#discover");
-  vi.advanceTimersByTime(600);
+  vi.advanceTimersByTime(2700);
   click("#tool-detail");
   fill("#trial-name", "research-data");
   submit("#validate-form");
@@ -99,7 +99,7 @@ it("reuses a recorded wafer query with new product and equipment and matching me
   click('[data-site="wafer"]');
   expect(document.querySelector("#measurement-count")!.textContent).toBe("48");
   click("#discover");
-  vi.advanceTimersByTime(600);
+  vi.advanceTimersByTime(2700);
   click("#tool-detail");
   submit("#validate-form");
   expect(document.querySelector("#query-scope")!.textContent).toContain(
@@ -145,7 +145,7 @@ it("returns to the guided action after tab exploration and resumes after skippin
   start();
   click('[data-action="guide"]');
   click("#discover");
-  vi.advanceTimersByTime(600);
+  vi.advanceTimersByTime(2700);
   click('[data-action="guide"]');
   expect(document.querySelector(".guide h2")!.textContent).toContain(
     "어떤 도구",
@@ -156,4 +156,35 @@ it("returns to the guided action after tab exploration and resumes after skippin
   expect(
     document.querySelector("#tool-detail")!.classList.contains("focus-target"),
   ).toBe(true);
+});
+
+it("shows Discover phases and opens conversation before trial, and drafts Record notes from actual actions", () => {
+  vi.useFakeTimers();
+  start();
+  click("#discover");
+  expect(document.querySelector("progress")?.getAttribute("value")).toBe("1");
+  vi.advanceTimersByTime(650);
+  expect(document.querySelector("progress")?.getAttribute("value")).toBe("2");
+  vi.advanceTimersByTime(2050);
+  expect(document.querySelector("#chat-form")).toBeTruthy();
+  fill("#chat-input", "안녕");
+  submit("#chat-form");
+  expect(document.querySelector(".keeper-body")!.textContent).toContain(
+    "대화는 바로",
+  );
+  click("#tool-detail");
+  submit("#validate-form");
+  click('[data-tab="learn"]');
+  click("#record-start");
+  click('[data-action="open-create"]');
+  fill("#bucket-name", "record-notes");
+  submit("#bucket-form");
+  click("#record-stop");
+  expect(
+    (document.querySelector("#intent") as HTMLTextAreaElement).value,
+  ).toContain("record-notes");
+  submit("#intent-form");
+  expect(document.querySelector(".skill-card")!.textContent).toContain(
+    "record-notes",
+  );
 });
