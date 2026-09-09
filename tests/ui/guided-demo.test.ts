@@ -417,3 +417,48 @@ it("keeps the browser extension button available to close and reopen Keeper", ()
       .getAttribute("aria-expanded"),
   ).toBe("true");
 });
+
+it("executes mail tools and composes sender filtering, reading and starring with matching state", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="mail"]');
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click("#tool-detail");
+  expect(document.querySelectorAll(".capability-card")).toHaveLength(7);
+  submit("#validate-form");
+  fill("#chat-input", "구매팀 메일을 읽고 별표를 붙여서 모아줘");
+  submit("#chat-form");
+  expect(document.querySelector(".mail-list")!.textContent).toContain("견적");
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(1);
+  expect(
+    document
+      .querySelector('[data-star="mail-3"]')!
+      .getAttribute("aria-pressed"),
+  ).toBe("true");
+  expect(
+    document.querySelector(".message.keeper:last-of-type")!.textContent,
+  ).toContain("복합 작업 완료 · 4단계");
+  click('[data-tab="tools"]');
+  const target = document.querySelector<HTMLSelectElement>(
+    '[data-mail-tool="unstar"] select',
+  )!;
+  target.value = "mail-3";
+  submit('[data-mail-tool="unstar"]');
+  submit('[data-mail-tool="starred"]');
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(0);
+  const reader = document.querySelector<HTMLSelectElement>(
+    '[data-mail-tool="read"] select',
+  )!;
+  reader.value = "mail-3";
+  submit('[data-mail-tool="read"]');
+  expect(document.querySelector(".opened-mail")!.textContent).toContain(
+    "샘플 제작 견적",
+  );
+  submit('[data-mail-tool="sender"]');
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(1);
+  expect(document.querySelector<HTMLSelectElement>("#mail-sender")!.value).toBe(
+    "기획팀",
+  );
+});

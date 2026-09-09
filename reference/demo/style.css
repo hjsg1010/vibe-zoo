@@ -1966,3 +1966,48 @@ tbody tr:last-child td {
 .keeper-launcher .panel-state {
   margin-left: 6px;
 }
+.mail-sender-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  margin: 0 0 15px;
+}
+.mail-sender-filter select {
+  max-width: 200px;
+  padding: 8px;
+}
+.mail-extra-tools {
+  border-top: 1px solid #d9e4da;
+  margin-top: 20px;
+  padding-top: 15px;
+}
+.mail-extra-tools > p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.mail-extra-tools .capability-card > div {
+  min-width: 0;
+  width: 100%;
+}
+.mail-tool-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+.mail-tool-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+}
+.mail-tool-form select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+}
+.tool-run-result {
+  background: #e5f3e9;
+  padding: 10px;
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
