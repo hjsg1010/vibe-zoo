@@ -1582,3 +1582,227 @@ tbody tr:last-child td {
   margin: -7px 0 12px;
   max-width: 390px;
 }
+
+.site-choices {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 1100px;
+}
+.landing {
+  max-width: 1200px;
+}
+.site-choice {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 26px;
+}
+.site-choice.recommended {
+  border: 2px solid var(--green);
+  background: #fbfdf8;
+}
+.mail-icon {
+  background: #fff0e9;
+  color: #cc5647;
+}
+.mail-app {
+  background: white;
+  grid-template-columns: 150px minmax(0, 1fr);
+}
+.mail-app .web-nav {
+  background: #f6f8fc;
+  border-color: #f0f2f5;
+}
+.mail-logo {
+  font-size: 24px;
+  color: #d45b4a;
+  margin: 0 10px 32px;
+  white-space: nowrap;
+}
+.mail-logo b {
+  font-size: 19px;
+  color: #607083;
+  font-weight: 500;
+}
+.mail-app .web-nav > button.selected {
+  background: #d3e3fd;
+  color: #254271;
+  border-radius: 0 20px 20px 0;
+}
+.mail-app .web-main {
+  padding: 20px 18px;
+}
+.mail-search {
+  display: flex;
+  gap: 8px;
+  background: #edf2fa;
+  border-radius: 24px;
+  padding: 6px 8px 6px 15px;
+  align-items: center;
+  margin-bottom: 25px;
+}
+.mail-search input {
+  border: 0;
+  background: transparent;
+  outline-offset: 0;
+  margin: 0;
+  min-width: 0;
+}
+.mail-search button {
+  border-radius: 18px;
+  background: #d3e3fd;
+  color: #254271;
+  padding: 9px 15px;
+  white-space: nowrap;
+}
+.mail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mail-heading h2 {
+  font-size: 19px;
+  margin-bottom: 6px;
+  color: #3c4755;
+}
+.mail-scope {
+  font-size: 11px;
+  color: #748078;
+  margin-bottom: 20px;
+}
+.mail-row {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #e9edf3;
+  background: #f5f8fe;
+  padding: 13px 6px;
+  gap: 6px;
+}
+.mail-row:last-child {
+  border-bottom: 1px solid #e9edf3;
+}
+.star-button {
+  font-size: 18px;
+  background: none;
+  color: #9aa2ae;
+  padding: 4px;
+}
+.star-button[aria-pressed="true"] {
+  color: #d4a02d;
+}
+.mail-preview {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  color: #354457;
+  border-radius: 0;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 35px;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 400;
+}
+.mail-preview > strong {
+  font-size: 10px;
+}
+.mail-preview > span {
+  min-width: 0;
+}
+.mail-preview b,
+.mail-preview small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mail-preview b {
+  font-size: 11px;
+  margin-bottom: 5px;
+}
+.mail-preview small {
+  font-size: 10px;
+  color: #8d99a8;
+}
+.mail-preview time {
+  font-size: 8px;
+  text-align: right;
+}
+.opened-mail {
+  border-top: 1px solid #e9edf3;
+  padding: 20px 5px;
+}
+.opened-mail h2 {
+  font-size: 20px;
+  margin-top: 20px;
+}
+.opened-mail p {
+  font-size: 12px;
+  line-height: 1.9;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+@media (max-width: 1050px) {
+  .site-choice {
+    padding: 22px;
+  }
+  .site-choice h2 {
+    font-size: 21px;
+  }
+  .mail-app {
+    grid-template-columns: 100px minmax(0, 1fr);
+  }
+  .mail-logo {
+    font-size: 21px;
+    margin-left: 3px;
+  }
+  .mail-logo b {
+    font-size: 15px;
+  }
+}
+@media (max-width: 850px) {
+  .mail-app {
+    grid-template-columns: 45px minmax(0, 1fr);
+  }
+  .mail-logo b {
+    display: none;
+  }
+  .mail-logo {
+    margin: 0 0 25px;
+    text-align: center;
+  }
+  .mail-app .web-main {
+    padding: 18px 10px;
+  }
+  .mail-preview {
+    grid-template-columns: minmax(0, 1fr) 30px;
+    gap: 5px;
+  }
+  .mail-preview > strong {
+    grid-column: 1/-1;
+    font-size: 9px;
+  }
+  .site-choices {
+    gap: 12px;
+  }
+  .site-choice {
+    padding: 20px 15px;
+  }
+}
+@media (max-width: 640px) {
+  .site-choices {
+    grid-template-columns: 1fr;
+  }
+  .site-choice {
+    flex-direction: row;
+    align-items: center;
+    padding: 22px;
+    gap: 20px;
+  }
+}

@@ -253,3 +253,45 @@ it("preserves pending wafer filter choices when the panel closes", () => {
     (document.querySelector("#trial-product") as HTMLSelectElement).value,
   ).toBe("DEMO-C");
 });
+
+it("puts mail first and completes search, Record, prefilled notes and reuse with changed input", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  expect(
+    Array.from(document.querySelectorAll("[data-site]")).map(
+      (e) => (e as HTMLElement).dataset.site,
+    ),
+  ).toEqual(["mail", "wafer", "minio"]);
+  click('[data-site="mail"]');
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  expect(document.querySelector("#chat-form")).toBeTruthy();
+  click("#tool-detail");
+  submit("#validate-form");
+  expect(document.querySelector(".mail-scope")!.textContent).toContain("회의");
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(2);
+  fill("#chat-input", "견적 메일을 찾아줘");
+  submit("#chat-form");
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(1);
+  expect(document.querySelector(".mail-list")!.textContent).toContain("견적");
+  click("#record-start");
+  fill("#mail-search", "출장");
+  submit("#web-action");
+  click("#record-stop");
+  expect(
+    (document.querySelector("#intent") as HTMLTextAreaElement).value,
+  ).toContain("출장");
+  submit("#intent-form");
+  fill("#reuse-name", "일정");
+  submit("#reuse-form");
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(3);
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "체험 완료",
+  );
+  click('[data-action="panel"]');
+  click('[data-action="panel"]');
+  expect(document.querySelector(".mail-scope")!.textContent).toContain("일정");
+  click('[data-action="reset"]');
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(6);
+});

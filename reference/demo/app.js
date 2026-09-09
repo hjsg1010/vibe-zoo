@@ -35,6 +35,11 @@
       { name: "model-artifacts", objects: 8, size: 64 },
       { name: "team-reports", objects: 12, size: 32 },
     ],
+    mailQuery: "",
+    mailDraft: "",
+    mailFolder: "inbox",
+    mailStars: [],
+    openedMail: null,
     keys: [],
     keyDraft: "",
     trialFilter: { product: "DEMO-A", tool: "ETCH-01" },
@@ -182,7 +187,74 @@
       "다른 웹앱을 선택하면 MinIO 흐름도 바로 시작할 수 있어요.",
     ],
   ];
-  const steps = () => (s.site === "wafer" ? waferSteps : minioSteps);
+  const mailSteps = [
+    [
+      "익숙한 메일함부터 시작해볼까요?",
+      "왼쪽은 합성 메일함이에요. ‘회의 메일 찾기’처럼 매번 하던 일을 Keeper에게 맡겨보세요. 먼저 Discover를 눌러주세요.",
+      "#discover",
+      "Discover는 화면을 살펴보고 Keeper가 대신할 작업을 찾는 과정이에요.",
+    ],
+    [
+      "‘도구’는 Keeper가 대신할 수 있는 일이에요",
+      "‘메일 찾기’는 검색어로 메일을 찾는 작업이에요. 구성 확인을 눌러 필요한 입력과 실행 순서를 살펴보세요.",
+      "#tool-detail",
+      "어떤 작업을 맡기는지 알고 시험할 수 있어요.",
+    ],
+    [
+      "시험 실행은 작은 리허설이에요",
+      "검색어 ‘회의’로 시험해보세요. 왼쪽에 회의 관련 메일만 남으면 이 도구를 쓸 준비가 된 거예요.",
+      "#validate-form",
+      "시험 입력과 실제 합성 메일 검색 결과가 일치합니다.",
+    ],
+    [
+      "‘대화’에서는 원하는 일을 말해요",
+      "‘견적 메일을 찾아줘’라고 보내보세요. 검색창을 직접 만지는 대신 Keeper가 찾아줍니다.",
+      "#chat-form",
+      "같은 메일 제목과 검색 건수가 메일함과 채팅에 나타나요.",
+    ],
+    [
+      "‘가르치기’에서는 내 방법을 보여줘요",
+      "Record는 클릭과 입력 순서를 기록해요. 시작한 뒤 왼쪽 검색창에서 평소처럼 메일을 찾아보세요.",
+      "#record-start",
+      "직접 보여준 작업을 내 Skill로 재사용할 수 있어요.",
+    ],
+    [
+      "메일함에서 직접 검색해보세요",
+      "왼쪽 검색창에 ‘출장’을 입력하고 검색을 눌러주세요. Keeper가 검색 순서와 입력을 기록합니다.",
+      "#web-action",
+      "출장 메일이 나타나고, Record에 내 검색 행동이 남습니다.",
+    ],
+    [
+      "보여주기가 끝났다면 Record 종료",
+      "기록된 검색어를 확인하고 종료하세요. 녹화한 내용을 바탕으로 설명 초안을 만들어드려요.",
+      "#record-stop",
+      "아무 설명도 처음부터 작성할 필요가 없어요.",
+    ],
+    [
+      "설명을 더하면 더 잘 배워요",
+      "녹화한 검색 내용을 정리해뒀어요. ‘제목을 먼저 확인해줘’처럼 목적이나 선호를 덧붙여 Skill을 만드세요.",
+      "#intent-form",
+      "Skill은 내가 보여준 작업 순서와 설명을 묶은 나만의 방법이에요.",
+    ],
+    [
+      "다른 검색어로 다시 써보세요",
+      "‘일정’처럼 다른 검색어로 Skill을 실행하세요. 한 번 보여준 검색을 새 입력에 그대로 활용합니다.",
+      "#reuse-form",
+      "새 검색어와 메일 목록, 채팅 결과가 함께 바뀝니다.",
+    ],
+    [
+      "익숙한 일을, 더 간단하게",
+      "메일 찾기를 내 Skill로 다시 사용했어요. 메일을 열거나 별표를 눌러 자유롭게 둘러보세요.",
+      ".keeper-brand",
+      "다른 웹앱에서 WaferSight, 마지막으로 MinIO도 체험할 수 있어요.",
+    ],
+  ];
+  const steps = () =>
+    s.site === "mail"
+      ? mailSteps
+      : s.site === "wafer"
+        ? waferSteps
+        : minioSteps;
   const remember = () => {
     checkpoints[s.stage] = structuredClone(s);
   };
@@ -213,6 +285,12 @@
       s.page = "dashboard";
       s.chatDraft = "제품 DEMO-B, 설비 ETCH-02 조건으로 조회해줘";
     }
+    if (site === "mail") {
+      s.page = "inbox";
+      s.trial = "회의";
+      s.reuse = "일정";
+      s.chatDraft = "견적 메일을 찾아줘";
+    }
     checkpoints = [];
     remember();
     render();
@@ -221,7 +299,7 @@
     return `<header class="topbar"><button class="brand" data-action="home"><span>🦁</span> vibe zoo <small>LIVE DEMO</small></button><div class="top-actions"><span class="simulation">인터랙티브 시뮬레이션</span><a href="evidence.html">실제 실행 증거 ↗</a>${s ? '<button class="quiet" data-action="home">다른 웹앱</button><button class="quiet" data-action="reset">처음부터</button>' : ""}</div></header>`;
   }
   function landing() {
-    return `${header()}<main class="landing"><div class="eyebrow">THE WEB YOU KNOW. A NEW WAY TO WORK.</div><h1>웹은 그대로.<br><em>일하는 방식은 새롭게.</em></h1><p>쓰던 웹앱에서 말하고, 한 번 보여주고,<br>나만의 업무 Skill로 다시 해보세요.</p><div class="site-choices"><button class="site-choice" data-site="minio"><span class="site-icon minio-icon">M</span><div><small>OBJECT STORAGE</small><h2>MinIO</h2><p>버킷을 만들고, 프로젝트 준비를 Skill로.</p><strong>약 3분 · 체험 시작 →</strong></div></button><button class="site-choice" data-site="wafer"><span class="site-icon wafer-icon">Si</span><div><small>SEMICONDUCTOR METROLOGY</small><h2>WaferSight</h2><p>조건을 바꾸고, 계측 결과를 한눈에.</p><strong>약 3분 · 체험 시작 →</strong></div></button></div><p class="landing-note">설치·계정·API 키 없이 바로 시작합니다.<br>모든 데이터와 실행은 브라우저 안의 합성 시뮬레이션입니다.</p><div class="zoo-art" aria-hidden="true">🌳 <span>🦒</span> 🌿</div></main>`;
+    return `${header()}<main class="landing"><div class="eyebrow">THE WEB YOU KNOW. A NEW WAY TO WORK.</div><h1>웹은 그대로.<br><em>일하는 방식은 새롭게.</em></h1><p>쓰던 웹앱에서 말하고, 한 번 보여주고,<br>나만의 업무 Skill로 다시 해보세요.</p><div class="site-choices"><button class="site-choice recommended" data-site="mail"><span class="site-icon mail-icon">✉</span><div><small>START HERE · 가장 쉬운 체험</small><h2>메일</h2><p>Gmail처럼 익숙한 메일함.<br>원하는 메일을 말로 찾아보세요.</p><strong>약 2분 · 여기서 시작 →</strong></div></button><button class="site-choice" data-site="wafer"><span class="site-icon wafer-icon">Si</span><div><small>SEMICONDUCTOR METROLOGY</small><h2>WaferSight</h2><p>조건을 바꾸고,<br>계측 결과를 한눈에.</p><strong>약 3분 · 체험 시작 →</strong></div></button><button class="site-choice" data-site="minio"><span class="site-icon minio-icon">M</span><div><small>OBJECT STORAGE</small><h2>MinIO</h2><p>파일 보관함을 만들고,<br>프로젝트 준비를 Skill로.</p><strong>약 3분 · 체험 시작 →</strong></div></button></div><p class="landing-note">설치·계정·API 키 없이 바로 시작합니다.<br>모든 데이터와 실행은 브라우저 안의 합성 시뮬레이션입니다.</p><div class="zoo-art" aria-hidden="true">🌳 <span>🦒</span> 🌿</div></main>`;
   }
   const tabExplanations = {
     chat: [
@@ -316,6 +394,166 @@
   }
   function keys() {
     return `<p class="web-description">이 데모 안에서만 사용하는 Access Key를 만들고 삭제해보세요.</p><form id="key-form" class="inline-form"><label for="key-name">Key Name</label><input id="key-name" name="name" value="${esc(s.keyDraft)}" placeholder="demo-reader" required maxlength="40"><button class="web-button">Create Access Key</button></form><div class="table-wrap"><table><thead><tr><th>NAME</th><th>ACCESS KEY</th><th>STATUS</th><th></th></tr></thead><tbody>${s.keys.map((key, i) => `<tr><td>${esc(key.name)}</td><td><code>DEMO-ONLY-${String(key.number).padStart(3, "0")}</code></td><td>Enabled</td><td><button class="danger" data-delete-key="${i}">Delete</button></td></tr>`).join("") || '<tr><td colspan="4">아직 발급한 데모 키가 없습니다.</td></tr>'}</tbody></table></div>${s.deleteKey !== undefined ? `<div class="confirm-box"><p><strong>${esc(s.keys[s.deleteKey]?.name)}</strong> 데모 키를 삭제할까요?</p><button class="danger" data-action="confirm-delete">이 키 삭제</button><button class="quiet" data-action="cancel-delete">취소</button></div>` : ""}<p class="web-footnote">실제 인증에 쓸 수 없는 합성 키입니다. Secret Key를 발급하거나 저장하지 않습니다.</p>`;
+  }
+
+  const demoMail = [
+    {
+      id: "mail-1",
+      from: "기획팀",
+      subject: "내일 회의 일정 안내",
+      body: "내일 오전 10시 프로젝트 회의가 있습니다. 안건은 새 서비스의 첫 화면입니다.",
+      time: "10:24",
+    },
+    {
+      id: "mail-2",
+      from: "디자인팀",
+      subject: "첫 화면 회의 자료 공유",
+      body: "회의에서 함께 볼 화면 초안을 공유합니다. 사용자가 처음 해야 할 일이 잘 보이는지 확인해주세요.",
+      time: "09:40",
+    },
+    {
+      id: "mail-3",
+      from: "구매팀",
+      subject: "샘플 제작 견적 확인 요청",
+      body: "샘플 제작 견적을 확인해주세요. 항목은 인쇄물과 전시 패널입니다. 이 메일과 금액은 합성 데모 내용입니다.",
+      time: "09:12",
+    },
+    {
+      id: "mail-4",
+      from: "운영팀",
+      subject: "다음 주 출장 일정",
+      body: "다음 주 화요일 전시 준비를 위한 출장이 예정되어 있습니다. 준비물과 참석자를 확인해주세요.",
+      time: "어제",
+    },
+    {
+      id: "mail-5",
+      from: "프로젝트팀",
+      subject: "이번 주 작업 일정 정리",
+      body: "월요일에는 초안 검토, 수요일에는 시연 준비, 금요일에는 결과 공유를 진행합니다.",
+      time: "어제",
+    },
+    {
+      id: "mail-6",
+      from: "지원팀",
+      subject: "데모 계정 사용 안내",
+      body: "이 메일함은 설치 없이 사용하는 합성 체험입니다. 실제 메일을 읽거나 보내지 않습니다.",
+      time: "어제",
+    },
+  ];
+  function mailMatches(query = s.mailQuery) {
+    const q = query.trim().toLowerCase();
+    return demoMail
+      .filter((mail) =>
+        `${mail.from} ${mail.subject} ${mail.body}`.toLowerCase().includes(q),
+      )
+      .filter(
+        (mail) => s.mailFolder !== "starred" || s.mailStars.includes(mail.id),
+      );
+  }
+  function mailbox() {
+    const rows = mailMatches(),
+      opened = demoMail.find((mail) => mail.id === s.openedMail);
+    return `<div class="web-app mail-app"><aside class="web-nav"><div class="mail-logo">✉ <b>메일</b></div><button class="${s.mailFolder === "inbox" ? "selected" : ""}" data-folder="inbox"><span>▣</span><b>받은편지함</b></button><button class="${s.mailFolder === "starred" ? "selected" : ""}" data-folder="starred"><span>☆</span><b>별표편지함</b></button><small class="nav-bottom">DEMO · 합성 메일<br>실제 계정 연결 없음</small></aside><section class="web-main"><form id="web-action" class="mail-search"><label for="mail-search" class="sr-only">메일 검색</label><input id="mail-search" name="query" placeholder="메일 검색 · 예: 회의" value="${esc(s.mailDraft)}"><button aria-label="메일 검색 실행">검색</button></form><div class="mail-heading"><h2>${s.mailFolder === "starred" ? "별표편지함" : "받은편지함"}</h2><span class="web-badge">합성 데모</span></div><p class="mail-scope">${s.mailQuery ? `‘${esc(s.mailQuery)}’ 검색 결과` : "전체 메일"} · <strong>${rows.length}건</strong></p>${opened ? `<article class="opened-mail"><button class="quiet" data-action="mail-back">← 목록으로</button><h2>${esc(opened.subject)}</h2><p class="muted">${esc(opened.from)} → 나 · ${opened.time}</p><p>${esc(opened.body)}</p></article>` : `<div class="mail-list">${rows.map((mail) => `<article class="mail-row"><button class="star-button" aria-label="${esc(mail.subject)} 별표 ${s.mailStars.includes(mail.id) ? "해제" : "추가"}" aria-pressed="${s.mailStars.includes(mail.id)}" data-star="${mail.id}">${s.mailStars.includes(mail.id) ? "★" : "☆"}</button><button class="mail-preview" data-mail-id="${mail.id}"><strong>${mail.from}</strong><span><b>${mail.subject}</b><small>${mail.body}</small></span><time>${mail.time}</time></button></article>`).join("") || '<p class="empty-state">일치하는 메일이 없어요. 다른 검색어를 입력해보세요.</p>'}</div>`}<p class="web-footnote">Gmail처럼 익숙한 검색·목록을 담은 독립 시뮬레이션입니다. 실제 Google 서비스가 아닙니다.</p></section></div>`;
+  }
+  function mailTools() {
+    return `<div class="asset-card"><div class="asset-top"><span class="tool-icon">⌕</span><div><h3>메일 찾기</h3><small>MCP TOOL · browser</small></div><span class="pill ${s.ready ? "ready" : ""}">${s.ready ? "준비 완료" : "시험 필요"}</span></div><p>검색어가 포함된 메일을 찾아 제목과 건수를 확인합니다.</p><button id="tool-detail" class="text-button" data-action="detail" aria-expanded="${s.detail}">도구·Skill 구성 보기 ${s.detail ? "−" : "＋"}</button>${s.detail ? `<div class="tool-detail"><div class="detail-label">필요한 입력</div><p>검색어 · 예: 회의, 견적, 출장</p><div class="detail-label">작업 순서</div><ol><li>메일 검색창에 검색어 입력</li><li>검색 실행</li><li>일치하는 메일 제목과 건수 확인</li></ol><div class="detail-label">성공 확인</div><p>메일함과 Keeper가 같은 결과를 보여줍니다.</p></div>` : ""}${!s.ready && s.detail ? `<form id="validate-form" class="test-form"><label for="trial-name">시험할 검색어</label><input id="trial-name" name="name" value="${esc(s.trial)}" required><button>내 탭에서 시험 실행</button></form>` : ""}</div><details class="asset-card"><summary>메일 읽기 <span class="pill">읽기</span></summary><p>검색한 메일을 열어 보낸 사람·제목·본문을 확인하는 작업이에요.</p></details>`;
+  }
+  function mailLearn() {
+    return `<div class="learn-intro"><span>◉</span><h3>매번 하던 메일 검색을 내 Skill로.</h3><p>Record로 검색 방법을 보여주고 필요한 설명을 덧붙이세요.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((action) => `<li>${esc(action.label)}</li>`).join("") || "<li>왼쪽 검색창에서 메일을 찾아보세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required>${esc(s.intent)}</textarea><p>목적이나 선호를 덧붙이면 내 작업 방식을 더 잘 이해할 수 있어요.</p><button>개인 Skill 만들기</button></form>` : ""}${s.skill ? `<div class="asset-card skill-card"><span class="eyebrow">MY SKILL</span><h3>${esc(s.skill.name)}</h3><p>${esc(s.skill.intent)}</p><details><summary>Skill 구성 보기</summary><ol><li>입력: 새 검색어</li><li>메일 찾기 도구로 검색</li><li>메일 제목과 건수 확인</li></ol></details><form id="reuse-form" class="test-form"><label for="reuse-name">이번에 찾을 검색어</label><input id="reuse-name" name="name" value="${esc(s.reuse)}" required><button>이 입력으로 Skill 실행</button></form></div>` : ""}`;
+  }
+  function runMailSearch(query) {
+    s.mailQuery = query.trim();
+    s.mailDraft = s.mailQuery;
+    s.mailFolder = "inbox";
+    s.openedMail = null;
+    return mailMatches();
+  }
+  function mailSummary(rows) {
+    return `‘${s.mailQuery}’ 메일 ${rows.length}건을 찾았어요.${rows.length ? " " + rows.map((mail) => mail.subject).join(" · ") : " 다른 검색어로 다시 찾아보세요."}`;
+  }
+  function mailSubmit(form, data) {
+    if (form.id === "web-action") {
+      const query = String(data.get("query") || "");
+      const rows = runMailSearch(query);
+      if (s.recording) {
+        s.actions.push({
+          kind: "search_mail",
+          query,
+          count: rows.length,
+          label: `메일 검색 · ${query || "전체"} · ${rows.length}건`,
+        });
+        advance("web");
+      }
+      success(mailSummary(rows));
+      render();
+      return true;
+    }
+    if (form.id === "validate-form" || form.id === "reuse-form") {
+      if (form.id === "reuse-form" && !s.skill) return true;
+      const query = String(data.get("name") || "").trim();
+      if (!query) {
+        fail("찾을 검색어를 입력해주세요. 예: 회의");
+        return true;
+      }
+      const rows = runMailSearch(query);
+      if (form.id === "validate-form" && !rows.length) {
+        fail(
+          "시험할 메일을 찾지 못했어요. 회의·견적·출장 중 하나로 시험해주세요.",
+        );
+        return true;
+      }
+      s.ready = true;
+      s.messages.push({ role: "keeper", text: mailSummary(rows) });
+      success(
+        `${form.id === "validate-form" ? "시험 실행" : "Skill 재사용"} 완료 · ${mailSummary(rows)}`,
+      );
+      advance(form.id === "validate-form" ? "validate" : "reuse");
+      if (form.id === "validate-form") s.tab = "chat";
+      render();
+      return true;
+    }
+    if (form.id === "chat-form") {
+      const text = String(data.get("message") || "");
+      const query = text
+        .replace(/(이메일|메일)(을|를)?/g, "")
+        .replace(
+          /(찾아주세요|찾아줘|검색해주세요|검색해줘|보여주세요|보여줘|관련)/g,
+          "",
+        )
+        .replace(/["'“”]/g, "")
+        .trim();
+      if (!query) {
+        fail("찾을 내용을 알려주세요. 예: 견적 메일을 찾아줘");
+        return true;
+      }
+      const rows = runMailSearch(query);
+      s.messages.push(
+        { role: "user", text },
+        { role: "keeper", text: mailSummary(rows) },
+      );
+      success(mailSummary(rows));
+      advance("chat");
+      render();
+      return true;
+    }
+    if (form.id === "intent-form") {
+      const intent = String(data.get("intent") || "").trim();
+      if (!intent || !s.recorded.length) {
+        fail("검색 시연을 먼저 보여주세요.");
+        return true;
+      }
+      s.skill = {
+        name: "나의 메일 찾기",
+        intent,
+        kind: "search_mail",
+        steps: ["search_mail", "read_results"],
+      };
+      success("메일 찾기 Skill을 만들었어요. 새 검색어로 써보세요.");
+      advance("skill");
+      render();
+      return true;
+    }
+    return false;
   }
 
   const products = ["전체 제품", "DEMO-A", "DEMO-B", "DEMO-C"];
@@ -486,6 +724,7 @@
     return `<div class="tool-detail"><div class="detail-label">필요한 입력</div><p><code>bucketName</code> · 필수<br>생성할 새 버킷 이름</p><div class="detail-label">브라우저 작업 순서</div><ol><li>Create Bucket 열기</li><li>이름 입력 · 생성</li><li>Object Browser에서 이름 확인</li></ol><div class="detail-label">실행 후 확인할 결과</div><p>입력한 이름이 버킷 목록에 표시됩니다.</p></div>`;
   }
   function toolsPanel() {
+    if (s.site === "mail" && s.discovered) return mailTools();
     if (s.site === "wafer" && s.discovered) return waferTools();
     if (!s.discovered)
       return `<div class="empty-state"><span>🌿</span><h3>아직 도구가 없어요</h3><p>Discover로 이 페이지의 업무를 찾아보세요.</p></div>`;
@@ -501,9 +740,10 @@
       .join("");
   }
   function chatPanel() {
-    return `${s.discovered ? "" : `<div class="welcome-art" aria-hidden="true"><span class="tree">♣</span><span>🦁</span><span class="tree small">♣</span></div><h2 class="welcome-title">이 웹에서도,<br>말로 일할 수 있을까요?</h2><p class="muted">Keeper가 현재 페이지를 살펴보고<br>반복할 일을 도구로 준비해요.</p>`}${messages()}${s.discovered && !s.ready ? '<button id="tool-detail" class="secondary full" data-action="detail">도구 후보 2개 · 구성 확인 →</button>' : ""}${s.discovered ? `<form id="chat-form" class="chat-form"><label for="chat-input">Keeper에게 요청하기</label><textarea id="chat-input" name="message" rows="2" required>${esc(s.chatDraft)}</textarea><div><small>${s.site === "wafer" ? "예: DEMO-C, ETCH-01 조건으로 조회해줘" : "예: launch-assets 버킷을 만들어줘"}</small><button aria-label="요청 보내기">보내기 ↑</button></div></form>` : ""}`;
+    return `${s.discovered ? "" : `<div class="welcome-art" aria-hidden="true"><span class="tree">♣</span><span>🦁</span><span class="tree small">♣</span></div><h2 class="welcome-title">이 웹에서도,<br>말로 일할 수 있을까요?</h2><p class="muted">Keeper가 현재 페이지를 살펴보고<br>반복할 일을 도구로 준비해요.</p>`}${messages()}${s.discovered && !s.ready ? '<button id="tool-detail" class="secondary full" data-action="detail">도구 후보 2개 · 구성 확인 →</button>' : ""}${s.discovered ? `<form id="chat-form" class="chat-form"><label for="chat-input">Keeper에게 요청하기</label><textarea id="chat-input" name="message" rows="2" required>${esc(s.chatDraft)}</textarea><div><small>${s.site === "mail" ? "예: 견적 메일을 찾아줘" : s.site === "wafer" ? "예: DEMO-C, ETCH-01 조건으로 조회해줘" : "예: launch-assets 버킷을 만들어줘"}</small><button aria-label="요청 보내기">보내기 ↑</button></div></form>` : ""}`;
   }
   function learnPanel() {
+    if (s.site === "mail") return mailLearn();
     if (s.site === "wafer") return waferLearn();
     return `<div class="learn-intro"><span>◉</span><h3>한 번 보여주면, 다음엔 Skill로.</h3><p>웹앱에서 시연하고 반복하려는 의도를 알려주세요.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>${!s.ready ? '<p class="muted">먼저 Discover에서 도구를 시험해주세요.</p>' : ""}` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((a) => `<li>${esc(a.label)}</li>`).join("") || "<li>왼쪽 웹앱에서 업무를 수행해주세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required placeholder="프로젝트마다 새 버킷을 만들고 확인하고 싶어요.">${esc(s.intent)}</textarea><p>시연 ${s.recorded.length}개 행동 · 이름은 매번 바뀌는 입력으로 연결합니다.</p><button>개인 Skill 만들기</button></form>` : ""}${s.skill ? `<div class="asset-card skill-card"><span class="eyebrow">MY SKILL</span><h3>${esc(s.skill.name)}</h3><p>${esc(s.skill.intent)}</p><details><summary>Skill 구성 보기</summary><ol><li>입력: bucketName</li><li>버킷 생성 도구에 연결</li><li>목록에 입력한 이름이 있는지 확인</li></ol></details><form id="reuse-form" class="test-form"><label for="reuse-name">이번에 사용할 새 버킷 이름</label><input id="reuse-name" name="name" value="${esc(s.reuse)}" required><button>이 입력으로 Skill 실행</button></form></div>` : ""}`;
   }
@@ -517,7 +757,7 @@
     return `<section class="discovery-progress" role="status"><div class="row"><strong>Discover 진행 중</strong><span>${s.discoveryProgress + 1} / 4</span></div><progress max="4" value="${s.discoveryProgress + 1}" aria-label="Discover 진행률"></progress><p>${phases[s.discoveryProgress]}</p><small>합성 화면 관찰 → 도구 후보 구성 · 시뮬레이션</small></section>`;
   }
   function keeper() {
-    return `<aside class="keeper"><div class="keeper-brand"><span>🦁</span><div><strong>Keeper</strong><small>by vibe zoo · 시뮬레이션</small></div><span class="habitat">${s.site === "minio" ? "MinIO" : "WaferSight"}</span><button class="quiet panel-toggle" data-action="panel" aria-expanded="true" aria-label="Keeper 패널 접기">접기 ›</button></div><nav class="keeper-tabs" aria-label="Keeper 메뉴">${[
+    return `<aside class="keeper"><div class="keeper-brand"><span>🦁</span><div><strong>Keeper</strong><small>by vibe zoo · 시뮬레이션</small></div><span class="habitat">${s.site === "mail" ? "메일" : s.site === "minio" ? "MinIO" : "WaferSight"}</span><button class="quiet panel-toggle" data-action="panel" aria-expanded="true" aria-label="Keeper 패널 접기">접기 ›</button></div><nav class="keeper-tabs" aria-label="Keeper 메뉴">${[
       ["chat", "대화"],
       ["tools", "도구"],
       ["learn", "가르치기"],
@@ -535,7 +775,7 @@
       root.innerHTML = landing();
       return;
     }
-    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}"><section class="browser" aria-label="합성 웹앱"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 후보 시험 필요" : "○ 첫 방문 · 도구 없음"}</span>${!s.panelOpen ? '<button class="keeper-launcher" data-action="panel" aria-expanded="false">🦁 Keeper 열기</button>' : ""}</div>${s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && s.panelOpen ? welcomeCard() : ""}`;
+    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}"><section class="browser" aria-label="합성 웹앱"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "mail" ? "mail.demo / inbox" : s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 후보 시험 필요" : "○ 첫 방문 · 도구 없음"}</span>${!s.panelOpen ? '<button class="keeper-launcher" data-action="panel" aria-expanded="false">🦁 Keeper 열기</button>' : ""}</div>${s.site === "mail" ? mailbox() : s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && s.panelOpen ? welcomeCard() : ""}`;
     if (s.guided && s.panelOpen) {
       const target = coachTarget();
       target?.classList.add("focus-target");
@@ -578,6 +818,30 @@
       return;
     }
     if (!s) return;
+    if (element.dataset.mailId) {
+      s.openedMail = element.dataset.mailId;
+      render();
+      return;
+    }
+    if (element.dataset.star) {
+      const id = element.dataset.star;
+      s.mailStars = s.mailStars.includes(id)
+        ? s.mailStars.filter((x) => x !== id)
+        : [...s.mailStars, id];
+      render();
+      return;
+    }
+    if (element.dataset.folder) {
+      s.mailFolder = element.dataset.folder;
+      s.openedMail = null;
+      render();
+      return;
+    }
+    if (element.dataset.action === "mail-back") {
+      s.openedMail = null;
+      render();
+      return;
+    }
     if (element.dataset.tab) {
       s.tab = element.dataset.tab;
       s.tabTip = s.seenTabs.includes(s.tab) ? null : s.tab;
@@ -636,7 +900,13 @@
                 ? "learn"
                 : "chat";
       if (s.stage === 2) s.detail = true;
-      if (s.stage === 5) s.page = s.site === "wafer" ? "dashboard" : "buckets";
+      if (s.stage === 5)
+        s.page =
+          s.site === "mail"
+            ? "inbox"
+            : s.site === "wafer"
+              ? "dashboard"
+              : "buckets";
       render();
       return;
     }
@@ -715,7 +985,12 @@
       s.recording = true;
       s.actions = [];
       s.recorded = [];
-      s.page = s.site === "wafer" ? "dashboard" : "buckets";
+      s.page =
+        s.site === "mail"
+          ? "inbox"
+          : s.site === "wafer"
+            ? "dashboard"
+            : "buckets";
       success("기록을 시작했어요. 왼쪽 웹앱에서 직접 작업해주세요.");
       advance("record");
       render();
@@ -727,9 +1002,11 @@
       s.recorded = structuredClone(s.actions);
       const last = s.recorded.at(-1);
       s.intent =
-        s.site === "wafer"
-          ? `${last.filter.product}, ${last.filter.tool} 조건으로 CD Line Width 계측 현황을 조회하고 결과를 확인했습니다. 제품과 설비를 바꿔 같은 조회를 반복하고 싶어요.`
-          : `${s.recorded.map((action) => action.name).join(", ")} 버킷을 생성하고 목록에서 확인했습니다. 새 버킷 이름으로 같은 작업을 반복하고 싶어요.`;
+        s.site === "mail"
+          ? `검색창에 ‘${last.query}’를 입력해 메일 ${last.count}건을 찾고 제목을 확인했습니다. 검색어를 바꿔 같은 방식으로 메일을 찾고 싶어요.`
+          : s.site === "wafer"
+            ? `${last.filter.product}, ${last.filter.tool} 조건으로 CD Line Width 계측 현황을 조회하고 결과를 확인했습니다. 제품과 설비를 바꿔 같은 조회를 반복하고 싶어요.`
+            : `${s.recorded.map((action) => action.name).join(", ")} 버킷을 생성하고 목록에서 확인했습니다. 새 버킷 이름으로 같은 작업을 반복하고 싶어요.`;
       success(
         "녹화 내용을 설명으로 정리했어요. 목적이나 예외를 덧붙이면 더 잘 배울 수 있어요.",
       );
@@ -794,6 +1071,7 @@
     const map = {
       "bucket-name": "newBucket",
       "key-name": "keyDraft",
+      "mail-search": "mailDraft",
       "trial-name": "trial",
       "chat-input": "chatDraft",
       intent: "intent",
@@ -829,6 +1107,7 @@
       return;
     }
 
+    if (s.site === "mail" && mailSubmit(form, data)) return;
     if (s.site === "wafer" && waferSubmit(form, data)) return;
     if (form.id === "bucket-form") {
       const error = addBucket(name, "web");
