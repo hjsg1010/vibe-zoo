@@ -20,6 +20,19 @@ jobs:
         run: |
           mkdir -p reference/demo/evidence
           cp screenshots/*.png reference/demo/evidence/
+      - name: Version static assets for browser caches
+        run: |
+          python3 - <<'PYTHON'
+          import hashlib
+          from pathlib import Path
+          root = Path("reference/demo")
+          versions = {name: hashlib.sha256((root / name).read_bytes()).hexdigest()[:12] for name in ["app.js", "style.css"]}
+          for page in root.glob("*.html"):
+              content = page.read_text()
+              for name, version in versions.items():
+                  content = content.replace('"' + name + '"', '"' + name + '?v=' + version + '"')
+              page.write_text(content)
+          PYTHON
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
