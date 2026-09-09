@@ -111,6 +111,8 @@ npm run check:public
 
 `demo:stop`과 정리의 프로세스 검사는 WSL/Linux `/proc`을 사용합니다. 종료·재시작은 DB/자산을 보존합니다. 실행 중 연결이 끊기면 결과가 미확인일 수 있으므로 실제 페이지를 확인하고 완료한 변경을 반복하지 마세요.
 
+현재 Backend는 작업당 누적 60,000토큰 제한을 해제하고 사용량만 기록합니다. 작업당 모델 호출 8회·실제 작업 시간 5분·브라우저 동작 60회(사후 확인용 5회 포함), 응답당 출력 상한 8,192토큰과 모델 공급자의 제한은 유지합니다. 이 변경은 Backend 재빌드·재시작으로 적용되며 Extension 재설치는 필요하지 않습니다.
+
 촬영을 마친 뒤 개인 데모 영역을 정말 비워야 할 때만 Backend를 멈추고 `npm run demo:cleanup -- --owner demo-keeper --apply`를 실행합니다. 지정 사용자 개인 자산/설치/작업/세션을 정리하며 접근 코드·다른 사용자·게시된 Store 스냅샷·MinIO 데이터는 보존합니다. **현재 데모 데이터에 이 삭제 명령을 실행하지 않았습니다.**
 
 CI는 [공식 setup-node 사용법](https://github.com/actions/setup-node/tree/v4)에 맞춰 프로젝트 Node 버전을 선택하고 시크릿 없는 합성 단위/통합 검사와 빌드·공개 파일 점검을 수행하도록 작성했습니다. 원격 실행 결과는 [GitHub Actions](https://github.com/hjsg1010/vibe-zoo/actions)에서 확인할 수 있습니다. Bedrock 호출이나 개인 브라우저 실행은 CI에 포함하지 않습니다. `check:public`은 텍스트/파일 검사이며 스크린샷은 별도 육안 검토가 필요합니다.

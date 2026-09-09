@@ -95,6 +95,32 @@ it("keeps unknown token reservations and the browser reconciliation reserve", ()
   );
   expect(reserveBrowser({ ...b, browserOps: 55 }, true).reconcileOps).toBe(1);
 });
+it("allows large follow-up requests while retaining token usage accounting", () => {
+  const before = {
+    ...job().budget,
+    modelRequests: 1,
+    tokens: 70_000,
+    reservedTokens: 90_000,
+  };
+  const reserved = reserveModel(before, 120_000);
+  expect(reserved.modelRequests).toBe(2);
+  expect(reserved.tokens).toBe(before.tokens);
+  expect(reserved.reservedTokens).toBe(218_192);
+  const reservation = reserved.reservedTokens - before.reservedTokens;
+  expect(settleModel(reserved, reservation)).toEqual(reserved);
+  expect(settleModel(reserved, reservation, 100_000)).toMatchObject({
+    tokens: 170_000,
+    reservedTokens: before.reservedTokens,
+  });
+});
+it.each([{ modelRequests: 8 }, { activeMs: 300_000 }])(
+  "retains model request and active time limits: %j",
+  (exhausted) => {
+    expect(() => reserveModel({ ...job().budget, ...exhausted }, 1)).toThrow(
+      "budget_exhausted",
+    );
+  },
+);
 it("serializes commit/enqueue decisions and isolates Record target slots", async () => {
   const c = new SerialControl();
   const order: number[] = [];

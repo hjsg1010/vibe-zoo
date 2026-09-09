@@ -6,13 +6,12 @@ export const limits = {
   reconcileOps: 5,
   modelRequests: 8,
   maxOutput: 8192,
-  totalTokens: 60_000,
 } as const;
 export function reserveModel(b: Budget, inputEstimate: number): Budget {
+  // Track estimated and billed usage without imposing a cumulative token cap.
   const reserved = Math.max(1, Math.ceil(inputEstimate)) + limits.maxOutput;
   if (
     b.modelRequests >= limits.modelRequests ||
-    b.tokens + b.reservedTokens + reserved > limits.totalTokens ||
     b.activeMs >= limits.activeMs
   )
     throw new AppError("budget_exhausted");
