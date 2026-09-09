@@ -300,32 +300,94 @@ it("next-step buttons execute real demo actions and wait for a recorded user inp
   vi.useFakeTimers();
   start();
   const next = () => click('[data-action="focus-step"]');
-  expect(document.querySelector('[data-action="focus-step"]')!.textContent).toBe("다음 단계 →");
+  expect(
+    document.querySelector('[data-action="focus-step"]')!.textContent,
+  ).toBe("다음 단계 →");
   next();
   expect(document.querySelector("progress")).toBeTruthy();
-  expect(document.querySelector('[data-action="focus-step"]')).toHaveProperty("disabled", true);
+  expect(document.querySelector('[data-action="focus-step"]')).toHaveProperty(
+    "disabled",
+    true,
+  );
   vi.advanceTimersByTime(2700);
   next();
   expect(document.querySelector("#validate-form")).toBeTruthy();
   fill("#trial-name", "research-data");
   next();
-  expect(document.querySelector('[role="alert"]')!.textContent).toContain("같은 이름");
+  expect(document.querySelector('[role="alert"]')!.textContent).toContain(
+    "같은 이름",
+  );
   fill("#trial-name", "next-trial");
   next();
-  expect(document.querySelector(".table-wrap")!.textContent).toContain("next-trial");
+  expect(document.querySelector(".table-wrap")!.textContent).toContain(
+    "next-trial",
+  );
   next();
   next();
   next();
   expect(document.activeElement?.id).toBe("bucket-name");
-  expect(document.querySelector("#record-stop")).toHaveProperty("disabled", true);
+  expect(document.querySelector("#record-stop")).toHaveProperty(
+    "disabled",
+    true,
+  );
   fill("#bucket-name", "next-record");
   submit("#bucket-form");
   next();
-  expect(document.querySelector<HTMLTextAreaElement>("#intent")!.value).toContain("next-record");
+  expect(
+    document.querySelector<HTMLTextAreaElement>("#intent")!.value,
+  ).toContain("next-record");
   next();
   fill("#reuse-name", "next-reuse");
   next();
-  expect(document.querySelector(".table-wrap")!.textContent).toContain("next-reuse");
+  expect(document.querySelector(".table-wrap")!.textContent).toContain(
+    "next-reuse",
+  );
   next();
   expect(document.querySelector("#welcome-card")).toBeNull();
+});
+
+it("shows capability meanings together and keeps a generated Skill visible across tabs", () => {
+  vi.useFakeTimers();
+  start();
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click("#tool-detail");
+  const cards = document.querySelectorAll(".capability-card");
+  expect(cards).toHaveLength(2);
+  expect(cards[0]!.textContent).toContain("파일 보관함 만들기");
+  expect(cards[1]!.textContent).toContain("보관함 목록 확인");
+  expect(document.querySelector("#validate-form")!.textContent).toContain(
+    "두 작업을 함께 확인",
+  );
+  expect(document.querySelector(".keeper-body")!.textContent).not.toMatch(
+    /시험 필요|MCP TOOL/,
+  );
+  submit("#validate-form");
+  submit("#chat-form");
+  click("#record-start");
+  click('[data-action="open-create"]');
+  fill("#bucket-name", "skill-visible");
+  submit("#bucket-form");
+  click("#record-stop");
+  submit("#intent-form");
+  expect(document.querySelector(".installed-skill")!.textContent).toContain(
+    "생성 완료",
+  );
+  expect(document.querySelector("#intent-form")).toBeNull();
+  expect(
+    document.querySelector(".installed-skill .skill-recipe")!.textContent,
+  ).toContain("보관함 목록 확인");
+  expect(document.querySelector('[data-tab="learn"]')!.textContent).toContain(
+    "Skill 1",
+  );
+  click('[data-tab="tools"]');
+  expect(document.querySelector(".installed-skill")!.textContent).toContain(
+    "내 Skill 열고 실행하기",
+  );
+  click('.installed-skill [data-tab="learn"]');
+  fill("#reuse-name", "skill-visible-again");
+  submit("#reuse-form");
+  expect(document.querySelector(".table-wrap")!.textContent).toContain(
+    "skill-visible-again",
+  );
 });

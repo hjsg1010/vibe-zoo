@@ -1806,3 +1806,137 @@ tbody tr:last-child td {
     gap: 20px;
   }
 }
+
+/* Capabilities and learned skills have separate, readable hierarchies. */
+.tool-overview h2,
+.my-skills-heading h2 {
+  font-size: 19px;
+  margin: 8px 0;
+}
+.tool-overview p,
+.my-skills-heading p {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.tool-readiness {
+  display: block;
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 10px;
+  background: #edf5ee;
+  font-size: 13px;
+}
+.capability-card {
+  display: flex;
+  gap: 12px;
+  padding: 17px 14px;
+  margin: 10px 0;
+}
+.capability-number {
+  color: #287b69;
+  font-weight: 800;
+  font-size: 14px;
+  padding-top: 2px;
+}
+.capability-card h3 {
+  font-size: 17px;
+  margin: 0 0 9px;
+}
+.capability-card p {
+  line-height: 1.65;
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+.capability-example {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f5f5ee;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.tool-trial {
+  border: 1px solid #bad8ca;
+  border-radius: 12px;
+  padding: 14px;
+}
+.tool-trial h3 {
+  font-size: 16px;
+  margin: 0;
+}
+.tool-trial p {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.my-skills-heading {
+  border-top: 1px solid #d9e4da;
+  margin-top: 24px;
+  padding-top: 16px;
+}
+.installed-skill {
+  border: 2px solid #7dac99;
+  background: #f3faf5;
+  padding: 18px;
+}
+.installed-skill h3 {
+  font-size: 20px;
+  margin: 12px 0;
+}
+.skill-status {
+  display: block;
+  color: #28634f;
+  font-size: 12px;
+  font-weight: 750;
+}
+.skill-definition,
+.skill-empty {
+  font-size: 13px;
+  line-height: 1.65;
+}
+.skill-recipe {
+  padding-left: 22px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.installed-skill details {
+  margin-bottom: 16px;
+}
+.installed-skill h4 {
+  margin: 0;
+  font-size: 15px;
+}
+.tool-overview .eyebrow {
+  font-size: 10px;
+}
+.tool-overview h2 {
+  font-size: 17px;
+}
+.tool-overview p {
+  margin: 5px 0;
+}
+.tool-readiness {
+  padding: 8px 10px;
+  margin: 10px 0;
+}
+.capability-card {
+  padding: 12px;
+}
+.capability-card h3 {
+  margin-bottom: 6px;
+}
+.capability-card p {
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.capability-example {
+  padding: 7px;
+}
+.tool-detail h4 {
+  margin: 5px 0;
+  font-size: 14px;
+}
+.tool-detail p {
+  margin: 7px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
