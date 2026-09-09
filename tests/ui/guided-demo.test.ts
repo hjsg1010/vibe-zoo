@@ -17,6 +17,7 @@ function start() {
   document.body.innerHTML = '<div id="app"></div>';
   window.eval(readFileSync("reference/demo/app.js", "utf8"));
   click('[data-site="minio"]');
+  click("#keeper-toolbar-toggle");
 }
 afterEach(() => {
   vi.useRealTimers();
@@ -62,6 +63,7 @@ it("completes Discover, trial, chat, Record and Skill reuse with matching busine
       document.querySelector(".keeper-body")!.textContent,
   ).toContain("second-project");
   click('[data-action="reset"]');
+  click("#keeper-toolbar-toggle");
   expect(document.querySelector(".table-wrap")!.textContent).not.toContain(
     "second-project",
   );
@@ -99,6 +101,7 @@ it("reuses a recorded wafer query with new product and equipment and matching me
   document.body.innerHTML = '<div id="app"></div>';
   window.eval(readFileSync("reference/demo/app.js", "utf8"));
   click('[data-site="wafer"]');
+  click("#keeper-toolbar-toggle");
   expect(document.querySelector("#measurement-count")!.textContent).toBe("48");
   click("#discover");
   vi.advanceTimersByTime(2700);
@@ -140,6 +143,7 @@ it("reuses a recorded wafer query with new product and equipment and matching me
   click('[data-page="wafermap"]');
   expect(document.querySelectorAll(".wafer-item")).toHaveLength(8);
   click('[data-action="reset"]');
+  click("#keeper-toolbar-toggle");
   expect(document.querySelector("#measurement-count")!.textContent).toBe("48");
   expect(document.querySelector("#discover")).toBeTruthy();
 });
@@ -199,7 +203,7 @@ it("replaces the fixed tour with numbered welcome cards and preserves state whil
   expect(document.querySelector(".guide")).toBeNull();
   expect(document.querySelector("#extras")).toBeNull();
   expect(document.querySelector("#welcome-card")!.textContent).toContain(
-    "1 / 10",
+    "2 / 11",
   );
   click("#discover");
   vi.advanceTimersByTime(2700);
@@ -212,7 +216,7 @@ it("replaces the fixed tour with numbered welcome cards and preserves state whil
     (document.querySelector("#chat-input") as HTMLTextAreaElement).value,
   ).toBe("보존할 초안");
   expect(document.querySelector("#welcome-card")!.textContent).toContain(
-    "2 / 10",
+    "3 / 11",
   );
 });
 
@@ -241,6 +245,7 @@ it("preserves pending wafer filter choices when the panel closes", () => {
   document.body.innerHTML = '<div id="app"></div>';
   window.eval(readFileSync("reference/demo/app.js", "utf8"));
   click('[data-site="wafer"]');
+  click("#keeper-toolbar-toggle");
   click("#discover");
   vi.advanceTimersByTime(2700);
   click("#tool-detail");
@@ -264,6 +269,7 @@ it("puts mail first and completes search, Record, prefilled notes and reuse with
     ),
   ).toEqual(["mail", "wafer", "minio"]);
   click('[data-site="mail"]');
+  click("#keeper-toolbar-toggle");
   click("#discover");
   vi.advanceTimersByTime(2700);
   expect(document.querySelector("#chat-form")).toBeTruthy();
@@ -293,6 +299,7 @@ it("puts mail first and completes search, Record, prefilled notes and reuse with
   click('[data-action="panel"]');
   expect(document.querySelector(".mail-scope")!.textContent).toContain("일정");
   click('[data-action="reset"]');
+  click("#keeper-toolbar-toggle");
   expect(document.querySelectorAll(".mail-row")).toHaveLength(6);
 });
 
@@ -423,6 +430,7 @@ it("executes mail tools and composes sender filtering, reading and starring with
   document.body.innerHTML = '<div id="app"></div>';
   window.eval(readFileSync("reference/demo/app.js", "utf8"));
   click('[data-site="mail"]');
+  click("#keeper-toolbar-toggle");
   click("#discover");
   vi.advanceTimersByTime(2700);
   click("#tool-detail");
@@ -461,4 +469,29 @@ it("executes mail tools and composes sender filtering, reading and starring with
   expect(document.querySelector<HTMLSelectElement>("#mail-sender")!.value).toBe(
     "기획팀",
   );
+});
+
+it("starts the tutorial with the closed extension and only discovers after opening it", () => {
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="mail"]');
+  expect(document.querySelector("#keeper-panel")).toBeNull();
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "1 / 11",
+  );
+  expect(
+    document
+      .querySelector("#keeper-toolbar-toggle")!
+      .classList.contains("focus-target"),
+  ).toBe(true);
+  click("#keeper-toolbar-toggle");
+  expect(document.querySelector("#discover")).toBeTruthy();
+  expect(document.querySelector("progress")).toBeNull();
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "2 / 11",
+  );
+  click('[data-action="back"]');
+  expect(document.querySelector("#keeper-panel")).toBeNull();
+  click('[data-action="focus-step"]');
+  expect(document.querySelector("#discover")).toBeTruthy();
 });

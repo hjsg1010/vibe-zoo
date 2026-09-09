@@ -17,7 +17,8 @@
     site,
     stage: 0,
     guided: true,
-    panelOpen: true,
+    panelOpen: false,
+    entryStarted: false,
     tabTip: null,
     seenTabs: ["chat"],
     tab: "chat",
@@ -322,13 +323,16 @@
     return `<div class="tab-context"><strong>${title}</strong><p>${description}</p></div>`;
   }
   function welcomeCard() {
+    if (!s.entryStarted)
+      return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · 1 / 11</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>먼저 Keeper를 켜볼까요?</h2><p>주소창 오른쪽의 🦁 Keeper 버튼을 눌러주세요. 크롬 확장처럼 옆에 도우미 패널이 열려요.</p><div class="coach-result">웹앱은 그대로 두고 Keeper에게 일을 맡길 수 있어요.</div><div class="coach-actions"><button class="quiet" data-action="focus-step">다음 단계 →</button></div></section>`;
     const [stepTitle, stepDescription, , result] = steps()[s.stage];
     const [title, description] = s.tabTip
       ? tabExplanations[s.tabTip]
       : [stepTitle, stepDescription];
-    return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · ${s.stage + 1} / ${steps().length}</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>${s.busy ? "이 페이지에서 할 수 있는 일을 찾고 있어요" : title}</h2><p>${s.busy ? "화면 관찰부터 후보 구성까지 진행 상황을 확인하세요. 완료되면 바로 대화할 수 있어요." : description}</p><div class="coach-result">${result}</div><div class="coach-actions"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step" ${s.busy ? "disabled" : ""}>${s.stage === 9 ? "체험 완료 ✓" : "다음 단계 →"}</button></div></section>`;
+    return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · ${s.stage + 2} / ${steps().length + 1}</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>${s.busy ? "이 페이지에서 할 수 있는 일을 찾고 있어요" : title}</h2><p>${s.busy ? "화면 관찰부터 후보 구성까지 진행 상황을 확인하세요. 완료되면 바로 대화할 수 있어요." : description}</p><div class="coach-result">${result}</div><div class="coach-actions"><button class="quiet" data-action="back" ${s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step" ${s.busy ? "disabled" : ""}>${s.stage === 9 ? "체험 완료 ✓" : "다음 단계 →"}</button></div></section>`;
   }
   function coachTarget() {
+    if (!s.entryStarted) return root.querySelector("#keeper-toolbar-toggle");
     if (s.tabTip) return root.querySelector(`[data-tab="${s.tabTip}"]`);
     return (
       root.querySelector(
@@ -995,8 +999,8 @@
       root.innerHTML = landing();
       return;
     }
-    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "mail" ? "mail.demo / inbox" : s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 실행 확인 전" : "○ 첫 방문 · 도구 없음"}</span><button id="keeper-toolbar-toggle" class="keeper-launcher" data-action="panel" aria-expanded="${s.panelOpen}" aria-controls="keeper-panel" aria-label="Keeper 확장 패널 ${s.panelOpen ? "닫기" : "열기"}" title="Keeper · 클릭하여 ${s.panelOpen ? "닫기" : "열기"}"><span aria-hidden="true">🦁</span> Keeper <span class="panel-state" aria-hidden="true">${s.panelOpen ? "◧" : "▯"}</span></button></div><section class="browser" aria-label="합성 웹앱">${s.site === "mail" ? mailbox() : s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && s.panelOpen ? welcomeCard() : ""}`;
-    if (s.guided && s.panelOpen) {
+    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "mail" ? "mail.demo / inbox" : s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 실행 확인 전" : "○ 첫 방문 · 도구 없음"}</span><button id="keeper-toolbar-toggle" class="keeper-launcher" data-action="panel" aria-expanded="${s.panelOpen}" aria-controls="keeper-panel" aria-label="Keeper 확장 패널 ${s.panelOpen ? "닫기" : "열기"}" title="Keeper · 클릭하여 ${s.panelOpen ? "닫기" : "열기"}"><span aria-hidden="true">🦁</span> Keeper <span class="panel-state" aria-hidden="true">${s.panelOpen ? "◧" : "▯"}</span></button></div><section class="browser" aria-label="합성 웹앱">${s.site === "mail" ? mailbox() : s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && (s.panelOpen || !s.entryStarted) ? welcomeCard() : ""}`;
+    if (s.guided && (s.panelOpen || !s.entryStarted)) {
       const target = coachTarget();
       target?.classList.add("focus-target");
       if (target && s.stage !== 5)
@@ -1093,6 +1097,10 @@
     const action = element.dataset.action;
     if (action === "panel") {
       s.panelOpen = !s.panelOpen;
+      if (s.panelOpen && !s.entryStarted) {
+        s.entryStarted = true;
+        remember();
+      }
       render();
       return;
     }
@@ -1107,6 +1115,10 @@
       return;
     }
     if (action === "focus-step") {
+      if (!s.entryStarted) {
+        root.querySelector("#keeper-toolbar-toggle").click();
+        return;
+      }
       if (s.busy) return;
       const explainingTab = Boolean(s.tabTip);
       s.panelOpen = true;
@@ -1178,7 +1190,7 @@
     }
     if (action === "guide") {
       s.guided = !s.guided;
-      if (s.guided) {
+      if (s.guided && s.entryStarted) {
         s.panelOpen = true;
         s.tab =
           s.stage <= 2
@@ -1190,6 +1202,12 @@
                 : "chat";
         if (s.stage === 0) s.tab = "chat";
       }
+      render();
+      return;
+    }
+    if (action === "back" && s.stage === 0) {
+      s.entryStarted = false;
+      s.panelOpen = false;
       render();
       return;
     }
