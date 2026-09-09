@@ -7,7 +7,10 @@ import { request } from "node:https";
 import { WebSocket } from "ws";
 import { openDatabase } from "../../src/backend/storage/database.js";
 import { migrate } from "../../src/backend/storage/migrate.js";
-import { Repository } from "../../src/backend/storage/repository.js";
+import {
+  Repository,
+  fingerprint,
+} from "../../src/backend/storage/repository.js";
 import { Registry } from "../../src/backend/assets/registry.js";
 import { Auth } from "../../src/backend/auth.js";
 import { Coordinator } from "../../src/backend/jobs/coordinator.js";
@@ -74,7 +77,11 @@ it("enforces auth, origin, actual TLS/WSS binding, body limits and static paths 
     token?: string,
     origin = extension,
   ) =>
-    new Promise<{ status: number; body: string; corsCredentials:string|undefined }>((resolve, reject) => {
+    new Promise<{
+      status: number;
+      body: string;
+      corsCredentials: string | undefined;
+    }>((resolve, reject) => {
       const req = request(
         {
           hostname: "127.0.0.1",
@@ -93,7 +100,15 @@ it("enforces auth, origin, actual TLS/WSS binding, body limits and static paths 
           res.on("data", (c) => {
             body += String(c);
           });
-          res.on("end", () => resolve({ status: res.statusCode!, body, corsCredentials:res.headers["access-control-allow-credentials"] as string|undefined }));
+          res.on("end", () =>
+            resolve({
+              status: res.statusCode!,
+              body,
+              corsCredentials: res.headers[
+                "access-control-allow-credentials"
+              ] as string | undefined,
+            }),
+          );
         },
       );
       req.on("error", reject);
@@ -135,6 +150,27 @@ it("enforces auth, origin, actual TLS/WSS binding, body limits and static paths 
     expect((await call("/api/state", "GET", undefined, token)).body).toContain(
       "fixture-extension",
     );
+    for (const [id, origin] of [
+      ["current-site", binding.origin],
+      ["other-site", "https://other.example.org"],
+    ]) {
+      repo.createAsset({
+        id: id!,
+        owner: "alice",
+        currentVersionId: null,
+        previousVersionId: null,
+        name: "Synthetic asset",
+        description: "Test",
+        siteKey: fingerprint(origin),
+        enabled: true,
+        revision: 0,
+        defaults: {},
+      });
+    }
+    const visible = JSON.parse(
+      (await call("/api/state", "GET", undefined, token)).body,
+    ) as { assets: { id: string }[] };
+    expect(visible.assets.map((asset) => asset.id)).toEqual(["current-site"]);
     expect((await call("/%2e%2e/package.json")).status).toBe(403);
     const huge = await call(
       "/api/prepare",

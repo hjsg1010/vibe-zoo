@@ -221,8 +221,9 @@ export class Router {
       return true;
     }
     if (path === "/api/state" && method === "GET") {
+      const currentBinding = c.browser.current(owner);
       this.json(res, 200, {
-        binding: c.browser.current(owner) ?? null,
+        binding: currentBinding ?? null,
         jobs: c.repo.jobs(owner).map((j) => ({
           ...j,
           confirmation: c.confirmation(owner, j.id),
@@ -245,15 +246,22 @@ export class Router {
               .find((a) => Object.keys(a.command.inputs).length)?.command
               .inputs ?? {},
         })),
-        assets: c.repo.assets(owner).map((a) => {
-          const v = c.repo.versions(owner, a.id).at(-1);
-          return {
-            ...a,
-            kind: v?.kind,
-            candidateVersionId: v?.id,
-            inputContract: v?.content.inputContract,
-          };
-        }),
+        assets: c.repo
+          .assets(owner)
+          .filter(
+            (a) =>
+              !currentBinding ||
+              a.siteKey === fingerprint(currentBinding.origin),
+          )
+          .map((a) => {
+            const v = c.repo.versions(owner, a.id).at(-1);
+            return {
+              ...a,
+              kind: v?.kind,
+              candidateVersionId: v?.id,
+              inputContract: v?.content.inputContract,
+            };
+          }),
       });
       return true;
     }

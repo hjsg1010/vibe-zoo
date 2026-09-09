@@ -64,3 +64,37 @@ it("shows scoped confirmation with the exact latest revision", () => {
   );
   cleanup();
 });
+
+it("opens Store in an explicit new tab instead of navigating the connected business tab", async () => {
+  const { Keeper } = await import("../../src/extension/panel/app.js");
+  const { ApiClient } = await import("../../src/ui/api-client.js");
+  const create = vi.fn().mockResolvedValue({});
+  vi.stubGlobal("chrome", {
+    storage: {
+      session: {
+        get: vi
+          .fn()
+          .mockResolvedValue({
+            token: "synthetic-token",
+            backendOrigin: "https://demo.example.org",
+          }),
+        set: vi.fn().mockResolvedValue(undefined),
+      },
+    },
+    tabs: { create },
+    runtime: { sendMessage: vi.fn().mockResolvedValue(undefined) },
+  });
+  const state = vi
+    .spyOn(ApiClient.prototype, "state")
+    .mockResolvedValue({ binding: null, jobs: [], assets: [] });
+  try {
+    render(<Keeper />);
+    fireEvent.click(await screen.findByRole("tab", { name: "설정" }));
+    fireEvent.click(screen.getByTestId("open-store"));
+    expect(create).toHaveBeenCalledWith({ url: "https://demo.example.org" });
+  } finally {
+    cleanup();
+    state.mockRestore();
+    vi.unstubAllGlobals();
+  }
+});

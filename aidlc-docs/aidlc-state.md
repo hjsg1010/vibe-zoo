@@ -10,16 +10,16 @@
 - **Project Type**: Greenfield (`brownfield = false`)
 - **Start Date**: 2026-09-08T08:55:25Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 2 — approved 16-step plan; Step 13 Store implementation/validation in progress
+- **Current Stage**: Code Generation Part 2 — implementation and mandatory evidence complete; awaiting code artifact approval
 - **Requirements Depth**: Comprehensive, concise artifacts appropriate to a 1-night/2-day, 5-person hackathon
 - **Last Completed**: Infrastructure Design — U-01 two unit artifacts and shared-resource note approved, 2026-09-09T01:37:45Z
 
 ## Workspace State
 
-- **Existing Product Code**: No
+- **Existing Product Code**: Yes — Backend, Extension and Store implemented during this workflow
 - **Reference Languages**: HTML/CSS/JavaScript in mockups only
-- **Build System**: None
-- **Project Structure**: Workflow rules, requirements, reference mockups; no application yet
+- **Build System**: npm / TypeScript / esbuild; Vitest
+- **Project Structure**: src/, tests/, scripts/, config/, screenshots/; original rules/requirements/mockups preserved
 - **Reverse Engineering Needed**: No — Greenfield; skipped
 - **Previous AI-DLC State / Reverse Engineering Artifacts**: None at workflow start
 - **Workspace Root**: Repository root (`.`); absolute private local path intentionally omitted
@@ -65,7 +65,7 @@
 - [x] NFR Requirements — U-01 complete; two artifacts explicitly approved, 2026-09-09T01:15:35Z
 - [x] NFR Design — U-01 two artifacts explicitly approved, 2026-09-09T01:27:56Z
 - [x] Infrastructure Design — U-01 local demo artifacts explicitly approved, 2026-09-09T01:37:45Z
-- [ ] Code Generation — U-01 Part 1 approved; Part 2 in progress
+- [ ] Code Generation — U-01 Part 1 approved; Part 2 complete, artifact approval pending
 - [ ] Build and Test — planned EXECUTE after all units; not started
 
 ### OPERATIONS
@@ -246,8 +246,12 @@ Existing CC/BR policies and basic quality constraints are carried forward; no op
 
 ## Next Step
 
-Step 14 code is implemented: source-case selection, evidence-grounded immutable candidate, two fresh-input validations, explicit reviewed apply, and previous-version restore. API/Panel/main are connected; normal Agent outcomes now retain version-specific evidence and stop on failure. MCP resolves simultaneously pinned versions with colliding names. Validation: 58-test full suite passed, then the additional idempotent validation/replay test passed (59 total); typecheck/lint and three builds pass. New Backend is running with existing data and authenticated improvement-case query verified. Model total remains 10 calls / 37,747 reported tokens; no model or browser mutations in this implementation verification.
+Request explicit U-01 Code Generation artifact approval, then proceed to the mandatory Build and Test stage. All 16 plan steps and US-01~09 generation/required representative evidence are complete. Stage completion approval itself is still pending.
 
-Step 14 actual improvement demonstration is pending: the known basic Skill failure was already resolved by the earlier Extension input fix, and must not be claimed as a newly reproduced improvement. Keep Step 14 completion/evidence checkbox open. Steps 15–16 (local commands/README/CI/evidence/final review) remain. Later stage approval has not been granted.
+Actual improvement verification passed under the user's approved **controlled fault-injection demo**: isolated unready copy → real failure → real related success and normal activation → Bedrock candidate changing one locator → actual failed-case/regression passes → explicit Keeper apply → improved-version chat/postcondition → Keeper previous-version restore. The improved version was reselected for filming; original assets/versions/publications/installations and MinIO data were preserved. No fabricated success report or relaxed condition was used. Natural-failure search is closed.
 
-Store evidence remains actual Keeper publication and real HTTPS API installation for demo-keeper; installed assets await own-tab validation. The user says second-window verification will be performed in the colleague environment. Do not repeat that setup here or mark it passed before results arrive.
+Store second-user verification remains user-reported colleague-environment evidence, distinguished from direct publication/API checks. AC-10 passed actual local Store-page observation with a visible scope restriction and zero model calls. See the single [implementation summary](construction/vibe-zoo-mvp/code/implementation-summary.md) for all AC evidence and limits.
+
+Final local checks passed: 61 tests across 18 files, typecheck, lint, all three builds. Commands/config/README/CI and actual screenshots 01–04 are ready. README includes filming order, initial states, fresh inputs and visible outcomes. Actual video recording and a fresh filming data directory have not been run. Remote CI remains unverified. Product model total is 13 calls / 49,352 reported tokens; expiry/remaining credit remain unknown. Enabled extensions remain No / N/A.
+
+The one-off fixture bootstrap has been stopped and the standard demo Backend restored. No later AI-DLC approval is assumed. Production routing/HA, extra management UI, broader site support and unrelated refactoring remain out of scope.
