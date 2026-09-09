@@ -139,3 +139,21 @@ it("reuses a recorded wafer query with new product and equipment and matching me
   expect(document.querySelector("#measurement-count")!.textContent).toBe("48");
   expect(document.querySelector("#discover")).toBeTruthy();
 });
+
+it("returns to the guided action after tab exploration and resumes after skipping guidance", () => {
+  vi.useFakeTimers();
+  start();
+  click('[data-action="guide"]');
+  click("#discover");
+  vi.advanceTimersByTime(600);
+  click('[data-action="guide"]');
+  expect(document.querySelector(".guide h2")!.textContent).toContain(
+    "어떤 도구",
+  );
+  click('[data-tab="learn"]');
+  expect(document.querySelector("#tool-detail")).toBeNull();
+  click('[data-action="focus-step"]');
+  expect(
+    document.querySelector("#tool-detail")!.classList.contains("focus-target"),
+  ).toBe(true);
+});

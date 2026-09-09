@@ -217,7 +217,7 @@
   }
   function guide() {
     const [title, description, target, result] = steps()[s.stage];
-    return `<section class="guide ${s.guided ? "" : "free-guide"}" aria-label="체험 안내"><div class="guide-head"><span class="eyebrow">${s.guided ? `GUIDED TOUR · ${String(s.stage + 1).padStart(2, "0")} / ${steps().length}` : "FREE EXPLORATION"}</span><button class="quiet" data-action="guide">${s.guided ? "안내 건너뛰기" : "가이드 이어가기"}</button></div><h2>${s.guided ? title : "내 방식대로 둘러보세요"}</h2><p>${s.guided ? description : "Discover로 도구를 준비하고 채팅·Record·Skill을 자유롭게 사용하세요. 왼쪽 웹앱도 직접 조작할 수 있어요."}</p>${s.guided ? `<div class="expected"><span>확인할 결과</span> ${result}</div><div class="guide-footer"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><span>${s.stage === 9 ? "체험 완료 ✓" : "강조된 요소를 직접 조작하세요"}</span></div>` : ""}</section>`;
+    return `<section class="guide ${s.guided ? "" : "free-guide"}" aria-label="체험 안내"><div class="guide-head"><span class="eyebrow">${s.guided ? `GUIDED TOUR · ${String(s.stage + 1).padStart(2, "0")} / ${steps().length}` : "FREE EXPLORATION"}</span><button class="quiet" data-action="guide">${s.guided ? "안내 건너뛰기" : "가이드 이어가기"}</button></div><h2>${s.guided ? title : "내 방식대로 둘러보세요"}</h2><p>${s.guided ? description : "Discover로 도구를 준비하고 채팅·Record·Skill을 자유롭게 사용하세요. 왼쪽 웹앱도 직접 조작할 수 있어요."}</p>${s.guided ? `<div class="expected"><span>확인할 결과</span> ${result}</div><div class="guide-footer"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step">${s.stage === 9 ? "체험 완료 ✓" : "할 일 위치로 →"}</button></div>` : ""}</section>`;
   }
   function bucketForm() {
     return `<form id="bucket-form" class="inline-form"><label for="bucket-name">Bucket Name</label><input id="bucket-name" name="name" placeholder="my-project" value="${esc(s.newBucket)}" required minlength="3" maxlength="63" pattern="[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"><div class="actions"><button class="web-button">Create Bucket</button><button type="button" class="quiet" data-action="close-create">Cancel</button></div></form>`;
@@ -435,7 +435,7 @@
     return `<div class="learn-intro"><span>◉</span><h3>한 번 보여주면, 다음엔 Skill로.</h3><p>웹앱에서 시연하고 반복하려는 의도를 알려주세요.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>${!s.ready ? '<p class="muted">먼저 Discover에서 도구를 시험해주세요.</p>' : ""}` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((a) => `<li>${esc(a.label)}</li>`).join("") || "<li>왼쪽 웹앱에서 업무를 수행해주세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording ? `<form id="intent-form" class="test-form"><label for="intent">어떤 업무를 반복하고 싶나요?</label><textarea id="intent" name="intent" required placeholder="프로젝트마다 새 버킷을 만들고 확인하고 싶어요.">${esc(s.intent)}</textarea><p>시연 ${s.recorded.length}개 행동 · 이름은 매번 바뀌는 입력으로 연결합니다.</p><button>개인 Skill 만들기</button></form>` : ""}${s.skill ? `<div class="asset-card skill-card"><span class="eyebrow">MY SKILL</span><h3>${esc(s.skill.name)}</h3><p>${esc(s.skill.intent)}</p><details><summary>Skill 구성 보기</summary><ol><li>입력: bucketName</li><li>버킷 생성 도구에 연결</li><li>목록에 입력한 이름이 있는지 확인</li></ol></details><form id="reuse-form" class="test-form"><label for="reuse-name">이번에 사용할 새 버킷 이름</label><input id="reuse-name" name="name" value="${esc(s.reuse)}" required><button>이 입력으로 Skill 실행</button></form></div>` : ""}`;
   }
   function keeper() {
-    return `<aside class="keeper"><div class="keeper-brand"><span>🦁</span><div><strong>Keeper</strong><small>by vibe zoo</small></div><span class="habitat">${s.site === "minio" ? "MinIO" : "WaferSight"}</span></div>${guide()}<nav class="keeper-tabs" aria-label="Keeper 메뉴">${[
+    return `<aside class="keeper"><div class="keeper-brand"><span>🦁</span><div><strong>Keeper</strong><small>by vibe zoo · 시뮬레이션</small></div><span class="habitat">${s.site === "minio" ? "MinIO" : "WaferSight"}</span></div>${guide()}<nav class="keeper-tabs" aria-label="Keeper 메뉴">${[
       ["chat", "대화"],
       ["tools", "도구"],
       ["learn", "가르치기"],
@@ -530,6 +530,22 @@
     }
     if (action === "reset") {
       choose(s.site);
+      return;
+    }
+    if (action === "focus-step") {
+      s.tab =
+        s.stage === 0
+          ? "chat"
+          : s.stage <= 2
+            ? "tools"
+            : s.stage === 3
+              ? "chat"
+              : s.stage <= 8
+                ? "learn"
+                : "chat";
+      if (s.stage === 2) s.detail = true;
+      if (s.stage === 5) s.page = s.site === "wafer" ? "dashboard" : "buckets";
+      render();
       return;
     }
     if (action === "guide") {
