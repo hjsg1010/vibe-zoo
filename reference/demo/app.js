@@ -324,7 +324,7 @@
   }
   function welcomeCard() {
     if (!s.entryStarted)
-      return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · 1 / 11</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>먼저 Keeper를 켜볼까요?</h2><p>주소창 오른쪽의 🦁 Keeper 버튼을 눌러주세요. 크롬 확장처럼 옆에 도우미 패널이 열려요.</p><div class="coach-result">웹앱은 그대로 두고 Keeper에게 일을 맡길 수 있어요.</div><div class="coach-actions"><button class="quiet" data-action="focus-step">다음 단계 →</button></div></section>`;
+      return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · 1 / 11</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>먼저 Keeper를 켜볼까요?</h2><p>주소창 오른쪽의 작은 🦁 확장 아이콘을 눌러주세요. 크롬 확장처럼 옆에 도우미 패널이 열려요.</p><div class="coach-result">웹앱은 그대로 두고 Keeper에게 일을 맡길 수 있어요.</div><div class="coach-actions"><button class="quiet" data-action="focus-step">다음 단계 →</button></div></section>`;
     const [stepTitle, stepDescription, , result] = steps()[s.stage];
     const [title, description] = s.tabTip
       ? tabExplanations[s.tabTip]
@@ -994,12 +994,23 @@
         "",
       )}</nav><div class="keeper-body">${tabContext()}${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice && s.tab !== "tools" && !(s.tab === "learn" && s.skill) ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}</div></aside>`;
   }
+  function browserToolbar() {
+    const icon = (path) =>
+      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+    const address =
+      s.site === "mail"
+        ? "mail.demo/inbox"
+        : s.site === "minio"
+          ? "minio.demo/browser"
+          : "wafersight.demo/dashboard";
+    return `<div class="browser-bar chrome-toolbar"><div class="browser-navigation" aria-hidden="true"><span class="chrome-icon unavailable">${icon('<path d="m12 5-7 7 7 7M5 12h14"/>')}</span><span class="chrome-icon unavailable">${icon('<path d="m12 5 7 7-7 7M5 12h14"/>')}</span><span class="chrome-icon">${icon('<path d="M19 8a8 8 0 1 0 1 7M19 3v5h-5"/>')}</span><span class="chrome-icon">${icon('<path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9"/>')}</span></div><div class="chrome-address"><span class="site-controls" aria-hidden="true">${icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="white"/><circle cx="15" cy="17" r="3" fill="white"/>')}</span><span class="address-text">${address}</span><span class="chrome-icon address-star" aria-hidden="true">${icon('<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/>')}</span></div><div class="chrome-extensions"><button id="keeper-toolbar-toggle" class="chrome-icon keeper-extension-icon" data-action="panel" aria-expanded="${s.panelOpen}" aria-controls="keeper-panel" aria-label="Keeper 확장 패널 ${s.panelOpen ? "닫기" : "열기"}" title="Vibe Zoo Keeper — ${s.panelOpen ? "패널 닫기" : "패널 열기"}"><span class="keeper-mini-logo" aria-hidden="true">🦁</span></button><span class="chrome-icon extension-puzzle" title="확장 프로그램 · 시뮬레이션" aria-hidden="true">${icon('<path d="M9 4H4v6h2a2 2 0 1 1 0 4H4v6h6v-2a2 2 0 1 1 4 0v2h6v-6h-2a2 2 0 1 1 0-4h2V4h-6V3a2.5 2.5 0 0 0-5 0Z"/>')}</span><button class="chrome-icon chrome-panel-icon" data-action="panel" aria-expanded="${s.panelOpen}" aria-controls="keeper-panel" aria-label="사이드 패널 ${s.panelOpen ? "닫기" : "열기"}" title="사이드 패널">${icon('<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M14 4v16m-4-11-3 3 3 3"/>')}</button></div></div>`;
+  }
   function render() {
     if (!s) {
       root.innerHTML = landing();
       return;
     }
-    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "mail" ? "mail.demo / inbox" : s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 실행 확인 전" : "○ 첫 방문 · 도구 없음"}</span><button id="keeper-toolbar-toggle" class="keeper-launcher" data-action="panel" aria-expanded="${s.panelOpen}" aria-controls="keeper-panel" aria-label="Keeper 확장 패널 ${s.panelOpen ? "닫기" : "열기"}" title="Keeper · 클릭하여 ${s.panelOpen ? "닫기" : "열기"}"><span aria-hidden="true">🦁</span> Keeper <span class="panel-state" aria-hidden="true">${s.panelOpen ? "◧" : "▯"}</span></button></div><section class="browser" aria-label="합성 웹앱">${s.site === "mail" ? mailbox() : s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && (s.panelOpen || !s.entryStarted) ? welcomeCard() : ""}`;
+    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}">${browserToolbar()}<section class="browser" aria-label="합성 웹앱">${s.site === "mail" ? mailbox() : s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && (s.panelOpen || !s.entryStarted) ? welcomeCard() : ""}`;
     if (s.guided && (s.panelOpen || !s.entryStarted)) {
       const target = coachTarget();
       target?.classList.add("focus-target");

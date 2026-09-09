@@ -2011,3 +2011,100 @@ tbody tr:last-child td {
   border-radius: 8px;
   overflow-wrap: anywhere;
 }
+
+/* Chrome-like browser chrome; product colors remain inside the page and Keeper. */
+.chrome-toolbar {
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 9px;
+  background: #fff;
+  border-bottom: 1px solid #e3e6ea;
+}
+.browser-navigation,
+.chrome-extensions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.chrome-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  padding: 5px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #50545a;
+}
+.chrome-icon svg,
+.site-controls svg {
+  width: 20px;
+  height: 20px;
+}
+.chrome-icon.unavailable {
+  color: #b4b7bb;
+}
+button.chrome-icon:hover {
+  background: #e8eaed;
+  color: #303134;
+}
+.chrome-address {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  padding: 0 7px;
+  border-radius: 22px;
+  background: #edf2fa;
+  font-size: 13px;
+  color: #303134;
+}
+.site-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  padding: 4px;
+}
+.address-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.keeper-mini-logo {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  background: #224c40;
+  font-size: 14px;
+  line-height: 1;
+}
+.keeper-extension-icon[aria-expanded="true"],
+.chrome-panel-icon[aria-expanded="true"] {
+  background: #e1e3e6;
+}
+@media (max-width: 640px) {
+  .browser-navigation {
+    display: none;
+  }
+  .chrome-toolbar {
+    gap: 5px;
+  }
+  .chrome-extensions {
+    gap: 2px;
+  }
+}
