@@ -2206,3 +2206,57 @@ button.chrome-icon:hover {
   color: #397c63;
   margin-left: 6px;
 }
+.web-execution-feedback {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #e7f5ed;
+  border: 1px solid #82b99a;
+  border-left: 4px solid #26714f;
+  padding: 13px 15px;
+  margin: 0 0 16px;
+  border-radius: 9px;
+  box-shadow: 0 3px 12px #274b3112;
+  animation: execution-arrives 0.35s ease-out;
+}
+.web-execution-feedback strong {
+  color: #235e42;
+  font-size: 15px;
+}
+.web-execution-feedback p {
+  white-space: pre-line;
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.mail-row.action-highlight,
+.opened-mail.action-highlight {
+  background: #fff7d6;
+  box-shadow: inset 4px 0 #e3b138;
+  animation: execution-flash 1.2s ease-out;
+}
+@keyframes execution-arrives {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes execution-flash {
+  from {
+    background: #ffe394;
+  }
+  to {
+    background: #fff7d6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .web-execution-feedback,
+  .mail-row.action-highlight,
+  .opened-mail.action-highlight {
+    animation: none;
+  }
+}

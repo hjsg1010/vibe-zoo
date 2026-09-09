@@ -364,7 +364,7 @@ it("shows capability meanings together and keeps a generated Skill visible acros
   expect(cards[0]!.textContent).toContain("파일 보관함 만들기");
   expect(cards[1]!.textContent).toContain("보관함 목록 확인");
   expect(document.querySelector("#validate-form")!.textContent).toContain(
-    "두 작업을 함께 확인",
+    "파일 보관함 만들기 실행",
   );
   expect(document.querySelector(".keeper-body")!.textContent).not.toMatch(
     /시험 필요|MCP TOOL/,
@@ -388,10 +388,8 @@ it("shows capability meanings together and keeps a generated Skill visible acros
     "Skill 1",
   );
   click('[data-tab="tools"]');
-  expect(document.querySelector(".installed-skill")!.textContent).toContain(
-    "내 Skill 열고 실행하기",
-  );
-  click('.installed-skill [data-tab="learn"]');
+  expect(document.querySelector(".installed-skill")).toBeNull();
+  click('[data-tab="learn"]');
   fill("#reuse-name", "skill-visible-again");
   submit("#reuse-form");
   expect(document.querySelector(".table-wrap")!.textContent).toContain(
@@ -508,8 +506,10 @@ it("keeps all mail tools in one collapsed list and preserves expanded details af
   const catalog = document.querySelector(".tool-catalog")!;
   expect(catalog.querySelectorAll(":scope > details")).toHaveLength(7);
   expect(catalog.querySelectorAll("details[open]")).toHaveLength(0);
-  expect(catalog.querySelector("#validate-form")).toBeNull();
-  expect(document.querySelector(".tool-setup #validate-form")).toBeTruthy();
+  expect(
+    catalog.querySelector('[data-tool-row="primary"] #validate-form'),
+  ).toBeTruthy();
+  expect(document.querySelector(".tool-setup")).toBeNull();
   submit("#validate-form");
   click('[data-tab="tools"]');
   const row = document.querySelector<HTMLDetailsElement>(
@@ -538,4 +538,57 @@ it("enters tools at the top and preserves the reading position after a tool exec
   fill("#trial-name", "research-data");
   submit("#validate-form");
   expect(document.querySelector(".keeper-body")!.scrollTop).toBe(120);
+});
+
+it("executes every discovered mail action without a trial gate and highlights the affected webpage", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="mail"]');
+  click("#keeper-toolbar-toggle");
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click("#tool-detail");
+  expect(
+    document.querySelector(".tool-setup, .my-skills-heading, .installed-skill"),
+  ).toBeNull();
+  expect(
+    document.querySelectorAll(".tool-catalog button:disabled"),
+  ).toHaveLength(0);
+  const row = document.querySelector<HTMLDetailsElement>(
+    '[data-tool-row="star"]',
+  )!;
+  row.open = true;
+  fireEvent(row, new Event("toggle"));
+  document.querySelector<HTMLSelectElement>(
+    '[data-mail-tool="star"] select',
+  )!.value = "mail-3";
+  submit('[data-mail-tool="star"]');
+  expect(
+    document.querySelector(".web-main .web-execution-feedback")!.textContent,
+  ).toContain("별표를 추가했어요");
+  expect(
+    document
+      .querySelector('.mail-row.action-highlight [data-star="mail-3"]')!
+      .getAttribute("aria-pressed"),
+  ).toBe("true");
+  document.querySelector<HTMLSelectElement>(
+    '[data-mail-tool="unstar"] select',
+  )!.value = "mail-3";
+  submit('[data-mail-tool="unstar"]');
+  expect(
+    document.querySelector(".web-execution-feedback")!.textContent,
+  ).toContain("별표를 해제했어요");
+  expect(
+    document
+      .querySelector('[data-star="mail-3"]')!
+      .getAttribute("aria-pressed"),
+  ).toBe("false");
+  document.querySelector<HTMLSelectElement>(
+    '[data-mail-tool="read"] select',
+  )!.value = "mail-3";
+  submit('[data-mail-tool="read"]');
+  expect(
+    document.querySelector(".opened-mail.action-highlight")!.textContent,
+  ).toContain("샘플 제작 견적");
 });
