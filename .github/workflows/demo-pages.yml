@@ -19,7 +19,7 @@ jobs:
       - name: Include existing public Extension evidence
         run: |
           mkdir -p reference/demo/evidence
-          cp screenshots/*.png reference/demo/evidence/
+          cp screenshots/*.png screenshots/*.webp reference/demo/evidence/
       - name: Version static assets for browser caches
         run: |
           python3 - <<'PYTHON'

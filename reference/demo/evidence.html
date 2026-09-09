@@ -18,6 +18,22 @@
         Live Demo는 합성 시뮬레이션입니다. 아래는 별도로 구현한
         Backend·Bedrock·MCP·Extension의 실제 화면 증거입니다.
       </p>
+      <h2>0.2.0 · 실제 YMS 다중 도구와 Skill</h2>
+      <p>실제 YMS DOM에서 8개 도구 후보를 생성하고 기존 자산을 보존하며 3개를 추가했습니다.
+        11개 중 4개 도구와 도구 기반 기본 Skill의 실제 MCP·Extension 검증이 통과했습니다.
+        나머지 후보와 YMS 개인 Skill의 Record 검증은 완료로 계산하지 않습니다.
+        <a href="https://github.com/hjsg1010/vibe-zoo/blob/main/docs/yms-discovery-0.2.md">설계 → 코드 → 실제 검증과 제한</a></p>
+      <div class="evidence-grid">
+        <figure><img src="evidence/10-yms-multiple-tools.png" alt="실제 YMS와 Keeper: 11개 도구 후보, 그중 4개 사용 가능" />
+          <figcaption>실제 Extension의 전체 도구 목록. 준비된 4개와 시험 전 7개를 구분합니다.</figcaption></figure>
+        <figure><img src="evidence/11-yms-tool-based-skills.png" alt="실제 YMS Film Thickness 결과와 두 기본 Skill 및 의존 도구 구성" />
+          <figcaption>필터 기본 Skill 검증 후 Film Thickness 결과. 위쪽 개인 Skill 실패 기록은 별개이며 완료로 계산하지 않습니다.</figcaption></figure>
+        <figure><img src="evidence/12-yms-chat-result.png" alt="실제 Keeper에서 기본 Skill과 트렌드 도구를 함께 실행한 채팅 결과" />
+          <figcaption>채팅에서 공정능력 기본 Skill + 트렌드 Tool 실행. Bedrock 2회·브라우저 2회, 실제 수치 응답.</figcaption></figure>
+        <figure><img src="evidence/13-yms-execution.webp" alt="실제 YMS 도구 목록, 기본 Skill, 채팅 결과 캡처 3장을 순서대로 보여주는 WebP" />
+          <figcaption><a href="evidence/13-yms-execution.webp" download>애니메이션 WebP 다운로드</a> · 실제 캡처 주요 장면 모음. 연속 녹화나 모델 대기 시간 실측 영상은 아닙니다.</figcaption></figure>
+      </div>
+      <h2>이전 MinIO 전체 흐름의 실제 증거</h2>
       <div class="evidence-grid">
         <figure>
           <img
@@ -57,7 +73,7 @@
           </figcaption>
         </figure>
       </div>
-      <h2>최신 Extension 화면 · PR #1 반영</h2>
+      <h2>0.1.1 보존 화면 · PR #1 반영</h2>
       <p>
         아래도 시뮬레이션이 아닌 Chrome의 실제 Keeper 화면입니다. MinIO의 보존된
         자산과 현재 UI를 확인했으며, 캡처를 위해 기존 업무 실행이나 전체 생성을
@@ -94,12 +110,11 @@
           </figcaption>
         </figure>
       </div>
-      <h2>반도체 YMS에 실제 Extension 연결</h2>
+      <h2>0.1.1 당시 YMS 연결·제한 기록</h2>
       <p>
-        제공된 WaferSight 데모 사이트를 실제 Chrome에서 열고 Keeper를
-        연결했습니다. 페이지 관찰 1회·모델 호출 0회이며, 현재 합성 MinIO 모델
-        전송 제한 때문에 도구 생성은 보류됩니다. YMS 도구 생성·업무 실행 성공과
-        구분합니다.
+        아래는 0.1.1 당시의 역사적 실패 기록입니다. 모델 전송 제한으로 생성이 보류됐으며,
+        0.2.0에서는 그 제한을 제거하고 위의 실제 YMS 도구 생성·실행을 검증했습니다.
+        아래 실패 화면을 새 성공 증거로 바꾸거나 삭제하지 않았습니다.
       </p>
       <div class="evidence-grid">
         <figure>
@@ -124,8 +139,8 @@
       </div>
       <h2>시연 영상</h2>
       <p>
-        기능별 촬영 시나리오는 준비되어 있습니다. 현재 공개된 영상 파일이나 영상
-        링크는 아직 없습니다.
+        실제 YMS 캡처 장면을 묶은 애니메이션 WebP를 위에서 제공합니다.
+        연속 촬영 영상은 아직 없으며, 기존 기능별 촬영 시나리오는 README에 보존합니다.
       </p>
       <p>
         <a

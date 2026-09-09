@@ -25,6 +25,8 @@ gh release create v0.2.0 dist/releases/vibe-zoo-keeper-v0.2.0.zip dist/releases/
 
 **0.2.0:** 사이트 주소 사전 등록 없이 현재 HTTP(S) 탭을 Discover합니다. DOM·접근성 근거에서 여러 Tool/MCP 후보를 만들고, 기존 자산을 보존하며 추가 탐색합니다. 후보 전체 목록과 검증을 통과한 사용 가능 도구를 구분합니다. 기본 Skill은 준비된 도구를 선택한 뒤 별도로 생성·검증하며, 개인 Skill은 Record와 의도로 도구를 조합합니다. 이전 단일 도구 생성 기록은 [0.1.1 wrap-up](docs/wrap-up-2026-09-09.md)에 보존합니다.
 
+**최신 실제 YMS 결과:** 11개 도구 후보 추출(8개 + 추가 3개), 4개 도구 실제 검증, 도구 기반 기본 Skill 2개 생성·독립 실행 통과. YMS 개인 Skill은 시연 값 근거 부족으로 차단되어 아직 완료하지 않았습니다. [대표 업무·설계→코드→실행 근거와 제한](docs/yms-discovery-0.2.md)을 한 문서에서 확인하세요.
+
 사이트 제한 제거는 모든 웹사이트 기능의 성공을 보장한다는 뜻은 아닙니다. 로그인된 탭의 관찰 가능한 DOM이 근거이며, iframe·canvas·동적 메뉴와 관찰 한계는 결과에 표시합니다. 한 번의 탐색은 최대 3회 모델 분석·회당 3개 후보로 제한하며, 다른 메뉴를 열거나 필요한 기능을 지정해 추가 탐색할 수 있습니다.
 
 | 기능 | 구현 | 실제 검증과 출처 |
@@ -37,6 +39,8 @@ gh release create v0.2.0 dist/releases/vibe-zoo-keeper-v0.2.0.zip dist/releases/
 | 개선 후보·두 사례 검증·적용·이전 버전 | 완료 | 직접 수행: **오류를 주입한 통제된 데모**에서 실제 실패·Bedrock 후보·두 사례·Keeper 적용·채팅·복구 통과 |
 
 검사 대역은 실제 모델/브라우저 성공으로 계산하지 않습니다. 상세 코드·AC 연결과 증거 한계는 [공통 구현 요약](aidlc-docs/construction/vibe-zoo-mvp/code/implementation-summary.md)을 참조하세요. Code Generation 산출물 승인을 받았고, 별도 깨끗한 작업 디렉터리에서 설치·타입·린트·61개 검사·세 빌드를 재현했습니다. 정식 [Build and Test 결과](aidlc-docs/construction/build-and-test/build-and-test-summary.md)까지 사용자 승인을 받았습니다.
+
+실제 YMS 화면: [전체 도구 목록](screenshots/10-yms-multiple-tools.png) · [기본 Skill 구성](screenshots/11-yms-tool-based-skills.png) · [채팅 실행 결과](screenshots/12-yms-chat-result.png) · **[애니메이션 WebP 다운로드](screenshots/13-yms-execution.webp)**. WebP는 실제 캡처 3장을 순서대로 보여주는 장면 모음이며 연속 녹화가 아닙니다. [웹에서 증거 보기](https://hjsg1010.github.io/vibe-zoo/evidence.html).
 
 ## 설치와 설정
 

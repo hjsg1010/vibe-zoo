@@ -22,7 +22,7 @@ for (const file of new Set(files)) {
     findings.push({ file, reason: "private/runtime artifact" });
     continue;
   }
-  if (/\.(?:png|jpg|jpeg|gif|webm|mp4|woff2?)$/i.test(file)) continue;
+  if (/\.(?:png|jpg|jpeg|gif|webp|webm|mp4|woff2?)$/i.test(file)) continue;
   const text = await readFile(file, "utf8");
   if (secret && text.includes(secret))
     findings.push({ file, reason: "configured model credential" });
