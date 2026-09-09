@@ -592,3 +592,87 @@ it("executes every discovered mail action without a trial gate and highlights th
     document.querySelector(".opened-mail.action-highlight")!.textContent,
   ).toContain("샘플 제작 견적");
 });
+
+it("adds multiple named Skills without overwriting recordings and reuses the selected Skill", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="mail"]');
+  click("#keeper-toolbar-toggle");
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click('[data-tab="learn"]');
+  const save = (query: string, name: string) => {
+    click("#record-start");
+    fill("#mail-search", query);
+    submit("#web-action");
+    click("#record-stop");
+    fill("#skill-name", name);
+    submit("#intent-form");
+  };
+  save("회의", "회의 준비");
+  fill("#reuse-name", "일정");
+  save("견적", "견적 확인");
+  expect(document.querySelectorAll("[data-skill-row]")).toHaveLength(2);
+  expect(document.querySelector('[data-tab="learn"]')!.textContent).toContain(
+    "Skill 2",
+  );
+  expect(
+    document.querySelector('[data-skill-row="skill-1"]')!.textContent,
+  ).toContain("회의");
+  expect(
+    document.querySelector('[data-skill-row="skill-2"]')!.textContent,
+  ).toContain("견적");
+  const first = document.querySelector<HTMLDetailsElement>(
+    '[data-skill-row="skill-1"]',
+  )!;
+  first.open = true;
+  fireEvent(first, new Event("toggle"));
+  expect(document.querySelector<HTMLInputElement>("#reuse-name")!.value).toBe(
+    "일정",
+  );
+  submit("#reuse-form");
+  expect(document.querySelector(".mail-scope")!.textContent).toContain("일정");
+  expect(document.querySelectorAll(".mail-row")).toHaveLength(3);
+  expect(document.querySelectorAll("[data-skill-row]")).toHaveLength(2);
+  click("#record-start");
+  click('[data-action="cancel-record"]');
+  expect(document.querySelectorAll("[data-skill-row]")).toHaveLength(2);
+  expect(document.querySelector(".learn-intro")).toBeNull();
+});
+
+it("records and replays a personal mail starring workflow alongside other Skills", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="mail"]');
+  click("#keeper-toolbar-toggle");
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click('[data-tab="learn"]');
+  click("#record-start");
+  click('[data-star="mail-3"]');
+  click('[data-mail-id="mail-3"]');
+  click("#record-stop");
+  fill("#skill-name", "견적 중요 표시하고 읽기");
+  submit("#intent-form");
+  expect(document.querySelector(".skill-recipe")!.textContent).toContain(
+    "별표",
+  );
+  expect(document.querySelector("#reuse-name")).toBeNull();
+  click('[data-action="mail-back"]');
+  click('[data-star="mail-3"]');
+  expect(
+    document
+      .querySelector('[data-star="mail-3"]')!
+      .getAttribute("aria-pressed"),
+  ).toBe("false");
+  submit("#reuse-form");
+  expect(document.querySelector(".opened-mail")!.textContent).toContain("견적");
+  click('[data-action="mail-back"]');
+  expect(
+    document
+      .querySelector('[data-star="mail-3"]')!
+      .getAttribute("aria-pressed"),
+  ).toBe("true");
+});

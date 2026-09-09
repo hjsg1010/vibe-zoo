@@ -2260,3 +2260,60 @@ button.chrome-icon:hover {
     animation: none;
   }
 }
+.skill-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.skill-list-heading h2 {
+  font-size: 17px;
+  margin: 0;
+}
+.skill-list-heading h2 span {
+  color: #527866;
+  font-size: 12px;
+  margin-left: 5px;
+}
+.skill-list-heading button {
+  font-size: 12px;
+  padding: 8px 10px;
+}
+.skill-catalog {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.skill-catalog:not(:empty) {
+  border: 1px solid #dce4dc;
+}
+.skill-catalog .skill-card {
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  padding: 0;
+  margin: 0;
+}
+.skill-catalog .skill-card + .skill-card {
+  border-top: 1px solid #e7ece7;
+}
+.skill-row-icon {
+  color: #478069;
+  font-size: 16px;
+}
+.record-session,
+.skill-draft {
+  border: 1px solid #c5d9cc;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 15px;
+}
+.skill-catalog .tool-row-label strong {
+  font-size: 14px;
+}
+.skill-catalog .skill-status {
+  padding-top: 10px;
+}
+.skill-catalog .skill-recipe {
+  font-size: 12px;
+}

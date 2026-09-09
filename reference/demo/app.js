@@ -20,6 +20,10 @@
     panelOpen: false,
     entryStarted: false,
     expandedTools: {},
+    skills: [],
+    nextSkillId: 1,
+    expandedSkills: {},
+    skillName: "",
     tabTip: null,
     seenTabs: ["chat"],
     tab: "chat",
@@ -321,7 +325,7 @@
     ],
   };
   function tabContext() {
-    if (s.tab === "tools" && s.discovered) return "";
+    if ((s.tab === "tools" && s.discovered) || s.tab === "learn") return "";
     const [title, description] = tabExplanations[s.tab];
     return `<div class="tab-context"><strong>${title}</strong><p>${description}</p></div>`;
   }
@@ -476,9 +480,6 @@
     const rows = mailMatches(),
       opened = demoMail.find((mail) => mail.id === s.openedMail);
     return `<div class="web-app mail-app"><aside class="web-nav"><div class="mail-logo">✉ <b>메일</b></div><button class="${s.mailFolder === "inbox" ? "selected" : ""}" data-folder="inbox"><span>▣</span><b>받은편지함</b></button><button class="${s.mailFolder === "starred" ? "selected" : ""}" data-folder="starred"><span>☆</span><b>별표편지함</b></button><small class="nav-bottom">DEMO · 합성 메일<br>실제 계정 연결 없음</small></aside><section class="web-main"><form id="web-action" class="mail-search"><label for="mail-search" class="sr-only">메일 검색</label><input id="mail-search" name="query" placeholder="메일 검색 · 예: 회의" value="${esc(s.mailDraft)}"><button aria-label="메일 검색 실행">검색</button></form><label class="mail-sender-filter">발신자 <select id="mail-sender"><option value="">모든 발신자</option>${demoMail.map((m) => `<option ${s.mailSender === m.from ? "selected" : ""}>${esc(m.from)}</option>`).join("")}</select></label><div class="mail-heading"><h2>${s.mailFolder === "starred" ? "별표편지함" : "받은편지함"}</h2><span class="web-badge">합성 데모</span></div><p class="mail-scope">${s.mailQuery ? `‘${esc(s.mailQuery)}’ 검색 결과` : "전체 메일"} · <strong>${rows.length}건</strong></p>${opened ? `<article class="opened-mail action-highlight"><button class="quiet" data-action="mail-back">← 목록으로</button><h2>${esc(opened.subject)}</h2><p class="muted">${esc(opened.from)} → 나 · ${opened.time}</p><p>${esc(opened.body)}</p></article>` : `<div class="mail-list">${rows.map((mail) => `<article class="mail-row ${s.webFeedback?.ids?.includes(mail.id) ? "action-highlight" : ""}"><button class="star-button" aria-label="${esc(mail.subject)} 별표 ${s.mailStars.includes(mail.id) ? "해제" : "추가"}" aria-pressed="${s.mailStars.includes(mail.id)}" data-star="${mail.id}">${s.mailStars.includes(mail.id) ? "★" : "☆"}</button><button class="mail-preview" data-mail-id="${mail.id}"><strong>${mail.from}</strong><span><b>${mail.subject}</b><small>${mail.body}</small></span><time>${mail.time}</time></button></article>`).join("") || '<p class="empty-state">일치하는 메일이 없어요. 다른 검색어를 입력해보세요.</p>'}</div>`}<p class="web-footnote">Gmail처럼 익숙한 검색·목록을 담은 독립 시뮬레이션입니다. 실제 Google 서비스가 아닙니다.</p></section></div>`;
-  }
-  function mailLearn() {
-    return `${installedSkill()}<div class="learn-intro"><span>◉</span><h3>매번 하던 메일 검색을 내 Skill로.</h3><p>Record로 검색 방법을 보여주고 필요한 설명을 덧붙이세요.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((action) => `<li>${esc(action.label)}</li>`).join("") || "<li>왼쪽 검색창에서 메일을 찾아보세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording && (!s.skill || s.learningNew) ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required>${esc(s.intent)}</textarea><p>목적이나 선호를 덧붙이면 내 작업 방식을 더 잘 이해할 수 있어요.</p><button>개인 Skill 만들기</button></form>` : ""}`;
   }
   function runMailSearch(query) {
     s.mailQuery = query.trim();
@@ -672,6 +673,19 @@
         : "대상 메일을 찾지 못했어요. 메일 제목을 알려주세요. 예: 견적 메일 읽어줘";
     return runMailTool(kind, matches[0].id);
   }
+  function recordMailTool(kind, target) {
+    if (!s.recording) return;
+    const title =
+      mailExtraTools.find((tool) => tool[0] === kind)?.[1] || "메일 목록";
+    const mail = demoMail.find((mail) => mail.id === target);
+    s.actions.push({
+      kind: "mail_action",
+      tool: kind,
+      target,
+      label: `${title}${target ? " · " + (mail?.subject || target) : ""}`,
+    });
+    advance("web");
+  }
   function mailSubmit(form, data) {
     if (form.dataset.mailTool) {
       const result = runMailTool(
@@ -679,6 +693,31 @@
         String(data.get("target") || ""),
       );
       s.messages.push({ role: "keeper", text: result });
+      render();
+      return true;
+    }
+    if (
+      form.id === "reuse-form" &&
+      s.skill?.recorded.some((action) => action.kind === "mail_action")
+    ) {
+      const query = String(data.get("name") || "").trim();
+      if (
+        s.skill.recorded.some((action) => action.kind === "search_mail") &&
+        !query
+      ) {
+        fail("검색어를 입력해주세요.");
+        return true;
+      }
+      const results = s.skill.recorded.map((action) =>
+        action.kind === "search_mail"
+          ? mailSummary(runMailSearch(query))
+          : runMailTool(action.tool, action.target),
+      );
+      s.messages.push({
+        role: "keeper",
+        text: `${s.skill.name} 실행\n${results.join("\n")}`,
+      });
+      advance("reuse");
       render();
       return true;
     }
@@ -771,6 +810,7 @@
         steps: ["search_mail", "read_results"],
       };
       success("메일 찾기 Skill을 만들었어요. 새 검색어로 써보세요.");
+      savePersonalSkill(data);
       advance("skill");
       render();
       return true;
@@ -859,9 +899,6 @@
   function waferToolDetails() {
     return `<div class="tool-detail"><div class="detail-label">필요한 입력</div><p><code>product</code> · 제품<br><code>tool</code> · 설비<br>파라미터: CD Line Width (nm)</p><div class="detail-label">브라우저 작업 순서</div><ol><li>대시보드 열기</li><li>제품·설비 조건 선택</li><li>측정 건수·평균·목록 확인</li></ol><div class="detail-label">실행 후 확인할 결과</div><p>선택 조건과 결과 목록의 제품·설비가 일치합니다.</p></div>`;
   }
-  function waferLearn() {
-    return `${installedSkill()}<div class="learn-intro"><span>◉</span><h3>매일 하던 조회를 나만의 Skill로.</h3><p>제품·설비를 바꾸는 시연과 조회 목적을 연결합니다.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((action) => `<li>${esc(action.label)}</li>`).join("") || "<li>왼쪽 제품이나 설비를 다른 값으로 바꾸세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording && (!s.skill || s.learningNew) ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required placeholder="매일 제품별 계측 현황을 확인하고 싶어요.">${esc(s.intent)}</textarea><p>시연 ${s.recorded.length}개 행동 · 제품과 설비를 바뀌는 입력으로 연결합니다.</p><button>개인 Skill 만들기</button></form>` : ""}`;
-  }
   function query(filter) {
     if (!products.includes(filter.product) || !machines.includes(filter.tool))
       return false;
@@ -932,6 +969,7 @@
         steps: ["query_measurements", "summarize_measurements"],
       };
       success("조회 Skill을 만들었어요. 다른 조건으로 재사용하세요.");
+      savePersonalSkill(data);
       advance("skill");
       render();
       return true;
@@ -972,11 +1010,17 @@
             "새 보관함이 목록에 생겼는지도 확인합니다.",
           ];
   }
-  function installedSkill(compact = false) {
-    if (!s.skill)
-      return compact
-        ? '<p class="skill-empty">아직 내 Skill은 없어요. <b>가르치기</b>에서 작업을 보여주면 만들 수 있어요.</p>'
-        : "";
+  function savePersonalSkill(data) {
+    s.skill.id = `skill-${s.nextSkillId++}`;
+    s.skill.name = String(data.get("skillName") || "").trim() || s.skill.name;
+    s.skill.recorded = structuredClone(s.recorded);
+    s.skill.reuse = s.reuse;
+    s.skill.reuseFilter = structuredClone(s.reuseFilter);
+    s.skills.push(s.skill);
+    s.expandedSkills = { [s.skill.id]: true };
+    s.skillName = "";
+  }
+  function installedSkill() {
     const copy = toolCopy();
     const input =
       s.site === "mail"
@@ -984,7 +1028,7 @@
         : s.site === "wafer"
           ? "제품·설비 조건"
           : "새 보관함 이름";
-    return `<section class="asset-card skill-card installed-skill"><span class="skill-status">✓ 생성 완료 · 이 체험에서 사용 가능</span><h3>${esc(s.skill.name)}</h3><p class="skill-definition">내가 보여준 작업을 기억한 <b>개인 Skill</b>이에요.</p><ol class="skill-recipe"><li>${copy[0]}</li><li>${copy[3]}</li></ol><p><b>매번 바꿀 수 있는 값</b> · ${input}</p><details><summary>내가 덧붙인 설명 보기</summary><p>${esc(s.skill.intent)}</p></details>${compact ? '<button class="secondary full" data-tab="learn">내 Skill 열고 실행하기 →</button>' : `<form id="reuse-form" class="test-form"><h4>만든 Skill 바로 사용하기</h4>${s.site === "wafer" ? filterFields("reuse", s.reuseFilter) : `<label for="reuse-name">이번에 사용할 ${input}</label><input id="reuse-name" name="name" value="${esc(s.reuse)}" required>`}<button>이 입력으로 Skill 실행</button></form>`}</section>`;
+    return `<div class="skill-catalog">${s.skills.map((skill) => `<details class="compact-tool skill-card ${s.skill?.id === skill.id ? "installed-skill" : ""}" data-skill-row="${skill.id}" ${s.expandedSkills[skill.id] ? "open" : ""}><summary><span class="skill-row-icon">✦</span><span class="tool-row-label"><strong>${esc(skill.name)}</strong><span>${esc(skill.intent)}</span></span><span class="tool-chevron" aria-hidden="true">⌄</span></summary><div class="tool-row-details"><span class="skill-status">✓ 생성 완료</span><p>${esc(skill.intent)}</p>${s.site === "mail" && skill.recorded.some((action) => action.kind === "mail_action") ? '<p class="muted">메일·발신자 대상은 녹화한 값으로 실행합니다.</p>' : ""}<ol class="skill-recipe">${s.site === "mail" && skill.recorded.some((action) => action.kind === "mail_action") ? skill.recorded.map((action) => `<li>${esc(action.label)}</li>`).join("") : `<li>${copy[0]}</li><li>${copy[3]}</li>`}</ol><details><summary>녹화한 동작 ${skill.recorded.length}개</summary><ol>${skill.recorded.map((action) => `<li>${esc(action.label)}</li>`).join("")}</ol></details>${s.skill?.id === skill.id ? `<form id="reuse-form" data-skill-id="${skill.id}" class="test-form">${s.site === "mail" && !skill.recorded.some((action) => action.kind === "search_mail") ? '<p class="muted">녹화한 메일·발신자를 그대로 사용합니다.</p>' : s.site === "wafer" ? filterFields("reuse", s.reuseFilter) : `<label for="reuse-name">${input}</label><input id="reuse-name" name="name" value="${esc(s.reuse)}" required>`}<button>Skill 실행</button></form>` : ""}</div></details>`).join("")}</div>`;
   }
   function toolsPanel() {
     if (!s.discovered)
@@ -1011,9 +1055,7 @@
     return `${s.discovered ? "" : `<div class="welcome-art" aria-hidden="true"><span class="tree">♣</span><span>🦁</span><span class="tree small">♣</span></div><h2 class="welcome-title">이 웹에서도,<br>말로 일할 수 있을까요?</h2><p class="muted">Keeper가 현재 페이지를 살펴보고<br>반복할 일을 도구로 준비해요.</p>`}${messages()}${s.discovered && !s.ready ? `<button id="tool-detail" class="secondary full" data-action="detail">도구 후보 ${s.site === "mail" ? 7 : 2}개 · 구성 확인 →</button>` : ""}${s.discovered ? `<form id="chat-form" class="chat-form"><label for="chat-input">Keeper에게 요청하기</label><textarea id="chat-input" name="message" rows="2" required>${esc(s.chatDraft)}</textarea><div><small>${s.site === "mail" ? "예: 구매팀 메일을 읽고 별표를 붙여서 모아줘" : s.site === "wafer" ? "예: DEMO-C, ETCH-01 조건으로 조회해줘" : "예: launch-assets 버킷을 만들어줘"}</small><button aria-label="요청 보내기">보내기 ↑</button></div></form>` : ""}`;
   }
   function learnPanel() {
-    if (s.site === "mail") return mailLearn();
-    if (s.site === "wafer") return waferLearn();
-    return `${installedSkill()}<div class="learn-intro"><span>◉</span><h3>한 번 보여주면, 다음엔 Skill로.</h3><p>웹앱에서 시연하고 반복하려는 의도를 알려주세요.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>${!s.ready ? '<p class="muted">먼저 Discover에서 도구를 시험해주세요.</p>' : ""}` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((a) => `<li>${esc(a.label)}</li>`).join("") || "<li>왼쪽 웹앱에서 업무를 수행해주세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording && (!s.skill || s.learningNew) ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required placeholder="프로젝트마다 새 버킷을 만들고 확인하고 싶어요.">${esc(s.intent)}</textarea><p>시연 ${s.recorded.length}개 행동 · 이름은 매번 바뀌는 입력으로 연결합니다.</p><button>개인 Skill 만들기</button></form>` : ""}`;
+    return `<div class="skill-list-heading"><h2>내 Skill <span>${s.skills.length}</span></h2>${!s.recording ? `<button id="record-start" class="secondary" data-action="record" ${!s.discovered ? "disabled" : ""}>＋ 새로 가르치기</button>` : ""}</div>${s.recording ? `<section class="record-session"><div class="recording"><span class="record-dot"></span>녹화 중 · ${s.actions.length}개 동작</div><ol class="record-actions">${s.actions.map((action) => `<li>${esc(action.label)}</li>`).join("")}</ol><div class="actions"><button id="record-stop" data-action="stop" ${!s.actions.length ? "disabled" : ""}>녹화 종료</button><button class="quiet" data-action="cancel-record">취소</button></div></section>` : ""}${s.recorded.length && !s.recording && s.learningNew ? `<form id="intent-form" class="test-form skill-draft"><label for="skill-name">Skill 이름</label><input id="skill-name" name="skillName" value="${esc(s.skillName)}" maxlength="60" required><label for="intent">설명</label><textarea id="intent" name="intent" required>${esc(s.intent)}</textarea><div class="actions"><button>Skill 저장</button><button type="button" class="quiet" data-action="cancel-record">취소</button></div></form>` : ""}${installedSkill()}${!s.skills.length && !s.learningNew ? '<p class="skill-empty">아직 저장한 Skill이 없습니다.</p>' : ""}`;
   }
   function discoveryProgress() {
     const phases = [
@@ -1032,11 +1074,11 @@
     ]
       .map(
         ([tab, label]) =>
-          `<button data-tab="${tab}" aria-selected="${s.tab === tab}">${label}${tab === "tools" && s.discovered ? `<span>${s.site === "mail" ? 7 : 2}</span>` : tab === "learn" && s.skill ? "<span>Skill 1</span>" : ""}</button>`,
+          `<button data-tab="${tab}" aria-selected="${s.tab === tab}">${label}${tab === "tools" && s.discovered ? `<span>${s.site === "mail" ? 7 : 2}</span>` : tab === "learn" && s.skills.length ? `<span>Skill ${s.skills.length}</span>` : ""}</button>`,
       )
       .join(
         "",
-      )}</nav><div class="keeper-body">${tabContext()}${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice && s.tab !== "tools" && !(s.tab === "learn" && s.skill) ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}</div></aside>`;
+      )}</nav><div class="keeper-body">${tabContext()}${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice && s.tab !== "tools" && s.tab !== "learn" ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}</div></aside>`;
   }
   function webFeedback() {
     return s.webFeedback
@@ -1121,12 +1163,14 @@
     }
     if (!s) return;
     if (element.dataset.mailId) {
+      recordMailTool("read", element.dataset.mailId);
       s.openedMail = element.dataset.mailId;
       render();
       return;
     }
     if (element.dataset.star) {
       const id = element.dataset.star;
+      recordMailTool(s.mailStars.includes(id) ? "unstar" : "star", id);
       s.mailStars = s.mailStars.includes(id)
         ? s.mailStars.filter((x) => x !== id)
         : [...s.mailStars, id];
@@ -1134,6 +1178,7 @@
       return;
     }
     if (element.dataset.folder) {
+      if (element.dataset.folder === "starred") recordMailTool("starred", "");
       s.mailFolder = element.dataset.folder;
       s.openedMail = null;
       render();
@@ -1226,6 +1271,7 @@
         render();
         return;
       }
+      if (s.stage === 8 && s.skill) s.expandedSkills[s.skill.id] = true;
       if (s.stage === 9) {
         s.guided = false;
         render();
@@ -1362,11 +1408,23 @@
       render();
       return;
     }
+    if (action === "cancel-record") {
+      s.recording = false;
+      s.learningNew = false;
+      s.actions = [];
+      s.recorded = [];
+      s.skillName = "";
+      s.notice = "";
+      render();
+      return;
+    }
     if (action === "record") {
       s.learningNew = true;
       s.recording = true;
       s.actions = [];
       s.recorded = [];
+      s.expandedSkills = {};
+      s.skillName = "";
       s.page =
         s.site === "mail"
           ? "inbox"
@@ -1383,9 +1441,17 @@
       s.recording = false;
       s.recorded = structuredClone(s.actions);
       const last = s.recorded.at(-1);
+      s.skillName =
+        s.site === "mail"
+          ? `${s.recorded.some((action) => action.kind === "mail_action") ? "나의 메일 정리" : (last.query || "전체") + " 메일 찾기"}`
+          : s.site === "wafer"
+            ? `${last.filter.product} 계측 조회`
+            : `${last.name} 보관함 만들기`;
       s.intent =
         s.site === "mail"
-          ? `검색창에 ‘${last.query}’를 입력해 메일 ${last.count}건을 찾고 제목을 확인했습니다. 검색어를 바꿔 같은 방식으로 메일을 찾고 싶어요.`
+          ? s.recorded.some((action) => action.kind === "mail_action")
+            ? s.recorded.map((action) => action.label).join(" → ")
+            : `검색창에 ‘${last.query}’를 입력해 메일 ${last.count}건을 찾고 제목을 확인했습니다. 검색어를 바꿔 같은 방식으로 메일을 찾고 싶어요.`
           : s.site === "wafer"
             ? `${last.filter.product}, ${last.filter.tool} 조건으로 CD Line Width 계측 현황을 조회하고 결과를 확인했습니다. 제품과 설비를 바꿔 같은 조회를 반복하고 싶어요.`
             : `${s.recorded.map((action) => action.name).join(", ")} 버킷을 생성하고 목록에서 확인했습니다. 새 버킷 이름으로 같은 작업을 반복하고 싶어요.`;
@@ -1421,6 +1487,17 @@
     "toggle",
     (event) => {
       const row = event.target;
+      if (s && row.isConnected && row.dataset.skillRow) {
+        s.expandedSkills[row.dataset.skillRow] = row.open;
+        if (row.open && s.skill?.id !== row.dataset.skillRow) {
+          s.skill = s.skills.find((skill) => skill.id === row.dataset.skillRow);
+          s.reuse = s.skill.reuse;
+          s.reuseFilter = structuredClone(s.skill.reuseFilter);
+          s.expandedSkills = { [s.skill.id]: true };
+          render();
+        }
+        return;
+      }
       if (s && row.isConnected && row.dataset.toolRow)
         s.expandedTools[row.dataset.toolRow] = row.open;
     },
@@ -1428,6 +1505,7 @@
   );
   root.addEventListener("change", (event) => {
     if (s?.site === "mail" && event.target.id === "mail-sender") {
+      if (event.target.value) recordMailTool("sender", event.target.value);
       s.mailSender = event.target.value;
       s.openedMail = null;
       render();
@@ -1437,6 +1515,8 @@
     if (s && draft) {
       s[draft[1] === "trial" ? "trialFilter" : "reuseFilter"][draft[2]] =
         event.target.value;
+      if (draft[1] === "reuse" && s.skill)
+        s.skill.reuseFilter = structuredClone(s.reuseFilter);
       return;
     }
 
@@ -1472,9 +1552,12 @@
       "trial-name": "trial",
       "chat-input": "chatDraft",
       intent: "intent",
+      "skill-name": "skillName",
       "reuse-name": "reuse",
     };
     if (map[event.target.id]) s[map[event.target.id]] = event.target.value;
+    if (event.target.id === "reuse-name" && s.skill)
+      s.skill.reuse = event.target.value;
   });
   root.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1591,6 +1674,7 @@
         steps: ["create_bucket", "list_buckets"],
       };
       success("개인 Skill을 만들었어요. 다른 이름으로 재사용해보세요.");
+      savePersonalSkill(data);
       advance("skill");
       render();
       return;
