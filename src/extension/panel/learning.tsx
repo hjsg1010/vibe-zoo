@@ -140,8 +140,8 @@ export function Learning({
         있어요.
       </p>
       <p className="hint">
-        합성 MinIO 데모에만 사용해주세요. 기록 중 자동 브라우저 작업은 대기하며,
-        Stop만으로 학습하거나 재생하지 않아요.
+        기록 중 자동 브라우저 작업은 대기하며, Stop만으로 학습하거나 재생하지
+        않아요.
       </p>
       {error && (
         <p role="alert" className="error">
@@ -205,7 +205,10 @@ export function Learning({
         </button>
       )}
       {state.jobs
-        .filter((j) => j.kind === "learning")
+        .filter(
+          (j) =>
+            j.kind === "learning" && j.binding.origin === state.binding?.origin,
+        )
         .map((j) => (
           <article className="asset" key={j.id}>
             <h3>{j.purpose}</h3>

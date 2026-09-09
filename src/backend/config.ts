@@ -7,7 +7,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   dotenv({ path: resolve(".env"), processEnv: env, quiet: true });
   const localSchema = z.object({
     extensionIds: z.array(z.string().regex(/^[a-p]{32}$/)).default([]),
-    syntheticOrigin: z.string().url().optional(),
   });
   const local = existsSync(".local/config.json")
     ? localSchema.parse(JSON.parse(readFileSync(".local/config.json", "utf8")))
@@ -34,8 +33,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     extensionIds: env.VIBE_ZOO_ALLOWED_EXTENSION_IDS
       ? env.VIBE_ZOO_ALLOWED_EXTENSION_IDS.split(",").filter(Boolean)
       : local.extensionIds,
-    syntheticOrigin:
-      env.VIBE_ZOO_SYNTHETIC_DEMO_ORIGIN ?? local.syntheticOrigin ?? "",
     region: env.AWS_REGION ?? "ap-northeast-2",
     modelId: env.BEDROCK_MODEL_ID ?? "",
     bearer: env.AWS_BEARER_TOKEN_BEDROCK ?? "",

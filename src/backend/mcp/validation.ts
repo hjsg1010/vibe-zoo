@@ -1,10 +1,11 @@
+import { toolReadinessIssue } from "../../shared/tool-readiness.js";
 import type {
   Version,
   Tool,
   ValidationReport,
   Skill,
 } from "../../shared/asset-schema.js";
-import type { Inputs } from "../../shared/operation-schema.js";
+import { mutates, type Inputs } from "../../shared/operation-schema.js";
 import type { Outcome } from "../../shared/contracts.js";
 import { Coordinator } from "../jobs/coordinator.js";
 import { fingerprint, newId } from "../storage/repository.js";
@@ -28,6 +29,7 @@ export class Validator {
     );
     const tool = version.content as Tool;
     inputSchema(tool).parse(inputs);
+    if (version.discovery) invariant(!toolReadinessIssue(tool), "not_observed");
     const completed: number[] = [];
     let latest: Outcome = { status: "unknown", completed, reason: "실행 전" };
     for (const [index, operation] of tool.adapter.operations.entries()) {
@@ -100,15 +102,35 @@ export class Validator {
     inputs: Inputs,
     originalInputs: Inputs,
     caseKind: ValidationReport["caseKind"] = "different_input",
+    viaMcp = false,
   ): Promise<ValidationReport> {
-    if (caseKind === "different_input")
-      invariant(
-        fingerprint(inputs) !== fingerprint(originalInputs),
-        "invalid_input",
-      );
+    if (caseKind === "different_input") {
+      if (version.content.inputContract.length === 0) {
+        const tools =
+          "steps" in version.content
+            ? version.content.steps.map((s) =>
+                this.c.repo.version(owner, s.toolVersionId),
+              )
+            : [version];
+        invariant(
+          tools.every(
+            (v) =>
+              "adapter" in v.content &&
+              !v.content.adapter.operations.some(mutates),
+          ),
+          "invalid_input",
+        );
+        invariant(!Object.keys(inputs).length, "invalid_input");
+        caseKind = "state_observation";
+      } else
+        invariant(
+          fingerprint(inputs) !== fingerprint(originalInputs),
+          "invalid_input",
+        );
+    }
     const before = this.c.repo.actions(owner, jobId).length;
     let outcome: Outcome;
-    if (version.kind === "tool" && caseKind !== "execution")
+    if (version.kind === "tool" && (caseKind !== "execution" || viaMcp))
       outcome = await this.throughMcp(owner, jobId, version, inputs);
     else outcome = await this.executeVersion(owner, jobId, version, inputs);
     const report: ValidationReport = {

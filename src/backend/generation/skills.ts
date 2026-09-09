@@ -57,13 +57,12 @@ export class SkillLearner {
     private c: Coordinator,
     private model: ModelPort,
     private validator: Validator,
-    private allowedOrigin: string,
+    _legacyOrigin?: string,
   ) {}
   private key(owner: string, b: Binding) {
     return `${owner}:${b.instance}:${b.tabId}`;
   }
   start(owner: string, binding: Binding) {
-    invariant(binding.origin === this.allowedOrigin, "forbidden");
     invariant(
       fingerprint(binding) === fingerprint(this.c.browser.current(owner)),
       "target_changed",
@@ -147,10 +146,7 @@ export class SkillLearner {
     return { job, evidence };
   }
   async compile(job: Job, evidence: Recording): Promise<void> {
-    invariant(
-      job.binding.origin === this.allowedOrigin && !job.candidateId,
-      "forbidden",
-    );
+    invariant(!job.candidateId, "forbidden");
     const tools = job.snapshots
       .map((s) => this.c.repo.version(job.owner, s.versionId))
       .filter((v) => v.kind === "tool");

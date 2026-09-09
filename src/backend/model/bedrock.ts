@@ -15,6 +15,7 @@ import {
 } from "../jobs/budget.js";
 import { AppError, invariant } from "../../shared/errors.js";
 import { assertSafeData } from "../../shared/redaction.js";
+import { fingerprint } from "../storage/repository.js";
 import { log } from "../logger.js";
 export interface ModelPort {
   converse(
@@ -53,8 +54,19 @@ export class BedrockGateway implements ModelPort {
     if (this.config.modelId.includes("[1m]"))
       throw new AppError("invalid_input");
     const j = this.coordinator.repo.getJob(owner, jobId);
-    invariant(j.binding.origin === this.config.syntheticOrigin, "forbidden");
-    assertSafeData(input);
+    invariant(
+      ["http:", "https:"].includes(new URL(j.binding.origin).protocol),
+      "unsupported",
+    );
+    // Scan the page/model payload, not SDK options such as maxTokens.
+    assertSafeData(
+      {
+        messages: input.messages,
+        system: input.system,
+        toolConfig: input.toolConfig,
+      },
+      120000,
+    );
     return this.scheduler.submit(
       j.kind === "execution" ? "interactive" : "background",
       owner,
@@ -64,6 +76,11 @@ export class BedrockGateway implements ModelPort {
           const current = this.coordinator.repo.getJob(owner, jobId);
           invariant(!current.cancelled, "cancelled");
           invariant(this.coordinator.browser.current(owner), "disconnected");
+          invariant(
+            fingerprint(this.coordinator.browser.current(owner)) ===
+              fingerprint(current.binding),
+            "target_changed",
+          );
           const estimate = JSON.stringify(input).length;
           const budget = reserveModel(current.budget, estimate);
           reservation = budget.reservedTokens - current.budget.reservedTokens;
@@ -83,7 +100,10 @@ export class BedrockGateway implements ModelPort {
               modelId: this.config.modelId,
               inferenceConfig: {
                 ...input.inferenceConfig,
-                maxTokens: limits.maxOutput,
+                maxTokens: Math.min(
+                  input.inferenceConfig?.maxTokens ?? 4096,
+                  limits.maxOutput,
+                ),
               },
             }),
             { abortSignal: AbortSignal.timeout(60000) },

@@ -7,7 +7,7 @@ import { Coordinator } from "../../src/backend/jobs/coordinator.js";
 import { ToolGenerator } from "../../src/backend/generation/tools.js";
 import { Validator } from "../../src/backend/mcp/validation.js";
 import { job, binding } from "../helpers/fixtures.js";
-it("uses the same preparation entry for an unregistered site but blocks model transmission outside the approved scope", async () => {
+it("uses the same preparation entry for an unregistered site and sends filtered evidence without an origin allowlist", async () => {
   const db = openDatabase(":memory:");
   migrate(db);
   const repo = new Repository(db);
@@ -48,7 +48,31 @@ it("uses the same preparation entry for an unregistered site but blocks model tr
     {
       converse: async () => {
         sent = true;
-        throw Error();
+        return {
+          $metadata: {},
+          stopReason: "tool_use",
+          usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+          metrics: { latencyMs: 1 },
+          output: {
+            message: {
+              role: "assistant",
+              content: [
+                {
+                  toolUse: {
+                    name: "freeze_discovery",
+                    toolUseId: "fixture",
+                    input: {
+                      tools: [],
+                      remaining: [],
+                      unsupported: ["canvas"],
+                      inspect: null,
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        };
       },
     },
     new Validator(c),
@@ -67,8 +91,8 @@ it("uses the same preparation entry for an unregistered site but blocks model tr
     expect(repo.getJob("alice", created.id).outcome?.reason).toContain(
       "canvas",
     );
-    expect(repo.getJob("alice", created.id).status).toBe("failed");
-    expect(sent).toBe(false);
+    expect(repo.getJob("alice", created.id).status).toBe("completed");
+    expect(sent).toBe(true);
     expect(observed).toBe(true);
     expect(repo.jobs("alice")).toHaveLength(1);
   } finally {

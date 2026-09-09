@@ -22,6 +22,8 @@ export function find(
   return Array.from(doc.querySelectorAll("body *"))
     .filter((el) => visible(el) && !sensitive(el))
     .filter((el) => {
+      if (locator.by === "id" || locator.by === "name")
+        return el.getAttribute(locator.by) === value;
       if (locator.by === "label")
         return normalizeLabel(label(el)) === normalizeLabel(value);
       if (locator.by === "placeholder")
@@ -50,7 +52,7 @@ function unique(
     // Text locators can also match headings or a button's nested text span.
     // Resolve only actual interactive ancestors; never guess between two controls.
     const selector =
-      "button,a[href],input[type=button],input[type=submit],[role=button],[role=link],[role=checkbox]";
+      "button,a[href],input[type=button],input[type=submit],[role=button],[role=link],[role=checkbox],[role=tab],input[type=checkbox]";
     matches = [
       ...new Set(
         matches

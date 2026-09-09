@@ -29,7 +29,7 @@ export class AssetStore {
   constructor(
     private c: Coordinator,
     private validator: Validator,
-    private allowedOrigin: string,
+    _legacyOrigin?: string,
   ) {}
   private get repo(): Repository {
     return this.c.repo;
@@ -46,7 +46,7 @@ export class AssetStore {
     invariant(
       asset.revision === data.revision &&
         main.assetId === asset.id &&
-        main.siteKey === fingerprint(this.allowedOrigin),
+        main.siteKey === asset.siteKey,
       "conflict",
     );
     const versions: Version[] = [];
@@ -67,7 +67,8 @@ export class AssetStore {
       name: data.name,
       description: data.description,
       author: data.author,
-      scope: "MinIO 합성 데모",
+      scope: "게시자가 검증한 웹앱 · 설치자 재검증 필요",
+      siteKey: main.siteKey,
       mainRef: refs.get(main.id)!,
       versions: versions.map((v) => ({
         ref: refs.get(v.id)!,
@@ -91,7 +92,7 @@ export class AssetStore {
       validation:
         "게시자의 해당 버전 검증 통과. 설치자는 자기 로그인 탭에서 다시 검증해야 합니다.",
       limitations:
-        "표준 DOM과 합성 MinIO 범위. 로그인·개인 기본값·시연 근거는 공유하지 않습니다.",
+        "게시자가 관찰·검증한 DOM 기능 범위. 로그인·개인 기본값·시연 근거는 공유하지 않습니다.",
     };
     assertSafeData(publication);
     const text = JSON.stringify(publication);
@@ -150,7 +151,23 @@ export class AssetStore {
       .prepare("SELECT data FROM publications WHERE id=?")
       .get(id);
     invariant(row, "not_found");
-    return JSON.parse(String(row.data)) as Publication;
+    const publication = JSON.parse(String(row.data)) as Publication;
+    if (!publication.siteKey) {
+      const source = this.repo.db
+        .prepare(
+          "SELECT v.data FROM versions v JOIN publications p ON p.version_id=v.id WHERE p.id=?",
+        )
+        .get(id);
+      const installed = this.repo.db
+        .prepare(
+          "SELECT v.data FROM versions v JOIN installations i ON json_extract(i.data, '$.versionId')=v.id WHERE i.publication_id=? LIMIT 1",
+        )
+        .get(id);
+      const data = source?.data ?? installed?.data;
+      if (data)
+        publication.siteKey = (JSON.parse(String(data)) as Version).siteKey;
+    }
+    return publication;
   }
   installation(owner: string, id: string): Installation | undefined {
     const row = this.repo.db
@@ -182,7 +199,8 @@ export class AssetStore {
                 })),
               }
             : shared.content;
-        const siteKey = fingerprint(this.allowedOrigin);
+        const siteKey = publication.siteKey;
+        invariant(siteKey, "not_observed");
         this.repo.createAsset({
           id: assetId,
           owner,
@@ -248,8 +266,14 @@ export class AssetStore {
       const version = this.repo.version(job.owner, item.versionId);
       inputSchema(version.content).parse(item.inputs);
     }
+    const parameterized = cases.filter(
+      (item) =>
+        this.repo.version(job.owner, item.versionId).content.inputContract
+          .length > 0,
+    );
     invariant(
-      new Set(cases.map((c) => fingerprint(c.inputs))).size === cases.length,
+      new Set(parameterized.map((item) => fingerprint(item.inputs))).size ===
+        parameterized.length,
       "invalid_input",
     );
     for (const item of cases) {

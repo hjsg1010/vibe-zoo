@@ -247,6 +247,7 @@ export class Repository {
         const usesAsset =
           job.snapshots.some((s) => s.assetId === id) ||
           versionIds.has(job.candidateId ?? "") ||
+          job.discovery?.versionIds.some((id) => versionIds.has(id)) ||
           versionIds.has(job.assetValidation?.versionId ?? "") ||
           job.improvement?.assetId === id;
         if (usesAsset)
@@ -418,7 +419,14 @@ export class Repository {
       const reports = this.reports(owner, versionId).filter(
         (r) => r.jobId === jobId && r.status === "passed",
       );
-      invariant(reports.some((r) => r.caseKind === "different_input"));
+      invariant(
+        reports.some(
+          (r) =>
+            r.caseKind === "different_input" ||
+            (v.content.inputContract.length === 0 &&
+              r.caseKind === "state_observation"),
+        ),
+      );
       if (j.kind === "improvement")
         invariant(
           explicitImprovement &&

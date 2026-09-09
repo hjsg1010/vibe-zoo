@@ -10,6 +10,10 @@ export type State = {
   })[];
   assets: (PersonalAsset & {
     kind?: string;
+    suggestedInputs?: import("../shared/operation-schema.js").Inputs;
+    validationStatus?: string;
+    readinessIssue?: string;
+    validationReason?: string;
     candidateVersionId?: string;
     inputContract?: import("../shared/asset-schema.js").Tool["inputContract"];
   })[];

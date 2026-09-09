@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Vibe Zoo Keeper",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "현재 탭에서 도구와 Skill을 만들고 검증하는 Keeper",
   "permissions": ["sidePanel", "activeTab", "scripting", "storage"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],

@@ -1,15 +1,11 @@
 import { z } from "zod";
-import {
-  generatedBundleSchema,
-  type Version,
-  type PersonalAsset,
-} from "../../shared/asset-schema.js";
+import { type Version } from "../../shared/asset-schema.js";
 import { assertSafeData } from "../../shared/redaction.js";
-import { observationSchema, type Job } from "../../shared/contracts.js";
-import { invariant, AppError } from "../../shared/errors.js";
+import { type Job } from "../../shared/contracts.js";
+import { invariant } from "../../shared/errors.js";
 import { Coordinator } from "../jobs/coordinator.js";
 import type { ModelPort } from "../model/bedrock.js";
-import { generationPrompt } from "./prompts.js";
+import { Discovery } from "./discovery.js";
 import { fingerprint, newId } from "../storage/repository.js";
 import { Validator } from "../mcp/validation.js";
 import { postconditionSchema } from "../../shared/operation-schema.js";
@@ -18,9 +14,30 @@ export class ToolGenerator {
     private c: Coordinator,
     private model: ModelPort,
     private validator: Validator,
-    private allowedOrigin: string,
+    _legacyOrigin?: string,
   ) {}
   async run(job: Job): Promise<void> {
+    if (job.assetExecution) {
+      const version = this.c.repo.version(
+        job.owner,
+        job.assetExecution.versionId,
+      );
+      const report = await this.validator.run(
+        job.owner,
+        job.id,
+        version,
+        job.inputs,
+        job.inputs,
+        "execution",
+        true,
+      );
+      this.finish(
+        job,
+        report.outcome?.reason ?? "실행 결과 미확인",
+        report.status === "passed",
+      );
+      return;
+    }
     if (job.assetValidation) {
       const request = job.assetValidation;
       const version = this.c.repo.version(job.owner, request.versionId);
@@ -45,7 +62,9 @@ export class ToolGenerator {
       this.finish(
         job,
         report.status === "passed"
-          ? "선택한 자산을 새 입력으로 독립 검증했습니다."
+          ? version.content.inputContract.length
+            ? "선택한 자산을 새 입력으로 독립 검증했습니다."
+            : "실제 MCP 호출 후 현재 페이지의 결과 상태를 독립 검증했습니다."
           : "선택한 자산의 사후 조건을 확인하지 못했습니다.",
         report.status === "passed",
       );
@@ -59,141 +78,8 @@ export class ToolGenerator {
       await this.resumeCandidate(job);
       return;
     }
-    if (job.snapshots.length) {
-      this.finish(job, "이미 준비된 개인 자산을 사용할 수 있습니다.");
-      return;
-    }
-    const observed = await this.c.execute(
-      job.owner,
-      job.id,
-      { kind: "observe" },
-      {},
-    );
-    invariant(observed.observation, "not_observed");
-    const observation = observationSchema.parse(observed.observation);
-    assertSafeData(observation);
-    if (job.binding.origin !== this.allowedOrigin) {
-      this.finish(
-        job,
-        `현재 페이지를 관찰했습니다. 모델 전송은 합성 MinIO 데모에만 허용되어 도구 생성은 보류합니다. 관찰 제한: ${observation.limitations.join(", ") || "표준 DOM 범위"}.`,
-        false,
-      );
-      return;
-    }
-    const response = await this.model.converse(job.owner, job.id, {
-      system: [{ text: generationPrompt }],
-      toolConfig: {
-        tools: [
-          {
-            toolSpec: {
-              name: "freeze_tool_bundle",
-              description:
-                "Return the evidence-grounded candidate and independent validation inputs. This only proposes a candidate and never executes browser actions.",
-              inputSchema: {
-                json: JSON.parse(
-                  JSON.stringify(z.toJSONSchema(generatedBundleSchema)),
-                ),
-              },
-            },
-          },
-        ],
-        toolChoice: { tool: { name: "freeze_tool_bundle" } },
-      },
-      messages: [
-        {
-          role: "user",
-          content: [
-            { text: JSON.stringify({ purpose: job.purpose, observation }) },
-          ],
-        },
-      ],
-    });
-    const structured = response.output?.message?.content?.find(
-      (c) => c.toolUse?.name === "freeze_tool_bundle",
-    )?.toolUse?.input;
-    const parsed = generatedBundleSchema.safeParse(structured);
-    if (!parsed.success) throw new AppError("model_output_invalid");
-    const bundle = parsed.data;
-    assertSafeData(bundle);
-    invariant(
-      fingerprint(bundle.exampleInputs) !==
-        fingerprint(bundle.validationInputs) &&
-        fingerprint(bundle.exampleInputs) !==
-          fingerprint(bundle.skillValidationInputs),
-      "invalid_input",
-    );
-    const current = this.c.repo.getJob(job.owner, job.id);
-    invariant(!current.cancelled, "cancelled");
-    const siteKey = fingerprint(job.binding.origin);
-    const make = (
-      kind: Version["kind"],
-      name: string,
-      description: string,
-      content: Version["content"],
-    ): Version => {
-      const id = newId();
-      const asset: PersonalAsset = {
-        id,
-        owner: job.owner,
-        currentVersionId: null,
-        previousVersionId: null,
-        name,
-        description,
-        defaults: {},
-        enabled: true,
-        revision: 0,
-        siteKey,
-      };
-      this.c.repo.createAsset(asset);
-      const version: Version = {
-        id: newId(),
-        assetId: id,
-        owner: job.owner,
-        kind,
-        siteKey,
-        content,
-        evidence: bundle.evidenceSummary,
-        createdAt: Date.now(),
-      };
-      this.c.repo.saveVersion(version);
-      return version;
-    };
-    const tool = make(
-      "tool",
-      bundle.tool.name,
-      bundle.tool.description,
-      bundle.tool,
-    );
-    const skill = make(
-      "basic_skill",
-      bundle.basicSkill.name,
-      bundle.basicSkill.description,
-      {
-        ...bundle.basicSkill,
-        inputContract: bundle.tool.inputContract,
-        steps: [
-          {
-            toolVersionId: tool.id,
-            arguments: {},
-            bindings: Object.fromEntries(
-              bundle.tool.inputContract.map((p) => [p.name, p.name]),
-            ),
-          },
-        ],
-      },
-    );
-    this.c.repo.updateJob(job.owner, job.id, current.controlRevision, (j) => ({
-      ...j,
-      candidateId: tool.id,
-    }));
-    await this.validatePair(
-      job,
-      tool,
-      skill,
-      bundle.validationInputs,
-      bundle.skillValidationInputs,
-      bundle.exampleInputs,
-    );
+    const result = await new Discovery(this.c, this.model).run(job);
+    this.finish(job, result.reason, true, result.partial);
   }
   private async repairValidator(job: Job): Promise<void> {
     invariant(job.validationRequest && job.candidateId, "invalid_input");

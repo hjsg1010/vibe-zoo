@@ -26,6 +26,7 @@ export function Keeper() {
   const [tab, setTab] = useState("채팅");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [discoveryPurpose, setDiscoveryPurpose] = useState("");
   const [connectionStage, setConnectionStage] = useState("연결 중…");
   const conversation = useRef<string>(crypto.randomUUID());
   const generation = useRef(0);
@@ -89,7 +90,7 @@ export function Keeper() {
         conversationId: conversation.current,
         binding: target,
         purpose:
-          "현재 페이지의 합성 업무 데이터에서 반복 가능한 작은 작업을 도구로 준비해주세요.",
+          "현재 페이지에서 관찰 가능한 여러 기능을 각각 재사용 가능한 MCP 도구로 준비해주세요. 기존 도구는 유지하고 빠진 기능을 추가해주세요.",
         inputs: {},
       })
       .then(() => api.state())
@@ -285,45 +286,54 @@ export function Keeper() {
           </nav>
           {tab === "채팅" && (
             <>
-              {!state.assets.some((a) => a.currentVersionId) && (
-                <section className="hero">
-                  <div className="hero-icon" aria-hidden="true">
-                    🦒
-                  </div>
-                  <h2>
-                    처음 만난 페이지도
-                    <br />
-                    함께 배워볼까요?
-                  </h2>
-                  <p>
-                    현재 화면을 살펴보고 사용할 도구와 기본 Skill을 준비해요.
-                  </p>
-                  <button
-                    data-testid="prepare-tools"
-                    disabled={
-                      !state.binding ||
-                      state.jobs.some(
-                        (job) =>
-                          job.kind === "generation" &&
-                          !["completed", "failed", "cancelled"].includes(
-                            job.status,
-                          ),
-                      )
-                    }
-                    onClick={() => {
-                      void submit(
-                        "/api/prepare",
-                        "현재 페이지의 합성 업무 데이터에서 반복 가능한 작은 작업을 도구로 준비해주세요.",
-                      ).catch(() => undefined);
-                    }}
-                  >
-                    이 페이지 도구 준비
-                  </button>
-                  <p className="hint">
-                    모델 전송은 허용된 합성 MinIO 데모 범위로 제한됩니다.
-                  </p>
-                </section>
-              )}
+              <section className="discovery-guide">
+                <h2>페이지 기능을 도구로 준비하기</h2>
+                <p className="hint">
+                  현재 탭의 화면 구조를 분석해 Agent가 호출할 도구 목록을
+                  만듭니다. 기존 도구를 유지하며 다른 메뉴에서도 추가 탐색할 수
+                  있어요.
+                </p>
+                <button
+                  data-testid="prepare-tools"
+                  disabled={
+                    !state.binding ||
+                    state.jobs.some(
+                      (job) =>
+                        job.kind === "generation" &&
+                        job.binding.origin === state.binding?.origin &&
+                        job.binding.tabId === state.binding?.tabId &&
+                        !["completed", "failed", "cancelled"].includes(
+                          job.status,
+                        ),
+                    )
+                  }
+                  onClick={() => {
+                    void submit(
+                      "/api/prepare",
+                      discoveryPurpose.trim() ||
+                        "현재 페이지에서 관찰 가능한 여러 기능을 각각 재사용 가능한 MCP 도구로 준비해주세요. 기존 도구는 유지하고 빠진 기능을 추가해주세요.",
+                    ).catch(() => undefined);
+                  }}
+                >
+                  {state.assets.some((a) => a.kind === "tool")
+                    ? "이 페이지에서 도구 추가 탐색"
+                    : "이 페이지 도구 준비"}
+                </button>
+                <details>
+                  <summary>찾고 싶은 기능 지정</summary>
+                  <label>
+                    추가로 필요한 기능
+                    <input
+                      value={discoveryPurpose}
+                      onChange={(e) => setDiscoveryPurpose(e.target.value)}
+                      placeholder="예: 기간별 조회와 상세 보기"
+                    />
+                  </label>
+                </details>
+                <p className="hint">
+                  비밀번호·토큰·쿠키를 제외한 페이지 근거를 모델로 분석합니다.
+                </p>
+              </section>
               <DiscoveryGuide
                 jobs={state.jobs.filter(
                   (job) => job.conversationId === conversation.current,
@@ -400,18 +410,26 @@ export function Keeper() {
                   .filter((a) =>
                     tab === "도구" ? a.kind === "tool" : a.kind !== "tool",
                   )
+                  .sort(
+                    (a, b) =>
+                      Number(!!b.currentVersionId) -
+                      Number(!!a.currentVersionId),
+                  )
                   .map((a) => (
-                    <article className="asset" key={a.id}>
-                      <div className="row">
-                        <h3>{a.name}</h3>
+                    <details className="asset" key={a.id}>
+                      <summary className="row">
+                        <strong>{a.name}</strong>
                         <span className="tag">
                           {!a.enabled
                             ? "꺼짐"
                             : a.currentVersionId
-                              ? "검증 통과"
-                              : "검증 필요"}
+                              ? "사용 가능"
+                              : a.validationStatus === "failed" ||
+                                  a.validationStatus === "unknown"
+                                ? "시험 결과 확인"
+                                : "시험 전"}
                         </span>
-                      </div>
+                      </summary>
                       <p>{a.description}</p>
                       <button
                         className="secondary"
@@ -442,7 +460,52 @@ export function Keeper() {
                       >
                         삭제
                       </button>
+                      {a.readinessIssue && (
+                        <p className="hint">{a.readinessIssue}</p>
+                      )}
+                      {a.validationReason && (
+                        <p className="hint">최근 시험: {a.validationReason}</p>
+                      )}
                       <AssetDetails assetId={a.id} api={api} />
+                      {a.currentVersionId && (
+                        <AssetValidationForm
+                          contract={a.inputContract ?? []}
+                          initialInputs={a.defaults}
+                          submitLabel="이 도구·Skill 실행"
+                          guidance="입력값으로 연결된 내 탭에서 실행하고 결과를 확인합니다."
+                          onSubmit={async (inputs) => {
+                            if (!state.binding) throw Error("disconnected");
+                            await api.call(`/api/assets/${a.id}/run`, {
+                              inputs,
+                              request: {
+                                requestKey: crypto.randomUUID(),
+                                conversationId: conversation.current,
+                                binding: state.binding,
+                                purpose: `${a.name} 실행`,
+                                inputs,
+                              },
+                            });
+                            setState(await api.state());
+                            setTab("채팅");
+                          }}
+                        />
+                      )}
+                      {a.currentVersionId && a.kind === "tool" && (
+                        <button
+                          className="secondary"
+                          onClick={() => {
+                            void api
+                              .call(`/api/assets/${a.id}/basic-skill`, {})
+                              .then(async () => {
+                                setState(await api.state());
+                                setTab("내 Skill");
+                              })
+                              .catch((e) => setError(errorMessage(e)));
+                          }}
+                        >
+                          이 도구로 기본 Skill 만들기
+                        </button>
+                      )}
                       <AssetSettings
                         asset={a}
                         api={api}
@@ -461,6 +524,7 @@ export function Keeper() {
                           <AssetValidationForm
                             submitLabel="내 탭에서 시험 실행"
                             contract={a.inputContract ?? []}
+                            initialInputs={a.suggestedInputs}
                             onSubmit={async (inputs) => {
                               if (!state.binding) throw Error("disconnected");
                               await api.call(`/api/assets/${a.id}/validate`, {
@@ -479,7 +543,7 @@ export function Keeper() {
                             }}
                           />
                         )}
-                    </article>
+                    </details>
                   ))
               ) : (
                 <Empty>

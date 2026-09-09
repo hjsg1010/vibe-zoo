@@ -149,7 +149,7 @@ it("explains how to validate candidates and does not claim discovery success whi
   const view = render(
     <DiscoveryGuide jobs={[]} assets={[asset]} onTools={onTools} />,
   );
-  expect(screen.getByText(/합성 입력으로/)).toBeTruthy();
+  expect(screen.getByText(/시험할 입력으로/)).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: /도구 목록/ }));
   expect(onTools).toHaveBeenCalledOnce();
   view.rerender(

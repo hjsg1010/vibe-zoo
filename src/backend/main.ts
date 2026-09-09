@@ -39,27 +39,12 @@ export function start() {
   const bridge = new Bridge(server, auth, origins);
   const model = new BedrockGateway(config, coordinator);
   const validator = new Validator(coordinator);
-  const generator = new ToolGenerator(
-    coordinator,
-    model,
-    validator,
-    config.syntheticOrigin,
-  );
-  const learner = new SkillLearner(
-    coordinator,
-    model,
-    validator,
-    config.syntheticOrigin,
-  );
+  const generator = new ToolGenerator(coordinator, model, validator);
+  const learner = new SkillLearner(coordinator, model, validator);
   router.learner = learner;
-  const store = new AssetStore(coordinator, validator, config.syntheticOrigin);
+  const store = new AssetStore(coordinator, validator);
   router.store = store;
-  const improvement = new Improvement(
-    coordinator,
-    model,
-    validator,
-    config.syntheticOrigin,
-  );
+  const improvement = new Improvement(coordinator, model, validator);
   router.improvement = improvement;
   const agent = new Agent(coordinator, model, validator);
   const running = new Set<string>();
@@ -67,7 +52,8 @@ export function start() {
     if (running.has(job.id)) return;
     running.add(job.id);
     try {
-      if (job.kind === "generation") await generator.run(job);
+      if (job.kind === "generation" || job.assetExecution)
+        await generator.run(job);
       else if (job.kind === "learning") await learner.validate(job);
       else if (job.kind === "improvement") await improvement.run(job);
       else if (job.kind === "install") await store.validate(job);

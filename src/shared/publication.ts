@@ -5,6 +5,7 @@ export type Publication = {
   description: string;
   author: string;
   scope: string;
+  siteKey?: string;
   createdAt: number;
   mainRef: string;
   versions: {

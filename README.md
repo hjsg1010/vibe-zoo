@@ -16,14 +16,16 @@ Release ZIP은 고정된 공개 Extension ID를 사용합니다. `npm run demo:s
 
 ```sh
 npm run release:extension
-gh release create v0.1.1 dist/releases/* --target main --title "Vibe Zoo Keeper 0.1.1" --notes-file docs/release-notes.md
+gh release create v0.2.0 dist/releases/vibe-zoo-keeper-v0.2.0.zip dist/releases/vibe-zoo-keeper-v0.2.0.zip.sha256 dist/releases/INSTALL.txt --target main --title "Vibe Zoo Keeper 0.2.0" --notes-file docs/release-notes.md
 ```
 
 이미 게시된 버전은 덮어쓰지 않고 다음 버전으로 배포합니다.
 
 ## 구현과 검증 상태
 
-현재 [wrap-up과 최신 기능 캡처](docs/wrap-up-2026-09-09.md): 동료 PR #1 반영, 87개 검사·전체 빌드 통과. 실제 Discover는 **한 도구와 한 기본 Skill 생성**까지 구현되어 있으며, 페이지의 여러 기능을 한 번에 Tool/MCP로 준비하는 확장은 후속 검토입니다. 아래의 기존 실제 검증은 이 구현 범위에서 수행했습니다. 이번 PR 수정은 main에서 빌드해야 하며 기존 Release ZIP은 이전 버전입니다.
+**0.2.0:** 사이트 주소 사전 등록 없이 현재 HTTP(S) 탭을 Discover합니다. DOM·접근성 근거에서 여러 Tool/MCP 후보를 만들고, 기존 자산을 보존하며 추가 탐색합니다. 후보 전체 목록과 검증을 통과한 사용 가능 도구를 구분합니다. 기본 Skill은 준비된 도구를 선택한 뒤 별도로 생성·검증하며, 개인 Skill은 Record와 의도로 도구를 조합합니다. 이전 단일 도구 생성 기록은 [0.1.1 wrap-up](docs/wrap-up-2026-09-09.md)에 보존합니다.
+
+사이트 제한 제거는 모든 웹사이트 기능의 성공을 보장한다는 뜻은 아닙니다. 로그인된 탭의 관찰 가능한 DOM이 근거이며, iframe·canvas·동적 메뉴와 관찰 한계는 결과에 표시합니다. 한 번의 탐색은 최대 3회 모델 분석·회당 3개 후보로 제한하며, 다른 메뉴를 열거나 필요한 기능을 지정해 추가 탐색할 수 있습니다.
 
 | 기능 | 구현 | 실제 검증과 출처 |
 |---|---|---|
@@ -38,7 +40,7 @@ gh release create v0.1.1 dist/releases/* --target main --title "Vibe Zoo Keeper 
 
 ## 설치와 설정
 
-개발 환경은 WSL/Linux와 Windows Chrome입니다. Node **24.20.x**(`.node-version`), npm, OpenSSL, 로그인 가능한 합성 데이터 MinIO Console, 제공받은 Bedrock API 키가 필요합니다. 일반 참여자는 별도 CLI나 Agent 앱 없이 Extension을 사용합니다. 아래 CLI는 Backend를 준비하는 개발자용입니다.
+개발 환경은 WSL/Linux와 Windows Chrome입니다. Node **24.20.x**(`.node-version`), npm, OpenSSL, 관찰·실행할 웹앱 탭, 제공받은 Bedrock API 키가 필요합니다. 일반 참여자는 별도 CLI나 Agent 앱 없이 Extension을 사용합니다. 아래 CLI는 Backend를 준비하는 개발자용입니다.
 
 ```sh
 npm ci
@@ -52,14 +54,14 @@ cp config/env.example .env   # 새 환경에 .env가 없을 때만 실행
 | `AWS_BEARER_TOKEN_BEDROCK` | 로컬 `.env`에 제공받은 키 입력. 빈 값이면 파일에서 채우세요. 채팅/로그에 붙이지 않습니다. |
 | `AWS_REGION` | `ap-northeast-2` |
 | `BEDROCK_MODEL_ID` | `global.anthropic.claude-opus-4-8` |
-| `VIBE_ZOO_SYNTHETIC_DEMO_ORIGIN` | 승인된 합성 MinIO Console의 정확한 origin. 경로 없이 scheme·host·port를 로컬에서 지정합니다. |
+| `VIBE_ZOO_SYNTHETIC_DEMO_ORIGIN` | **폐기됨.** 기존 `.env`에 남아 있어도 대상 사이트를 제한하지 않습니다. |
 | `VIBE_ZOO_PUBLIC_ORIGIN` | 기본 `https://localhost:18443` |
 | `VIBE_ZOO_BIND_HOST` / `VIBE_ZOO_PORT` | 기본 `127.0.0.1` / `18443` |
 | `VIBE_ZOO_DATA_DIR` | 기본 `.local/state` |
 | `VIBE_ZOO_TLS_CERT_PATH` / `VIBE_ZOO_TLS_KEY_PATH` | 기본 `.local/tls/localhost.crt` / `.local/tls/localhost.key` |
 | `VIBE_ZOO_ALLOWED_EXTENSION_IDS` | 기본 빈 값: setup이 생성한 로컬 Extension ID를 사용합니다. |
 
-`ANTHROPIC_MODEL`은 Backend가 읽지 않습니다. Claude Code용 `[1m]`을 Bedrock modelId에 넣지 마세요. 다른 모델로 자동 대체하지 않습니다. 키/모델 접근·유효기간·크레딧은 설정 존재만으로 보장되지 않습니다. 글로벌 추론에서 리전 밖 처리가 가능하며, 전송 허용 범위는 최소 필터 근거를 사용하는 합성 MinIO 데모입니다.
+`ANTHROPIC_MODEL`은 Backend가 읽지 않습니다. Claude Code용 `[1m]`을 Bedrock modelId에 넣지 마세요. 다른 모델로 자동 대체하지 않습니다. 키/모델 접근·유효기간·크레딧은 설정 존재만으로 보장되지 않습니다. 글로벌 추론에서 리전 밖 처리가 가능하며, 선택한 사이트의 최소 페이지 근거를 전송합니다. 비밀번호·토큰·쿠키·인증 헤더는 제외합니다. 사이트 URL을 별도로 등록할 필요가 없습니다.
 
 ```sh
 npm run demo:setup
@@ -71,7 +73,7 @@ setup은 TLS와 안정된 Extension ID, 두 데모 사용자 접근 코드, DB m
 
 1. Chrome에서 `https://localhost:18443/health`를 열어 인증서 신뢰와 `status: ok`를 확인합니다. 인증서를 신뢰할지 로컬에서 직접 판단하고 등록하세요. 앱은 인증서 검증을 끄거나 OS 신뢰 저장소를 자동 변경하지 않습니다.
 2. `chrome://extensions`에서 개발자 모드를 켜고 **압축해제된 확장 프로그램을 로드**하여 `dist/extension`을 선택합니다. Windows에서는 탐색기의 WSL 공유 경로에서 프로젝트의 해당 폴더를 선택할 수 있습니다.
-3. 로그인한 합성 MinIO 탭에서 Vibe Zoo 아이콘으로 Keeper를 엽니다.
+3. 로그인한 대상 웹앱 탭에서 Vibe Zoo 아이콘으로 Keeper를 엽니다.
 4. Backend 주소와 `.local/demo-access.json`의 해당 사용자 코드를 입력하고 **이 탭 연결하기**를 누릅니다. `demo-keeper`와 `demo-colleague`는 서로 다른 개인 영역입니다. 코드 값을 공유 문서/화면에 노출하지 마세요.
 5. Store는 `https://localhost:18443`에서 엽니다. Store 설치는 로그인 세션을 복제하지 않습니다. 설치 자산은 설치자 자신의 Keeper 대상 탭에서 검증해야 사용 준비가 됩니다.
 
@@ -79,7 +81,9 @@ setup은 TLS와 안정된 Extension ID, 두 데모 사용자 접근 코드, DB m
 
 ## 대표 사용법
 
-- **처음 도구 준비**: 준비 자산이 없는 허용된 페이지에서 `이 페이지 도구 준비` → 후보/입력 검토 → 표시된 변경 확인 → 도구와 기본 Skill의 독립 검증. 일부만 통과하면 그 상태를 구분합니다.
+- **Discover**: `이 페이지 도구 준비` → DOM 분석 진행 상태 → `도구`의 전체 후보 목록. 항목을 펼쳐 계약·어댑터·성공 조건과 시험 입력을 확인하고 `내 탭에서 시험 실행`을 누릅니다. 변경이 있으면 확인을 거쳐 실제 MCP·내 탭·사후 관찰로 검증합니다. 입력 없는 조회는 별도 값 없이 실제 상태를 확인합니다.
+- **추가 탐색**: 도구가 있어도 `이 페이지에서 도구 추가 탐색`을 누를 수 있습니다. 다른 메뉴를 연 뒤 실행하거나 `찾고 싶은 기능 지정`에 부족한 기능을 적으세요. 기존 자산·설정·검증 결과는 보존합니다.
+- **기본 Skill**: 사용 가능한 도구를 펼쳐 `이 도구로 기본 Skill 만들기` → `내 Skill`에서 구성 확인·독립 시험 실행. Discover가 Skill을 자동 활성화하지 않습니다.
 - **채팅**: `새 이름의 버킷 하나 만들어줘`처럼 요청합니다. 현재 대상과 실제 입력을 확인한 후 실행하며, 페이지의 사후 결과로 성공을 판정합니다. 준비 자산이 있으면 재사용합니다.
 - **개인 Skill**: `내 Skill` → `Record 시작` → 웹앱에서 직접 시연 → `Stop` → 수행 의도 직접 입력 → 생성된 초안 → 원본과 다른 새 입력 검증. Stop만으로 모델 호출/재생하지 않습니다.
 - **개인 설정**: 자산의 `개인 설정`에서 이름·설명·기본값·사용 여부 저장. 이후 채팅에 반영되며 이미 시작된 실행은 고정 버전을 유지합니다.
@@ -133,7 +137,7 @@ Bedrock이 실제 두 기록으로 locator만 수정한 후보를 만들었습�
 
 ## 기능별 촬영 준비
 
-실제 촬영은 정식 Build and Test 검토를 마친 뒤 시작합니다. 공통 초기 상태는 실행 중인 로컬 Backend, 신뢰한 TLS, 로그인한 합성 MinIO와 연결된 Keeper입니다. 주소 표시줄·프로필·접근 코드·키는 촬영에 포함하지 않습니다. 각 이름의 `<take>`는 촬영 회차의 고유 값으로 바꾸고 이미 생성된 이름은 재사용하지 않습니다. 아래는 **촬영 계획**이며 새 촬영/추가 모델 실행을 완료했다는 기록은 아닙니다.
+AI-DLC는 종료되었으며 아래 기존 MinIO 촬영 순서를 재사용할 수 있습니다. 공통 초기 상태는 실행 중인 로컬 Backend, 신뢰한 TLS, 로그인한 합성 MinIO와 연결된 Keeper입니다. 주소 표시줄·프로필·접근 코드·키는 촬영에 포함하지 않습니다. 각 이름의 `<take>`는 촬영 회차의 고유 값으로 바꾸고 이미 생성된 이름은 재사용하지 않습니다. 아래는 **촬영 계획**이며 새 촬영/추가 모델 실행을 완료했다는 기록은 아닙니다.
 
 | 편집 순서 / 기능 | 초기 상태 | 입력과 사용자 동작 | 화면에서 확인할 결과 |
 |---|---|---|---|

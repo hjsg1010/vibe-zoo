@@ -92,9 +92,9 @@ export function DiscoveryGuide({
     description =
       "아래 ‘지금 할 일’에서 진행 상태를 확인하세요. 변경 승인이 필요하면 대상과 입력을 확인한 뒤 실행해주세요. 준비 중에는 다시 누를 필요가 없어요.";
   } else if (pending.length) {
-    title = `도구·Skill 후보 ${pending.length}개를 시험해보세요`;
+    title = `후보 ${pending.length}개를 시험해보세요`;
     description =
-      "‘도구’에서 후보의 설명과 입력 항목을 확인하고, 합성 입력으로 ‘내 탭에서 시험 실행’을 누르세요. 실제 결과를 확인해야 채팅에서 사용할 수 있어요. Skill은 ‘내 Skill’에서 따로 시험합니다.";
+      "‘도구’에서 후보의 설명과 입력 항목을 확인하고, 시험할 입력으로 ‘내 탭에서 시험 실행’을 누르세요. 실제 결과를 확인해야 채팅에서 사용할 수 있어요. Skill은 ‘내 Skill’에서 따로 시험합니다.";
   } else if (assets.some((asset) => asset.currentVersionId && asset.enabled)) {
     title = "준비된 도구로 요청해보세요";
     description =
@@ -113,6 +113,33 @@ export function DiscoveryGuide({
       <div className="eyebrow">DISCOVER · 다음 단계</div>
       <h2>{title}</h2>
       <p>{description}</p>
+      {latest?.discovery && (
+        <div className="discovery-progress" role="status">
+          <progress
+            max={4}
+            value={
+              finished(latest)
+                ? 4
+                : latest.discovery.phase === "observing"
+                  ? 1
+                  : latest.discovery.phase === "analyzing"
+                    ? 2
+                    : 3
+            }
+          />
+          <p className="hint">
+            {finished(latest) && latest.status !== "completed"
+              ? "분석 중단 · 작업 결과를 확인해주세요"
+              : {
+                  observing: "DOM·접근성 정보 관찰",
+                  analyzing: "기능별 MCP 계약·어댑터 분석",
+                  inspecting: "추가 메뉴 관찰 · 변경 확인이 필요할 수 있어요",
+                  ready: "후보 목록 준비 · 개별 시험 실행 가능",
+                }[latest.discovery.phase]}{" "}
+            · 새 도구 {latest.discovery.versionIds.length}개
+          </p>
+        </div>
+      )}
       {assets.length > 0 && (
         <button className="secondary" onClick={onTools}>
           도구 목록과 입력 확인 →

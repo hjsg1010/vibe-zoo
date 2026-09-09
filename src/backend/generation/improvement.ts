@@ -46,7 +46,7 @@ export class Improvement {
     private c: Coordinator,
     private model: ModelPort,
     private validator: Validator,
-    private allowedOrigin: string,
+    _legacyOrigin?: string,
   ) {}
   private source(
     owner: string,
@@ -65,7 +65,7 @@ export class Improvement {
     invariant(
       !job.cancelled &&
         job.status !== "unknown" &&
-        job.binding.origin === this.allowedOrigin,
+        fingerprint(job.binding.origin) === version.siteKey,
       "not_observed",
     );
     const actions = this.c.repo
@@ -122,7 +122,7 @@ export class Improvement {
     const a = this.c.repo.asset(owner, data.assetId);
     invariant(
       a.currentVersionId === data.expectedCurrent &&
-        data.request.binding.origin === this.allowedOrigin,
+        fingerprint(data.request.binding.origin) === a.siteKey,
       "conflict",
     );
     const v = this.c.repo.version(owner, data.expectedCurrent);

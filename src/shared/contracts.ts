@@ -28,6 +28,18 @@ export const observationSchema = z.strictObject({
         testid: z.string().max(100).optional(),
         value: z.string().max(200).optional(),
         disabled: z.boolean().optional(),
+        href: z.string().max(500).optional(),
+        id: z.string().max(100).optional(),
+        name: z.string().max(100).optional(),
+        options: z
+          .array(
+            z.strictObject({
+              text: z.string().max(100),
+              value: z.string().max(100),
+            }),
+          )
+          .max(40)
+          .optional(),
       }),
     )
     .max(180),
@@ -97,6 +109,15 @@ export type Job = {
   snapshots: Snapshot[];
   budget: Budget;
   candidateId?: string;
+  discovery?: {
+    phase: "observing" | "analyzing" | "inspecting" | "ready";
+    versionIds: string[];
+    reused: number;
+    pages: number;
+    round: number;
+    remaining: string[];
+    unsupported: string[];
+  };
   improvement?: {
     assetId: string;
     baseVersionId: string;
@@ -119,6 +140,7 @@ export type Job = {
     validationStarted: boolean;
     accepted?: { revision: number; inputRevision: number; digest: string };
   };
+  assetExecution?: { versionId: string };
   assetValidation?: {
     versionId: string;
     inputs: z.infer<typeof inputsSchema>;

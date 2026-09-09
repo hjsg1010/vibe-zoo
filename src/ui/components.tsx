@@ -238,18 +238,19 @@ export function AssetValidationForm({
   submitLabel = "이 자산만 검증",
   guidance = "이 자산만 새로운 입력으로 검증합니다. 이미 완료한 작업과 다른 값을 사용해주세요.",
   disabled = false,
+  initialInputs = {},
 }: {
   contract: import("../shared/asset-schema.js").Tool["inputContract"];
   submitLabel?: string;
   guidance?: string;
   disabled?: boolean;
+  initialInputs?: Record<string, string | number | boolean>;
   onSubmit: (
     inputs: Record<string, string | number | boolean>,
   ) => Promise<void>;
 }) {
-  const [values, setValues] = useState<
-    Record<string, string | number | boolean>
-  >({});
+  const [values, setValues] =
+    useState<Record<string, string | number | boolean>>(initialInputs);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   return (
@@ -270,7 +271,11 @@ export function AssetValidationForm({
           .finally(() => setBusy(false));
       }}
     >
-      <p>{guidance}</p>
+      <p>
+        {contract.length
+          ? guidance
+          : "추가 입력 없이 현재 탭의 실제 결과를 확인합니다."}
+      </p>
       {contract.map((field) => (
         <label key={field.name}>
           {field.description || field.name}

@@ -42,6 +42,25 @@ export const generatedBundleSchema = z.strictObject({
   validationInputs: inputsSchema,
   skillValidationInputs: inputsSchema,
 });
+export const discoveredToolSchema = z.strictObject({
+  tool: toolSchema,
+  evidenceSummary: z.string().min(1).max(1000),
+  exampleInputs: inputsSchema,
+  validationInputs: inputsSchema,
+});
+export const discoverySchema = z.strictObject({
+  tools: z.array(discoveredToolSchema).max(3),
+  remaining: z.array(z.string().max(200)).max(20),
+  unsupported: z.array(z.string().max(300)).max(12),
+  inspect: z.union([
+    z.strictObject({ path: z.string().max(500) }),
+    z.strictObject({
+      label: z.string().max(200),
+      role: z.enum(["button", "link"]),
+    }),
+    z.null(),
+  ]),
+});
 export type Tool = z.infer<typeof toolSchema>;
 export type Skill = z.infer<typeof skillSchema>;
 export type Version = {
@@ -52,6 +71,11 @@ export type Version = {
   siteKey: string;
   content: Tool | Skill;
   evidence: string;
+  discovery?: {
+    sourceJobId: string;
+    exampleInputs: z.infer<typeof inputsSchema>;
+    validationInputs: z.infer<typeof inputsSchema>;
+  };
   previousId?: string;
   createdAt: number;
 };
@@ -82,6 +106,7 @@ export type ValidationReport = {
   jobId: string;
   versionId: string;
   caseKind:
+    | "state_observation"
     | "different_input"
     | "failure_reproduction"
     | "success_regression"

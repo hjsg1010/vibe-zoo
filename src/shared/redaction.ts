@@ -3,9 +3,12 @@ export const sensitiveName =
   /(pass(word|wd)?|secret|token|cookie|authorization|api[-_ ]?key|access[-_ ]?keys?|private[-_ ]?key|credential|session|csrf|otp|credit.?card)/i;
 const sensitiveValue =
   /(Bearer\s+\S+|AWS4-HMAC|AKIA[0-9A-Z]{16}|-----BEGIN .*PRIVATE KEY|eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.)/i;
-export function assertSafeData(value: unknown): void {
+export function assertSafeData(value: unknown, maxStringLength = 20000): void {
   const walk = (v: unknown): void => {
-    if (typeof v === "string" && (sensitiveValue.test(v) || v.length > 20000))
+    if (
+      typeof v === "string" &&
+      (sensitiveValue.test(v) || v.length > maxStringLength)
+    )
       throw new AppError("invalid_input");
     if (Array.isArray(v)) {
       for (const x of v) walk(x);

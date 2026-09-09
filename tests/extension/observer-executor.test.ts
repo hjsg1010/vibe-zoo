@@ -167,3 +167,19 @@ it("delivers focusin when a side panel prevents native document focus", async ()
   expect(button.disabled).toBe(false);
   expect(field.value).toBe("new-synthetic-bucket");
 });
+
+it("keeps late controls and native select options on large pages while excluding auth and external hrefs", () => {
+  document.body.innerHTML =
+    Array.from({ length: 210 }, (_, i) => `<p>Row ${i}</p>`).join("") +
+    '<h2>Results</h2><button>Apply filter</button><label for="range">Period</label><select id="range"><option value="7d">Last week</option><option value="30d">Last month</option></select><input type="checkbox" aria-label="Only failures"><input name="token" value="private">';
+  const result = observe();
+  expect(result.elements.some((e) => e.text === "Apply filter")).toBe(true);
+  expect(result.elements.find((e) => e.role === "combobox")?.options).toEqual([
+    { text: "Last week", value: "7d" },
+    { text: "Last month", value: "30d" },
+  ]);
+  expect(result.elements.some((e) => e.role === "checkbox")).toBe(true);
+  expect(result.elements).toHaveLength(180);
+  expect(result.limitations).toContain("truncated");
+  expect(JSON.stringify(result)).not.toContain("private");
+});

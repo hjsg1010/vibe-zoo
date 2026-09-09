@@ -89,29 +89,32 @@ it("rejects remote code and extra control fields in generated bundles", () => {
     }).success,
   ).toBe(false);
 });
-it("freezes generated candidates and separately validates tool and basic Skill through real MCP using explicit model/browser fixtures", async () => {
+it("discovers multiple independent tools on any site, appends without replacing assets, and creates Skills only afterwards (model/browser fixtures, real MCP)", async () => {
+  const { createBasicSkill } =
+    await import("../../src/backend/generation/basic-skill.js");
   const db = openDatabase(":memory:");
   migrate(db);
   const repo = new Repository(db);
   repo.actor("alice", "hash");
+  const target = { ...binding, origin: "https://unregistered.example.org" };
   const c = new Coordinator(
     repo,
     {
-      current: () => binding,
-      enqueue: async (_o, command) => ({
+      current: () => target,
+      enqueue: async (_owner, command) => ({
         type: "receipt",
         actionId: command.actionId,
         jobId: command.jobId,
         controlRevision: command.controlRevision,
-        binding,
+        binding: target,
         outcome: {
           status: "success",
           completed: [0],
           reason: "TEST FIXTURE ONLY",
           observation: {
-            title: "Synthetic demo",
+            title: "Dashboard",
             path: "/",
-            elements: [{ role: "button", label: "検索", text: "検索" }],
+            elements: [{ role: "heading", label: "", text: "Dashboard" }],
             limitations: [],
           },
         },
@@ -119,15 +122,35 @@ it("freezes generated candidates and separately validates tool and basic Skill t
     },
     new Registry(repo),
   );
-  let generationCalls = 0;
+  const overview = {
+    ...tool,
+    name: "read_dashboard",
+    inputContract: [],
+    adapter: {
+      operations: [{ kind: "observe" as const }],
+      postconditions: [
+        {
+          locator: { by: "text" as const, value: { literal: "Dashboard" } },
+          assert: "visible" as const,
+        },
+      ],
+    },
+  };
+  const candidate = (t: typeof tool | typeof overview) => ({
+    tool: t,
+    evidenceSummary: "TEST FIXTURE ONLY",
+    exampleInputs: t.inputContract.length ? { item: "old" } : {},
+    validationInputs: t.inputContract.length ? { item: "new" } : {},
+  });
+  let calls = 0;
   const generator = new ToolGenerator(
     c,
     {
       converse: async () => {
-        generationCalls++;
+        calls++;
         return {
           $metadata: {},
-          stopReason: "end_turn",
+          stopReason: "tool_use",
           usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
           metrics: { latencyMs: 1 },
           output: {
@@ -136,16 +159,36 @@ it("freezes generated candidates and separately validates tool and basic Skill t
               content: [
                 {
                   toolUse: {
-                    name: "freeze_tool_bundle",
-                    toolUseId: "fixture-bundle",
-                    input: {
-                      tool,
-                      basicSkill: { name: "검색", description: "합성 검색" },
-                      evidenceSummary: "TEST FIXTURE ONLY",
-                      exampleInputs: { item: "old" },
-                      validationInputs: { item: "new" },
-                      skillValidationInputs: { item: "new-skill" },
-                    },
+                    name: "freeze_discovery",
+                    toolUseId: "fixture",
+                    input: JSON.parse(
+                      JSON.stringify({
+                        tools:
+                          calls === 1
+                            ? [
+                                candidate(tool),
+                                candidate(overview),
+                                { tool: { code: "arbitrary()" } },
+                              ]
+                            : [
+                                candidate(tool),
+                                candidate({
+                                  ...tool,
+                                  name: "find_details",
+                                  adapter: {
+                                    ...tool.adapter,
+                                    operations: [
+                                      { kind: "observe" },
+                                      { kind: "observe" },
+                                    ],
+                                  },
+                                }),
+                              ],
+                        remaining: [],
+                        unsupported: [],
+                        inspect: null,
+                      }),
+                    ),
                   },
                 },
               ],
@@ -155,62 +198,89 @@ it("freezes generated candidates and separately validates tool and basic Skill t
       },
     },
     new Validator(c),
-    binding.origin,
   );
   try {
-    const j = repo.createJob(job());
-    await generator.run(j);
+    const source = repo.createJob(job("alice", { binding: target }));
+    await generator.run(source);
     const assets = repo.assets("alice");
     expect(assets).toHaveLength(2);
-    expect(assets.every((a) => a.currentVersionId)).toBe(true);
-    expect(assets.every((a) => a.siteKey === fingerprint(binding.origin))).toBe(
-      true,
+    expect(
+      repo.getJob("alice", source.id).discovery?.unsupported.join(" "),
+    ).toContain("계약 오류");
+    expect(assets.every((a) => !a.currentVersionId)).toBe(true);
+    expect(assets.map((a) => repo.versions("alice", a.id)[0]!.kind)).toEqual([
+      "tool",
+      "tool",
+    ]);
+    expect(repo.actions("alice", source.id)).toHaveLength(1); // proposal never performs trial business work
+    const versions = assets.map((a) => repo.versions("alice", a.id)[0]!);
+    for (const version of versions) {
+      const validation = repo.createJob(
+        job("alice", {
+          binding: target,
+          assetValidation: {
+            versionId: version.id,
+            inputs: version.discovery!.validationInputs,
+            sourceInputs: version.discovery!.exampleInputs,
+            sourceJobId: source.id,
+          },
+        }),
+      );
+      await generator.run(validation);
+      expect(repo.asset("alice", version.assetId).currentVersionId).toBe(
+        version.id,
+      );
+      expect(repo.actions("alice", validation.id)).toHaveLength(1);
+    }
+    const read = versions.find((v) => !v.content.inputContract.length)!;
+    expect(repo.reports("alice", read.id)[0]!.caseKind).toBe(
+      "state_observation",
     );
-    const reports = assets.flatMap((a) =>
-      repo.reports("alice", a.currentVersionId!),
-    );
-    expect(reports).toHaveLength(2);
-    expect(reports[0]?.inputs).not.toEqual(reports[1]?.inputs);
-    expect(repo.getJob("alice", j.id).status).toBe("completed");
-    const candidateId = repo.getJob("alice", j.id).candidateId!;
-    const retry = repo.createJob(
+    const skill = createBasicSkill(repo, "alice", read.assetId);
+    expect(createBasicSkill(repo, "alice", read.assetId).id).toBe(skill.id);
+    expect(repo.asset("alice", skill.assetId).currentVersionId).toBeNull();
+    const validation = repo.createJob(
       job("alice", {
-        id: "fixture-revalidation",
-        requestKey: "fixture-revalidation",
-        candidateId,
-        validationRequest: {
-          sourceJobId: j.id,
-          sourceInputs: { item: "old" },
-          toolInputs: { item: "fresh-tool" },
-          skillInputs: { item: "fresh-skill" },
-        },
-      }),
-    );
-    await generator.run(retry);
-    const selected = repo
-      .assets("alice")
-      .find(
-        (a) =>
-          repo.version("alice", a.currentVersionId!).kind === "basic_skill",
-      )!;
-    const single = repo.createJob(
-      job("alice", {
+        binding: target,
         assetValidation: {
-          versionId: selected.currentVersionId!,
-          inputs: { item: "independent" },
-          sourceInputs: { item: "new-skill" },
-          sourceJobId: j.id,
+          versionId: skill.id,
+          inputs: {},
+          sourceInputs: {},
+          sourceJobId: source.id,
         },
       }),
     );
-    await generator.run(single);
-    expect(repo.actions("alice", single.id)).toHaveLength(1);
-    expect(generationCalls).toBe(1);
-    expect(repo.assets("alice")).toHaveLength(2);
-    expect(repo.getJob("alice", retry.id).status).toBe("completed");
-    expect(repo.reports("alice", candidateId).at(-1)?.inputs).toEqual({
-      item: "fresh-tool",
+    await generator.run(validation);
+    expect(repo.asset("alice", skill.assetId).currentVersionId).toBe(skill.id);
+    const original = repo.assets("alice");
+    const extra = c.prepare("alice", {
+      requestKey: "second",
+      conversationId: "fixture",
+      purpose: "Discover more",
+      binding: target,
+      inputs: {},
     });
+    expect(extra.snapshots.length).toBeGreaterThan(0);
+    await generator.run(extra);
+    expect(calls).toBe(2);
+    expect(repo.getJob("alice", extra.id).discovery?.versionIds).toHaveLength(
+      1,
+    );
+    expect(repo.getJob("alice", extra.id).discovery?.reused).toBe(1);
+    for (const a of original) expect(repo.asset("alice", a.id)).toEqual(a);
+    expect(repo.assets("alice")).toHaveLength(4);
+    const server = await serveJobTools(versions, (v, args) =>
+      new Validator(c).executeTool("alice", validation.id, v, args),
+    );
+    const client = await connectJobMcp(server);
+    try {
+      expect((await client.listTools()).tools.map((t) => t.name)).toEqual(
+        expect.arrayContaining(["find_item", "read_dashboard"]),
+      );
+    } finally {
+      await client.close();
+      await server.close();
+    }
   } finally {
     db.close();
   }

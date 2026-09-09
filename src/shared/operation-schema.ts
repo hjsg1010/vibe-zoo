@@ -10,10 +10,11 @@ export const valueSchema = z.union([
   z.strictObject({ input: z.string().min(1).max(64) }),
 ]);
 export const locatorSchema = z.strictObject({
-  by: z.enum(["label", "text", "placeholder", "testid", "role"]),
+  by: z.enum(["label", "text", "placeholder", "testid", "role", "id", "name"]),
   value: valueSchema,
   role: z
     .enum([
+      "tab",
       "button",
       "link",
       "textbox",

@@ -5,7 +5,7 @@ export const limits = {
   browserOps: 60,
   reconcileOps: 5,
   modelRequests: 8,
-  maxOutput: 4096,
+  maxOutput: 8192,
   totalTokens: 60_000,
 } as const;
 export function reserveModel(b: Budget, inputEstimate: number): Budget {

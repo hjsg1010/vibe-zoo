@@ -1,3 +1,6 @@
+import { toolReadinessIssue } from "../../shared/tool-readiness.js";
+import { createBasicSkill } from "../generation/basic-skill.js";
+import { inputSchema } from "../mcp/server.js";
 import type { Improvement } from "../generation/improvement.js";
 import type { AssetStore } from "../assets/store.js";
 import { installValidationSchema } from "../assets/store.js";
@@ -260,6 +263,17 @@ export class Router {
               kind: v?.kind,
               candidateVersionId: v?.id,
               inputContract: v?.content.inputContract,
+              suggestedInputs: v?.discovery?.validationInputs,
+              validationStatus: v
+                ? c.repo.reports(owner, v.id).at(-1)?.status
+                : undefined,
+              readinessIssue:
+                v?.discovery && "adapter" in v.content
+                  ? toolReadinessIssue(v.content)
+                  : undefined,
+              validationReason: v
+                ? c.repo.reports(owner, v.id).at(-1)?.outcome?.reason
+                : undefined,
             };
           }),
       });
@@ -380,6 +394,52 @@ export class Router {
         return true;
       }
     }
+    const executeAsset = path.match(/^\/api\/assets\/([^/]+)\/run$/);
+    if (executeAsset && method === "POST") {
+      const data = z
+        .strictObject({ inputs: inputsSchema, request: requestSchema })
+        .parse(await this.body(req));
+      assertSafeData(data);
+      const asset = c.repo.asset(owner, executeAsset[1]!);
+      const snapshot = c.registry
+        .select(owner, fingerprint(data.request.binding.origin))
+        .find((s) => s.assetId === asset.id);
+      invariant(snapshot, "not_observed");
+      const version = c.repo.version(owner, snapshot.versionId);
+      const inputs = inputsSchema.parse(
+        inputSchema(version.content).parse({
+          ...snapshot.defaults,
+          ...data.inputs,
+        }),
+      );
+      let job = c.prepare(owner, { ...data.request, inputs }, "execution", {
+        versionId: version.id,
+      });
+      if (!job.assetExecution) {
+        job = c.repo.updateJob(owner, job.id, job.controlRevision, (j) => ({
+          ...j,
+          snapshots: [snapshot],
+          assetExecution: { versionId: version.id },
+        }));
+        if (this.workflow)
+          void this.workflow(job).catch((error) => this.fail(job, error));
+      }
+      this.json(res, 202, { job });
+      return true;
+    }
+    const basicSkill = path.match(/^\/api\/assets\/([^/]+)\/basic-skill$/);
+    if (basicSkill && method === "POST") {
+      const asset = c.repo.asset(owner, basicSkill[1]!);
+      const binding = c.browser.current(owner);
+      invariant(
+        binding && asset.siteKey === fingerprint(binding.origin),
+        "target_changed",
+      );
+      this.json(res, 200, {
+        version: createBasicSkill(c.repo, owner, asset.id),
+      });
+      return true;
+    }
     const assetValidation = path.match(/^\/api\/assets\/([^/]+)\/validate$/);
     if (assetValidation && method === "POST") {
       const data = z
@@ -394,6 +454,7 @@ export class Router {
       const version = c.repo.version(owner, data.versionId);
       invariant(
         version.assetId === asset.id &&
+          version.siteKey === fingerprint(data.request.binding.origin) &&
           !asset.currentVersionId &&
           version.kind !== "personal_skill",
         "conflict",
@@ -404,17 +465,24 @@ export class Router {
       if (version.kind === "basic_skill" && "steps" in version.content)
         for (const step of version.content.steps)
           candidateIds.add(step.toolVersionId);
-      const source = prior
-        ? c.repo.getJob(owner, prior.jobId)
-        : c.repo.db
-            .prepare("SELECT data FROM jobs WHERE owner=? ORDER BY rowid DESC")
-            .all(owner)
-            .map((row) => JSON.parse(String(row.data)) as Job)
-            .find(
-              (job) =>
-                job.kind === "generation" &&
-                candidateIds.has(job.candidateId ?? ""),
-            );
+      const source = version.discovery
+        ? c.repo.getJob(owner, version.discovery.sourceJobId)
+        : prior
+          ? c.repo.getJob(owner, prior.jobId)
+          : c.repo.db
+              .prepare(
+                "SELECT data FROM jobs WHERE owner=? ORDER BY rowid DESC",
+              )
+              .all(owner)
+              .map((row) => JSON.parse(String(row.data)) as Job)
+              .find(
+                (job) =>
+                  job.kind === "generation" &&
+                  (candidateIds.has(job.candidateId ?? "") ||
+                    job.discovery?.versionIds.some((id) =>
+                      candidateIds.has(id),
+                    )),
+              );
       invariant(source, "not_observed");
       invariant(
         ["failed", "completed", "cancelled"].includes(source.status) &&
@@ -425,13 +493,16 @@ export class Router {
       );
       const sourceInputs =
         prior?.inputs ??
+        version.discovery?.exampleInputs ??
         source.validationRequest?.sourceInputs ??
         c.repo
           .actions(owner, source.id)
           .find((a) => Object.keys(a.command.inputs).length)?.command.inputs ??
         {};
+      inputSchema(version.content).parse(data.inputs);
       invariant(
-        fingerprint(data.inputs) !== fingerprint(sourceInputs),
+        !version.content.inputContract.length ||
+          fingerprint(data.inputs) !== fingerprint(sourceInputs),
         "invalid_input",
       );
       let j = c.prepare(owner, data.request, "generation", {
@@ -441,7 +512,7 @@ export class Router {
       if (!j.assetValidation) {
         j = c.repo.updateJob(owner, j.id, j.controlRevision, (x) => ({
           ...x,
-          budget: { ...source.budget },
+          budget: version.discovery ? x.budget : { ...source.budget },
           candidateId: version.id,
           assetValidation: {
             versionId: version.id,
