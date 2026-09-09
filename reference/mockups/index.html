@@ -50,12 +50,16 @@ const button = (label, action, value = '', className = '') => `<button data-acti
 const bucketTools = [
   {id:'list_buckets', name:'버킷 목록 조회', input:'없음 · 현재 계정', output:'버킷 이름, 객체 수, 사용량 목록', success:'현재 웹 화면의 목록과 결과가 일치함'},
   {id:'create_bucket', name:'버킷 생성', input:'bucket_name · 소문자/숫자/점/하이픈 3~63자', output:'생성된 버킷 이름', success:'버킷 목록에 입력한 이름이 존재함'},
-  {id:'verify_bucket', name:'생성 결과 확인', input:'bucket_name · 생성한 버킷 이름', output:'정확한 이름 일치 여부', success:'조회 결과에 해당 버킷이 한 개 존재함'}
+  {id:'verify_bucket', name:'생성 결과 확인', input:'bucket_name · 생성한 버킷 이름', output:'정확한 이름 일치 여부', success:'조회 결과에 해당 버킷이 한 개 존재함'},
+  {id:'get_bucket_metrics', name:'버킷별 모니터링', input:'bucket_name · 조회할 버킷 이름', output:'사용량, 객체 수, 최근 24시간 요청/오류 추이', success:'선택한 버킷의 웹 상세와 조회 결과가 일치함'},
+  {id:'list_access_keys', name:'접근 키 목록 조회', input:'없음 · 현재 계정', output:'키 식별자, 이름, 대상 버킷과 상태', success:'현재 계정의 키 목록과 결과가 일치함'},
+  {id:'create_access_key', name:'접근 키 발급', input:'name, bucket_name · 키 이름과 대상 버킷', output:'키 식별자와 발급 시에만 표시되는 모의 Secret', success:'발급된 키가 선택한 버킷에 연결되어 목록에 표시됨'},
+  {id:'delete_access_key', name:'접근 키 삭제', input:'key_id · 삭제할 키의 정확한 식별자', output:'삭제한 키 식별자', success:'목록에서 해당 키가 제거되고 다른 키는 유지됨'}
 ];
 function initialSite() {
   return {name:'MinIO Console', host:'minio.example.com', path:'/browser', ready:false, progress:0, panel:'chat', view:'buckets', messages:[], pending:null,
     buckets:[{name:'research-datasets',objects:72,usage:5.2},{name:'model-artifacts',objects:38,usage:2.7},{name:'team-reports',objects:14,usage:.5}],
-    done:[], skill:null, draft:null, recording:false, traces:[], recordedName:'', teachStage:'intro', shared:false, installed:false};
+    keys:[], nextKey:1, selectedBucket:'research-datasets', monitored:false, done:[], skill:null, draft:null, recording:false, traces:[], recordedName:'', teachStage:'intro', shared:false, installed:false};
 }
 let sites = {minio:initialSite()};
 let currentSite = 'minio';
@@ -63,7 +67,6 @@ let keeperOpen = false;
 let guided = true;
 let toastTimer;
 let generationTimer;
-let detailKind = '';
 let lastDialogFocus;
 const site = () => sites[currentSite];
 const toolsForSite = () => bucketTools;
@@ -71,6 +74,9 @@ const steps = [
   {id:'opened',title:'지금 쓰는 웹에 Keeper를 열어보세요',text:'오른쪽 위 Keeper 버튼을 누르면 이 사이트의 도구를 준비합니다.',label:'Keeper 열기',action:'keeper',target:'#keeper-toggle'},
   {id:'tools',title:'무엇을 할 수 있는지 살펴보세요',text:'도구 꾸러미를 열어 입력과 결과를 확인하세요.',label:'도구 살펴보기',action:'tools',target:'[data-action="tools"]'},
   {id:'created',title:'말 한마디로 버킷을 만들어보세요',text:'생성할 이름을 확인하고 실행하면 왼쪽 목록에 바로 나타납니다.',label:'버킷 생성 요청',action:'example-create',target:'[data-action="example-create"]'},
+  {id:'monitored',title:'버킷별 사용 현황을 확인하세요',text:'샘플 버킷의 용량·객체 수·요청 추이를 웹과 대화에서 함께 봅니다.',label:'모니터링 요청',action:'example-monitor',target:'[data-action="example-monitor"]'},
+  {id:'key-created',title:'이 버킷에 쓸 접근 키를 발급하세요',text:'대상 버킷과 키 이름을 확인하세요. 실제로 사용할 수 없는 모의 키입니다.',label:'키 발급 요청',action:'example-key',target:'[data-action="example-key"]'},
+  {id:'key-deleted',title:'발급한 키를 삭제해보세요',text:'정확한 키를 선택하고 삭제하면 웹 목록에서도 제거됩니다.',label:'키 삭제 요청',action:'example-delete-key',target:'[data-action="example-delete-key"]'},
   {id:'recorded',title:'반복할 업무를 한 번 보여주세요',text:'녹화를 켜고 왼쪽 웹에서 다른 버킷을 만들어보세요.',label:'업무 가르치기',action:'teach',target:'[data-action="start-record"]'},
   {id:'saved',title:'업무 순서를 내 Skill로 저장하세요',text:'의도와 바꿀 입력, 성공 조건을 확인하고 초안을 저장하세요.',label:'Skill 이어 만들기',action:'teach',target:'[data-action="save-skill"]'},
   {id:'reused',title:'다른 입력으로 다시 실행해보세요',text:'버킷 이름을 바꿔도 배운 순서대로 실행되는지 확인하세요.',label:'다른 이름으로 실행',action:'reuse',target:'[data-action="reuse"]'}
@@ -114,24 +120,27 @@ function renderGuide() {
 }
 function renderWebsite() {
   const s=site();
-  $('#website').innerHTML=`<header class="web-head"><span class="web-brand">MINIO</span><small>Console · demo-user</small></header>${s.recording?'<div class="record-banner">● 녹화 중 · Create Bucket으로 새 버킷을 하나 만들어주세요.</div>':''}<div class="web-layout"><nav class="web-nav" aria-label="MinIO 메뉴">${button('▣ &nbsp; Buckets','web-view','buckets','active')}</nav><div class="web-main">${renderBuckets()}</div></div>`;
+  $('#website').innerHTML=`<header class="web-head"><span class="web-brand">MINIO</span><small>Console · demo-user</small></header>${s.recording?'<div class="record-banner">● 녹화 중 · Create Bucket으로 새 버킷을 하나 만들어주세요.</div>':''}<div class="web-layout"><nav class="web-nav" aria-label="MinIO 메뉴">${button('▣ &nbsp; Buckets','web-view','buckets',s.view==='buckets'?'active':'')}${button('⌁ &nbsp; Monitoring','web-view','monitor',s.view==='monitor'?'active':'')}${button('⚿ &nbsp; Access Keys','web-view','keys',s.view==='keys'?'active':'')}</nav><div class="web-main">${s.view==='monitor'?renderMonitoring():s.view==='keys'?renderKeys():renderBuckets()}</div></div>`;
 }
 function renderBuckets() {
   const s=site();
-  return `<div class="crumb">Console / Object Browser</div><div class="web-title"><h2>Object Browser</h2>${button('＋ Create Bucket','web-create','','web-button')}</div><div class="stats"><div class="stat"><small>BUCKETS</small><strong>${s.buckets.length}</strong></div><div class="stat"><small>OBJECTS</small><strong>${s.buckets.reduce((n,b)=>n+b.objects,0)}</strong></div><div class="stat"><small>USAGE</small><strong>${s.buckets.reduce((n,b)=>n+b.usage,0).toFixed(1)} <small style="display:inline">GB</small></strong></div></div><div class="table-wrap"><table aria-label="버킷 목록"><thead><tr><th>BUCKET NAME</th><th>ACCESS</th><th>OBJECTS</th></tr></thead><tbody>${s.buckets.map((b,i)=>`<tr class="${i>2?'new-row':''}"><td>▱ &nbsp; ${escapeHTML(b.name)}</td><td>Private</td><td>${b.objects}</td></tr>`).join('')}</tbody></table></div><p class="web-hint">내 계정의 웹 화면에서 결과를 확인하세요. 표시된 데이터는 모의 값입니다.</p>`;
+  return `<div class="crumb">Console / Object Browser</div><div class="web-title"><h2>Object Browser</h2>${button('＋ Create Bucket','web-create','','web-button')}</div><div class="stats"><div class="stat"><small>BUCKETS</small><strong>${s.buckets.length}</strong></div><div class="stat"><small>OBJECTS</small><strong>${s.buckets.reduce((n,b)=>n+b.objects,0)}</strong></div><div class="stat"><small>USAGE</small><strong>${s.buckets.reduce((n,b)=>n+b.usage,0).toFixed(1)} <small style="display:inline">GB</small></strong></div></div><div class="table-wrap"><table aria-label="버킷 목록"><thead><tr><th>BUCKET NAME</th><th>ACCESS</th><th>OBJECTS</th></tr></thead><tbody>${s.buckets.map((b,i)=>`<tr class="${i>2?'new-row':''}"><td>${button('▱ &nbsp; '+escapeHTML(b.name),'bucket-detail',b.name,'quiet small')}</td><td>Private</td><td>${b.objects}</td></tr>`).join('')}</tbody></table></div><p class="web-hint">내 계정의 웹 화면에서 결과를 확인하세요. 표시된 데이터는 모의 값입니다.</p>`;
 }
 function renderPreparation() {
   const s=site(), labels=['현재 페이지 관찰','사용 가능한 기능 확인','도구와 기본 Skill 구성'];
   return `<span class="eyebrow">A NEW HABITAT</span><h2>${s.progress?'이 사이트의 일하는 법을<br>알아가는 중이에요.':'도구 준비를 이어가세요.'}</h2><p>처음 방문한 사이트입니다.<br>현재 탭에서 사용할 도구를 준비합니다.</p><div class="progress"><span style="width:${s.progress/4*100}%"></span></div>${labels.map((label,i)=>`<div class="generation-step ${s.progress>i+1?'done':''}">${s.progress>i+1?'✓':'○'} &nbsp; ${label}</div>`).join('')}<div class="info">${toolsForSite().map(t=>t.name).join(' · ')}</div>${s.progress?button('준비 중단','cancel-generation','','wide small'):button('다시 준비하기','generate','','primary wide')}<p>미리 구성한 기능으로 진행하는 모의 체험입니다.</p>`;
 }
 function examples() {
-  return `${button('내 버킷 목록 보여줘','example-list')}${button('demo-assets 버킷 만들어줘','example-create')}`;
+  return `${button('내 버킷 목록 보여줘','example-list')}${button('demo-assets 버킷 만들어줘','example-create')}${button('research-datasets 사용 현황 보여줘','example-monitor')}${button('데모용 접근 키 발급해줘','example-key')}${site().keys.length?button('접근 키 삭제하기','example-delete-key'):''}`;
 }
 function renderChat() {
   const s=site();
-  return `${s.messages.length?s.messages.map(m=>`${m.type==='assistant'?'<div class="message-name">🦁 KEEPER</div>':''}<div class="bubble ${m.type}">${escapeHTML(m.text)}</div>`).join(''):`<span class="pill">● ${toolsForSite().length}개 도구 준비됨</span><h2>이제 말로 일해보세요.</h2><p>요청하면 왼쪽 웹 화면에서 결과를 함께 확인할 수 있어요.</p><div class="card"><div class="row"><span class="avatar">🦫</span><div><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><small>MCP 도구 ${toolsForSite().length}개 · 기본 Skill 1개</small></div></div>${button('도구 구성 살펴보기 ↗','tools','','small wide')}</div>`}${s.pending?`<div class="card"><span class="eyebrow">실행 내용 확인</span><h3>${escapeHTML(pendingTitle())}</h3><p>대상: ${escapeHTML(s.name)} · 내 계정<br>${escapeHTML(s.pending.name)}</p><div class="row">${button('이 내용으로 실행','confirm','','primary small')}${button('취소','cancel','','small')}</div></div>`:''}<div class="suggestions">${examples()}${s.skill?.enabled?button(`${escapeHTML(s.skill.name)} · 다른 입력으로 실행`,'reuse'):''}</div>`;
+  return `${s.messages.length?s.messages.map(m=>`${m.type==='assistant'?'<div class="message-name">🦁 KEEPER</div>':''}<div class="bubble ${m.type}">${escapeHTML(m.text)}</div>`).join(''):`<span class="pill">● ${toolsForSite().length}개 도구 준비됨</span><h2>이제 말로 일해보세요.</h2><p>요청하면 왼쪽 웹 화면에서 결과를 함께 확인할 수 있어요.</p><div class="card"><div class="row"><span class="avatar">🦫</span><div><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><small>MCP 도구 ${toolsForSite().length}개 · 기본 Skill 1개</small></div></div>${button('도구 구성 살펴보기 ↗','tools','','small wide')}</div>`}${s.pending?`<div class="card"><span class="eyebrow">실행 내용 확인</span><h3>${escapeHTML(pendingTitle())}</h3><p>대상: ${escapeHTML(s.name)} · 내 계정<br>${escapeHTML(s.pending.name)}${s.pending.bucket?'<br>버킷: '+escapeHTML(s.pending.bucket):''}${s.pending.keyId?'<br>식별자: '+escapeHTML(s.pending.keyId):''}</p><div class="row">${button('이 내용으로 실행','confirm','','primary small')}${button('취소','cancel','','small')}</div></div>`:''}<div class="suggestions">${examples()}${s.skill?.enabled?button(`${escapeHTML(s.skill.name)} · 다른 입력으로 실행`,'reuse'):''}</div>`;
 }
-function pendingTitle() {return site().pending?.skill?'개인 Skill로 버킷을 생성하고 확인합니다':'새 버킷을 생성하고 목록에서 확인합니다';}
+function pendingTitle() {
+  if(site().pending?.type==='key-create')return '선택한 버킷에 모의 접근 키를 발급합니다';
+  if(site().pending?.type==='key-delete')return '선택한 접근 키를 삭제합니다';
+  return site().pending?.skill?'개인 Skill로 버킷을 생성하고 확인합니다':'새 버킷을 생성하고 목록에서 확인합니다';}
 function renderAssets() {
   const s=site();
   return `<span class="eyebrow">MY KEEPER / ${escapeHTML(s.name)}</span><h2>내 도구와 Skill</h2><p>도구는 하나의 기능, Skill은 도구를 사용하는 업무 순서입니다.</p><div class="section-title">이 사이트의 도구 <span class="pill">준비됨</span></div><div class="card"><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><p>MCP 도구 ${toolsForSite().length}개 · v0.1</p>${button('도구 목록 · 입력 · 결과 보기','tools','','small wide')}</div><div class="section-title">기본 Skill <small>도구와 함께 준비</small></div><div class="card"><h3>버킷 준비와 확인</h3><p>이름 확인 → 생성 → 목록 확인</p>${button('실행 순서와 구성 보기','basic-skill','','small wide')}</div><div class="section-title">내가 가르친 Skill ${button('＋ 새로 가르치기','teach','','quiet small')}</div>${s.skill?`<div class="card"><h3>${escapeHTML(s.skill.name)}</h3><p>기본값: ${escapeHTML(s.skill.default)} · ${s.shared?'팀 공유됨':'나만 사용'}</p><label class="toggle-row">대화에서 사용<input type="checkbox" data-action="toggle-skill" ${s.skill.enabled?'checked':''}></label><div class="row">${button('구성 · 편집','personal-skill','','small')}${button('팀에 공유','share','','small')}</div>${button('다른 입력으로 재실행','reuse','','small wide')}</div>`:'<div class="info">아직 개인 Skill이 없어요. 업무를 한 번 보여주면 이곳에 저장됩니다.</div>'}<div class="section-title">팀의 경험</div>${button('공유 Zoo 열기 ↗','store','','wide small')}`;
@@ -141,7 +150,6 @@ function toolDetails() {
 }
 function skillSteps() {return '<ol class="skill-steps"><li>입력한 이름과 기존 버킷을 확인합니다.<code>list_buckets</code></li><li>중복이 없으면 기본 옵션으로 생성합니다.<code>create_bucket(bucket_name)</code></li><li>새 목록에 정확한 이름이 있는지 확인합니다.<code>verify_bucket(bucket_name)</code></li></ol>';}
 function openDetails(kind) {
-  detailKind=kind;
   const s=site(), personal=kind==='personal', skill=personal?s.skill:null;
   if(kind==='tools') {
     mark('tools');
@@ -184,6 +192,20 @@ function requestCreate(name,skill=false) {
 function confirmTask() {
   const s=site(), task=s.pending;
   if(!task) return;
+  if(task.type==='key-create'){
+    const error=keyError(task.name,task.bucket);
+    if(error){message(error);s.pending=null;render();return;}
+    const key=createKey(task.name,task.bucket);
+    message(`${key.name} 접근 키를 발급했어요.\n식별자: ${key.id}\n대상 버킷: ${key.bucket}\n✓ 웹의 키 목록에서 확인했어요.`);
+    s.pending=null;render();showKeySecret(key);return;
+  }
+  if(task.type==='key-delete'){
+    const key=s.keys.find(k=>k.id===task.keyId);
+    if(!key){message('해당 키가 이미 삭제됐어요.');s.pending=null;render();return;}
+    s.keys=s.keys.filter(k=>k.id!==task.keyId);s.view='keys';mark('key-deleted');
+    message(`${key.name} (${key.id}) 접근 키를 삭제했어요.\n✓ 목록에서 제거된 것을 확인했어요. 다른 키는 그대로입니다.`);
+    s.pending=null;render();return;
+  }
   const error=bucketError(task.name);
   if(error){message(error);s.pending=null;render();return;}
   s.buckets.push({name:task.name,objects:0,usage:0});
@@ -200,6 +222,18 @@ function reuse() {
 }
 function sendMessage(text) {
   if(!site().ready||!text.trim())return;
+  if(/키|key/i.test(text)){
+    message(text,'user');
+    if(/삭제|제거/.test(text)){openKeyPicker();return;}
+    if(/발급|만들|생성/.test(text)){openKeyForm();return;}
+    sKeyList();return;
+  }
+  if(/현황|사용량|모니터|추이/.test(text)){
+    const named=site().buckets.find(b=>text.includes(b.name));
+    const requested=(text.match(/[a-z0-9][a-z0-9.-]{2,62}/i)||[])[0];
+    if(requested&&!named){message(text,'user');message(`${requested} 버킷을 찾지 못했어요. 왼쪽 목록에서 대상을 확인해주세요.`);render();return;}
+    monitor(named?.name||site().selectedBucket,true,text);return;
+  }
   if(/만들|생성/.test(text)){
     const name=(text.match(/[a-z0-9][a-z0-9.-]{2,62}/i)||[])[0]||site().skill?.default||'demo-assets';
     const wantsSkill=/skill|스킬/i.test(text);
@@ -232,6 +266,11 @@ function handleAction(action,value) {
   if(action==='reset'){clearInterval(generationTimer);sites={minio:initialSite()};currentSite='minio';keeperOpen=false;guided=true;document.querySelectorAll('dialog[open]').forEach(d=>d.close());render();return;}
   if(action==='site'){return;}
   if(action==='web-view'){s.view=value;render();return;}
+  if(action==='bucket-detail'){monitor(value,false);return;}
+  if(action==='example-monitor'){monitor('research-datasets',true);return;}
+  if(action==='example-key'||action==='web-key-create'){openKeyForm();return;}
+  if(action==='example-delete-key'){openKeyPicker();return;}
+  if(action==='delete-key'){requestKeyDelete(value);return;}
   if(action==='web-create'){openBucketForm();return;}
   if(action==='example-list'){sendMessage('내 버킷 목록 보여줘');return;}
   if(action==='example-create'){requestCreate('demo-assets');return;}
@@ -250,10 +289,74 @@ function handleAction(action,value) {
   if(action==='confirm-share'){s.shared=true;openStore();render();toast('팀에 공유했어요 · 실제 게시 없음');return;}
   if(action==='install'){s.installed=true;openStore();toast('현재 사이트의 Keeper에 설치했어요 · 시안');return;}
 }
+
+function metricData(bucket) {
+  const samples={'research-datasets':[18,24,15,38,30,48,34,62,40,58,76,51], 'model-artifacts':[10,16,11,20,38,28,19,36,27,43,36,48], 'team-reports':[8,12,7,15,11,18,21,14,9,16,19,24]};
+  const series=samples[bucket.name]||Array(12).fill(0);
+  return {series,requests:series.reduce((a,b)=>a+b,0),errors:bucket.name==='research-datasets'?2:0};
+}
+function renderMonitoring() {
+  const s=site(),b=s.buckets.find(b=>b.name===s.selectedBucket)||s.buckets[0],metrics=metricData(b);
+  const chart=metrics.series.map((n,i)=>`${20+i*40},${125-n}`).join(' ');
+  return `<div class="crumb">Console / Buckets / Monitoring</div><div class="web-title"><h2>Bucket Monitoring</h2><span class="pill">최근 24시간 · 샘플</span></div><label class="field" for="monitor-bucket">모니터링할 버킷</label><select id="monitor-bucket" style="width:100%;margin-bottom:18px">${s.buckets.map(b=>`<option ${b.name===s.selectedBucket?'selected':''}>${escapeHTML(b.name)}</option>`).join('')}</select><div class="stats"><div class="stat"><small>USAGE</small><strong>${b.usage.toFixed(1)} GB</strong></div><div class="stat"><small>OBJECTS</small><strong>${b.objects}</strong></div><div class="stat"><small>REQUESTS</small><strong>${metrics.requests}</strong></div></div><div class="card"><div class="row between"><strong style="font-size:12px">Request activity</strong><small>요청 ${metrics.requests} · 오류 ${metrics.errors}</small></div><svg viewBox="0 0 480 155" role="img" aria-label="${escapeHTML(b.name)}의 24시간 샘플 요청 ${metrics.requests}건, 오류 ${metrics.errors}건" style="width:100%;display:block"><path d="M20 45H460M20 85H460M20 125H460" fill="none" stroke="#e8edf0"/><polygon points="20,125 ${chart} 460,125" fill="#e8f2ec"/><polyline points="${chart}" fill="none" stroke="#468a70" stroke-width="2.5"/><g fill="#9aa6a0" font-size="10"><text x="20" y="150">00:00</text><text x="230" y="150">12:00</text><text x="433" y="150">24:00</text></g></svg><details><summary style="font-size:11px">2시간 단위 요청 수 보기</summary><p style="font-size:11px">${metrics.series.map((n,i)=>`${String(i*2).padStart(2,'0')}시: ${n}`).join(' · ')}</p></details></div><p class="web-hint">버킷별 고정 샘플 데이터입니다. 실제 실측이나 지속 감시는 수행하지 않습니다. 새 버킷은 0으로 표시됩니다.</p>`;
+}
+function monitor(name,chat=false,text='') {
+  const s=site(),b=s.buckets.find(b=>b.name===name);
+  if(!b){toast('버킷을 찾을 수 없어요.');return;}
+  s.view='monitor';s.selectedBucket=name;
+  if(chat){const metrics=metricData(b);s.panel='chat';message(text||`${name} 사용 현황 보여줘`,'user');message(`${name} 버킷의 샘플 현황이에요.\n• 사용량 ${b.usage.toFixed(1)} GB\n• 객체 ${b.objects}개\n• 최근 24시간 요청 ${metrics.requests}건 / 오류 ${metrics.errors}건\n\n왼쪽에서 같은 버킷의 추이를 확인하세요.`);mark('monitored');}
+  render();
+}
+function renderKeys() {
+  const s=site();
+  return `<div class="crumb">Console / Access Keys</div><div class="web-title"><h2>Access Keys</h2>${button('＋ Create Access Key','web-key-create','','web-button')}</div><div class="info">실제로 사용할 수 없는 데모용 키입니다. 선택한 버킷에만 사용하는 예시로 표시합니다.</div><div class="table-wrap"><table aria-label="접근 키 목록"><thead><tr><th>NAME / ACCESS KEY</th><th>BUCKET</th><th>ACTION</th></tr></thead><tbody>${s.keys.length?s.keys.map(k=>`<tr><td><strong>${escapeHTML(k.name)}</strong><br><small>${escapeHTML(k.id)}</small></td><td>${escapeHTML(k.bucket)}</td><td>${button('삭제','delete-key',k.id,'small danger')}</td></tr>`).join(''):'<tr><td colspan="3" class="empty">발급된 접근 키가 없습니다.</td></tr>'}</tbody></table></div><p class="web-hint">Secret은 발급 직후 한 번 표시합니다. 목록에 Secret을 남기지 않습니다.</p>`;
+}
+function keyError(name,bucket) {
+  if(!name||name.length>40)return '키 이름을 1~40자로 입력해주세요.';
+  if(site().keys.some(k=>k.name===name))return '같은 이름의 키가 있어요. 다른 이름을 사용해주세요.';
+  if(!site().buckets.some(b=>b.name===bucket))return '대상 버킷이 존재하지 않아요.';
+  return '';
+}
+function createKey(name,bucket) {
+  const s=site(), key={id:'DEMO-ACCESS-'+String(s.nextKey++).padStart(3,'0'),name,bucket};
+  s.keys.push(key);s.view='keys';mark('key-created');return key;
+}
+function showKeySecret(key) {
+  $('#web-dialog-content').innerHTML=`<h2 id="web-dialog-title">접근 키가 발급됐어요</h2><p>${escapeHTML(key.name)} · ${escapeHTML(key.bucket)}</p><label class="field">Access Key</label><code>${escapeHTML(key.id)}</code><label class="field">Secret · 지금 한 번만 표시</label><pre>DEMO-ONLY-NOT-A-REAL-SECRET-${escapeHTML(key.id)}</pre><div class="info">모의 문자열입니다. 실제 계정이나 API에 사용할 수 없습니다.</div>${button('확인 · 키 목록 보기','close-web','','primary wide')}`;
+  showDialog('#web-dialog');
+}
+function openKeyForm() {
+  const s=site();
+  if(!s.ready){toast('Keeper에서 도구를 먼저 준비해주세요.');return;}
+  s.view='keys';render();
+  $('#web-dialog-content').innerHTML=`<h2 id="web-dialog-title">접근 키 발급</h2><p>사용할 버킷과 알아보기 쉬운 이름을 선택하세요.</p><form id="key-form"><label class="field" for="key-name">키 이름</label><input class="text" id="key-name" value="demo-key-${s.nextKey}" required maxlength="40"><label class="field" for="key-bucket">대상 버킷</label><select id="key-bucket" class="wide">${s.buckets.map(b=>`<option ${b.name===s.selectedBucket?'selected':''}>${escapeHTML(b.name)}</option>`).join('')}</select><div class="info">범위: 선택한 버킷 · 읽기/쓰기 · 모의 권한<br>다른 버킷이나 계정에 대한 권한을 만들지 않습니다.</div><div class="actions">${button('취소','close-web')}<button type="submit" class="primary">발급 내용 확인</button></div></form>`;
+  showDialog('#web-dialog');
+}
+function openKeyPicker() {
+  const s=site();s.view='keys';s.panel='chat';render();
+  if(!s.keys.length){message('삭제할 접근 키가 없어요. 먼저 데모용 키를 발급해주세요.');render();return;}
+  $('#web-dialog-content').innerHTML=`<h2 id="web-dialog-title">삭제할 키 선택</h2><p>이름과 식별자를 확인하세요. 선택 후 한 번 더 실행 내용을 확인합니다.</p><div class="stack">${s.keys.map(k=>button(`${escapeHTML(k.name)} · ${escapeHTML(k.id)}`,'delete-key',k.id)).join('')}</div><div class="actions">${button('취소','close-web')}</div>`;
+  showDialog('#web-dialog');
+}
+function requestKeyDelete(id) {
+  const key=site().keys.find(k=>k.id===id);if(!key)return;
+  if($('#web-dialog').open)closeDialog('#web-dialog');
+  keeperOpen=true;site().panel='chat';site().pending={type:'key-delete',name:key.name,keyId:key.id,bucket:key.bucket};
+  message(`${key.name} (${key.id}) 접근 키 삭제해줘`,'user');render();$('#panel-content').scrollTop=$('#panel-content').scrollHeight;
+}
+function sKeyList(){site().view='keys';message(site().keys.length?site().keys.map(k=>`${k.name} · ${k.id} · ${k.bucket}`).join('\n'):'발급된 접근 키가 없어요.');render();}
+document.addEventListener('change',event=>{if(event.target.id==='monitor-bucket')monitor(event.target.value,false);});
+
 document.addEventListener('click',event=>{const target=event.target.closest('[data-action]');if(target&&!target.disabled)handleAction(target.dataset.action,target.dataset.value);});
 document.addEventListener('submit',event=>{
   const s=site(), id=event.target.id;
   event.preventDefault();
+  if(id==='key-form'){
+    const name=$('#key-name').value.trim(),bucket=$('#key-bucket').value,error=keyError(name,bucket);
+    if(error){toast(error);return;}
+    closeDialog('#web-dialog');keeperOpen=true;s.panel='chat';
+    s.pending={type:'key-create',name,bucket};message(`${bucket} 버킷에 ${name} 접근 키 발급해줘`,'user');render();$('#panel-content').scrollTop=$('#panel-content').scrollHeight;return;
+  }
   if(id==='chat-form'){sendMessage($('#chat-input').value);return;}
   if(id==='bucket-form'){
     const name=$('#bucket-name').value.trim(), error=bucketError(name);
