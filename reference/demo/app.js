@@ -17,6 +17,7 @@
     site,
     stage: 0,
     guided: true,
+    panelOpen: true,
     tab: "chat",
     page: "buckets",
     discovered: false,
@@ -110,7 +111,7 @@
     [
       "내 업무를 배우는 Keeper",
       "Discover부터 개인 Skill 재사용까지 완료했어요. 버킷 모니터링·키 관리도 자유롭게 둘러보세요.",
-      "#extras",
+      ".keeper-brand",
       "오른쪽의 ‘다른 웹앱’을 선택해 새 환경도 체험할 수 있어요.",
     ],
   ];
@@ -172,7 +173,7 @@
     [
       "새 웹앱에서도, 내 업무 방식대로",
       "조건 조회를 나만의 Skill로 재사용했어요. 관리도와 웨이퍼맵도 자유롭게 둘러보세요.",
-      "#extras",
+      ".keeper-brand",
       "다른 웹앱을 선택하면 MinIO 흐름도 바로 시작할 수 있어요.",
     ],
   ];
@@ -216,9 +217,52 @@
   function landing() {
     return `${header()}<main class="landing"><div class="eyebrow">THE WEB YOU KNOW. A NEW WAY TO WORK.</div><h1>웹은 그대로.<br><em>일하는 방식은 새롭게.</em></h1><p>쓰던 웹앱에서 말하고, 한 번 보여주고,<br>나만의 업무 Skill로 다시 해보세요.</p><div class="site-choices"><button class="site-choice" data-site="minio"><span class="site-icon minio-icon">M</span><div><small>OBJECT STORAGE</small><h2>MinIO</h2><p>버킷을 만들고, 프로젝트 준비를 Skill로.</p><strong>약 3분 · 체험 시작 →</strong></div></button><button class="site-choice" data-site="wafer"><span class="site-icon wafer-icon">Si</span><div><small>SEMICONDUCTOR METROLOGY</small><h2>WaferSight</h2><p>조건을 바꾸고, 계측 결과를 한눈에.</p><strong>약 3분 · 체험 시작 →</strong></div></button></div><p class="landing-note">설치·계정·API 키 없이 바로 시작합니다.<br>모든 데이터와 실행은 브라우저 안의 합성 시뮬레이션입니다.</p><div class="zoo-art" aria-hidden="true">🌳 <span>🦒</span> 🌿</div></main>`;
   }
-  function guide() {
-    const [title, description, target, result] = steps()[s.stage];
-    return `<section class="guide ${s.guided ? "" : "free-guide"}" aria-label="체험 안내"><div class="guide-head"><span class="eyebrow">${s.guided ? `GUIDED TOUR · ${String(s.stage + 1).padStart(2, "0")} / ${steps().length}` : "FREE EXPLORATION"}</span><button class="quiet" data-action="guide">${s.guided ? "안내 건너뛰기" : "가이드 이어가기"}</button></div><h2>${s.guided ? title : "내 방식대로 둘러보세요"}</h2><p>${s.guided ? description : "Discover로 도구를 준비하고 채팅·Record·Skill을 자유롭게 사용하세요. 왼쪽 웹앱도 직접 조작할 수 있어요."}</p>${s.guided ? `<div class="expected"><span>확인할 결과</span> ${result}</div><div class="guide-footer"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step">${s.stage === 9 ? "체험 완료 ✓" : "할 일 위치로 →"}</button></div>` : ""}</section>`;
+  function welcomeCard() {
+    const [title, description, , result] = steps()[s.stage];
+    return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · ${s.stage + 1} / ${steps().length}</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>${s.busy ? "이 페이지에서 할 수 있는 일을 찾고 있어요" : title}</h2><p>${s.busy ? "화면 관찰부터 후보 구성까지 진행 상황을 확인하세요. 완료되면 바로 대화할 수 있어요." : description}</p><div class="coach-result">${result}</div><div class="coach-actions"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step">${s.stage === 9 ? "체험 완료 ✓" : "할 일 위치로 →"}</button></div></section>`;
+  }
+  function coachTarget() {
+    return (
+      root.querySelector(steps()[s.stage][2]) ||
+      root.querySelector(
+        `[data-tab="${s.stage <= 2 ? "tools" : s.stage === 3 ? "chat" : "learn"}"]`,
+      )
+    );
+  }
+  function positionCoach() {
+    const card = root.querySelector("#welcome-card"),
+      target = coachTarget();
+    if (!card || !target || card.classList.contains("inline-coach")) return;
+    const rect = target.getBoundingClientRect(),
+      gap = 16,
+      width = 280;
+    const height = card.getBoundingClientRect().height;
+    let left, top;
+    if (rect.left >= width + gap + 10) {
+      left = rect.left - width - gap;
+      top = Math.max(12, Math.min(innerHeight - height - 12, rect.top));
+      card.dataset.arrow = "right";
+    } else if (innerWidth - rect.right >= width + gap + 10) {
+      left = rect.right + gap;
+      top = Math.max(12, Math.min(innerHeight - height - 12, rect.top));
+      card.dataset.arrow = "left";
+    } else if (rect.top >= height + gap + 12) {
+      left = Math.max(12, Math.min(innerWidth - width - 12, rect.left));
+      top = rect.top - height - gap;
+      card.dataset.arrow = "bottom";
+    } else if (innerHeight - rect.bottom >= height + gap + 12) {
+      left = Math.max(12, Math.min(innerWidth - width - 12, rect.left));
+      top = rect.bottom + gap;
+      card.dataset.arrow = "top";
+    } else {
+      card.classList.add("inline-coach");
+      (target.closest("nav") || target).before(card);
+      card.style.visibility = "visible";
+      return;
+    }
+    card.style.left = `${left}px`;
+    card.style.top = `${top}px`;
+    card.style.visibility = "visible";
   }
   function bucketForm() {
     return `<form id="bucket-form" class="inline-form"><label for="bucket-name">Bucket Name</label><input id="bucket-name" name="name" placeholder="my-project" value="${esc(s.newBucket)}" required minlength="3" maxlength="63" pattern="[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]"><div class="actions"><button class="web-button">Create Bucket</button><button type="button" class="quiet" data-action="close-create">Cancel</button></div></form>`;
@@ -429,7 +473,7 @@
       .join("");
   }
   function chatPanel() {
-    return `${s.ready ? "" : `<div class="welcome-art" aria-hidden="true"><span class="tree">♣</span><span>🦁</span><span class="tree small">♣</span></div><h2 class="welcome-title">이 웹에서도,<br>말로 일할 수 있을까요?</h2><p class="muted">Keeper가 현재 페이지를 살펴보고<br>반복할 일을 도구로 준비해요.</p>`}${messages()}${s.discovered && !s.ready ? '<button id="tool-detail" class="secondary full" data-action="detail">도구 후보 2개 · 구성 확인 →</button>' : ""}${s.discovered ? `<form id="chat-form" class="chat-form"><label for="chat-input">Keeper에게 요청하기</label><textarea id="chat-input" name="message" rows="2" required>${esc(s.chatDraft)}</textarea><div><small>${s.site === "wafer" ? "예: DEMO-C, ETCH-01 조건으로 조회해줘" : "예: launch-assets 버킷을 만들어줘"}</small><button aria-label="요청 보내기">보내기 ↑</button></div></form>` : ""}`;
+    return `${s.discovered ? "" : `<div class="welcome-art" aria-hidden="true"><span class="tree">♣</span><span>🦁</span><span class="tree small">♣</span></div><h2 class="welcome-title">이 웹에서도,<br>말로 일할 수 있을까요?</h2><p class="muted">Keeper가 현재 페이지를 살펴보고<br>반복할 일을 도구로 준비해요.</p>`}${messages()}${s.discovered && !s.ready ? '<button id="tool-detail" class="secondary full" data-action="detail">도구 후보 2개 · 구성 확인 →</button>' : ""}${s.discovered ? `<form id="chat-form" class="chat-form"><label for="chat-input">Keeper에게 요청하기</label><textarea id="chat-input" name="message" rows="2" required>${esc(s.chatDraft)}</textarea><div><small>${s.site === "wafer" ? "예: DEMO-C, ETCH-01 조건으로 조회해줘" : "예: launch-assets 버킷을 만들어줘"}</small><button aria-label="요청 보내기">보내기 ↑</button></div></form>` : ""}`;
   }
   function learnPanel() {
     if (s.site === "wafer") return waferLearn();
@@ -445,7 +489,7 @@
     return `<section class="discovery-progress" role="status"><div class="row"><strong>Discover 진행 중</strong><span>${s.discoveryProgress + 1} / 4</span></div><progress max="4" value="${s.discoveryProgress + 1}" aria-label="Discover 진행률"></progress><p>${phases[s.discoveryProgress]}</p><small>합성 화면 관찰 → 도구 후보 구성 · 시뮬레이션</small></section>`;
   }
   function keeper() {
-    return `<aside class="keeper"><div class="keeper-brand"><span>🦁</span><div><strong>Keeper</strong><small>by vibe zoo · 시뮬레이션</small></div><span class="habitat">${s.site === "minio" ? "MinIO" : "WaferSight"}</span></div>${guide()}<nav class="keeper-tabs" aria-label="Keeper 메뉴">${[
+    return `<aside class="keeper"><div class="keeper-brand"><span>🦁</span><div><strong>Keeper</strong><small>by vibe zoo · 시뮬레이션</small></div><span class="habitat">${s.site === "minio" ? "MinIO" : "WaferSight"}</span><button class="quiet panel-toggle" data-action="panel" aria-expanded="true" aria-label="Keeper 패널 접기">접기 ›</button></div><nav class="keeper-tabs" aria-label="Keeper 메뉴">${[
       ["chat", "대화"],
       ["tools", "도구"],
       ["learn", "가르치기"],
@@ -456,19 +500,20 @@
       )
       .join(
         "",
-      )}</nav><div class="keeper-body">${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}<div id="extras" class="extras"><span class="eyebrow">EXPLORE MORE</span>${s.site === "wafer" ? '<button data-page="dashboard">계측 대시보드 ↗</button><button data-page="wafermap">웨이퍼맵 ↗</button>' : '<button data-page="monitor">버킷별 모니터링 ↗</button><button data-page="keys">Access Key 발급·삭제 ↗</button>'}</div></div></aside>`;
+      )}</nav><div class="keeper-body">${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}</div></aside>`;
   }
   function render() {
     if (!s) {
       root.innerHTML = landing();
       return;
     }
-    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><span>데이터·도구·Skill이 연결된 합성 체험</span></div><div class="workspace"><section class="browser" aria-label="합성 웹앱"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 후보 시험 필요" : "○ 첫 방문 · 도구 없음"}</span></div>${s.site === "wafer" ? wafer() : minio()}</section>${keeper()}</div></main>`;
-    if (s.guided) {
-      const target = root.querySelector(steps()[s.stage][2]);
+    root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}"><section class="browser" aria-label="합성 웹앱"><div class="browser-bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="address">◈ ${s.site === "minio" ? "minio.demo / browser" : "wafersight.demo / dashboard"}</span><span class="browser-status">${s.ready ? "● 도구 준비 완료" : s.discovered ? "◐ 후보 시험 필요" : "○ 첫 방문 · 도구 없음"}</span>${!s.panelOpen ? '<button class="keeper-launcher" data-action="panel" aria-expanded="false">🦁 Keeper 열기</button>' : ""}</div>${s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && s.panelOpen ? welcomeCard() : ""}`;
+    if (s.guided && s.panelOpen) {
+      const target = coachTarget();
       target?.classList.add("focus-target");
       if (target && s.stage !== 5)
         target.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+      positionCoach();
     }
   }
   function fail(text) {
@@ -532,6 +577,11 @@
       return;
     }
     const action = element.dataset.action;
+    if (action === "panel") {
+      s.panelOpen = !s.panelOpen;
+      render();
+      return;
+    }
     if (action === "home") {
       clearTimeout(timer);
       s = null;
@@ -543,6 +593,7 @@
       return;
     }
     if (action === "focus-step") {
+      s.panelOpen = true;
       s.tab =
         s.stage === 0
           ? "chat"
@@ -561,6 +612,7 @@
     if (action === "guide") {
       s.guided = !s.guided;
       if (s.guided) {
+        s.panelOpen = true;
         s.tab =
           s.stage <= 2
             ? "tools"
@@ -854,6 +906,10 @@
       success(`${name} 데모 키를 만들었어요.`);
       render();
     }
+  });
+  root.addEventListener("scroll", positionCoach, true);
+  window.addEventListener("resize", () => {
+    if (s) render();
   });
   render();
 })();

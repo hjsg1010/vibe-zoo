@@ -53,7 +53,9 @@ it("completes Discover, trial, chat, Record and Skill reuse with matching busine
   expect(document.querySelector(".table-wrap")!.textContent).toContain(
     "second-project",
   );
-  expect(document.querySelector(".guide")!.textContent).toContain("체험 완료");
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "체험 완료",
+  );
   click('[data-tab="chat"]');
   expect(
     document.querySelector(".message.keeper:last-of-type")?.textContent ??
@@ -131,7 +133,9 @@ it("reuses a recorded wafer query with new product and equipment and matching me
   expect(document.querySelector("#query-scope")!.textContent).toContain(
     "DEMO-A · ETCH-01 · 8건",
   );
-  expect(document.querySelector(".guide")!.textContent).toContain("체험 완료");
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "체험 완료",
+  );
   click('[data-action="guide"]');
   click('[data-page="wafermap"]');
   expect(document.querySelectorAll(".wafer-item")).toHaveLength(8);
@@ -147,7 +151,7 @@ it("returns to the guided action after tab exploration and resumes after skippin
   click("#discover");
   vi.advanceTimersByTime(2700);
   click('[data-action="guide"]');
-  expect(document.querySelector(".guide h2")!.textContent).toContain(
+  expect(document.querySelector("#welcome-card h2")!.textContent).toContain(
     "어떤 도구",
   );
   click('[data-tab="learn"]');
@@ -186,5 +190,28 @@ it("shows Discover phases and opens conversation before trial, and drafts Record
   submit("#intent-form");
   expect(document.querySelector(".skill-card")!.textContent).toContain(
     "record-notes",
+  );
+});
+
+it("replaces the fixed tour with numbered welcome cards and preserves state while collapsing Keeper", () => {
+  vi.useFakeTimers();
+  start();
+  expect(document.querySelector(".guide")).toBeNull();
+  expect(document.querySelector("#extras")).toBeNull();
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "1 / 10",
+  );
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  fill("#chat-input", "보존할 초안");
+  click('[data-action="panel"]');
+  expect(document.querySelector(".keeper")).toBeNull();
+  expect(document.querySelector("#welcome-card")).toBeNull();
+  click('[data-action="panel"]');
+  expect(
+    (document.querySelector("#chat-input") as HTMLTextAreaElement).value,
+  ).toBe("보존할 초안");
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "2 / 10",
   );
 });
