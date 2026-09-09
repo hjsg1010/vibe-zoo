@@ -226,6 +226,26 @@ export class Repository {
       .all(owner)
       .map((r) => parse<PersonalAsset>(r)!);
   }
+  deleteAsset(owner: string, id: string): void {
+    this.asset(owner, id);
+    transaction(this.db, () => {
+      // Publications reference versions without a foreign key, so remove
+      // dependent publication rows before cascading the asset versions.
+      this.db
+        .prepare(
+          "DELETE FROM installations WHERE publication_id IN (SELECT id FROM publications WHERE owner=? AND version_id IN (SELECT id FROM versions WHERE owner=? AND asset_id=?))",
+        )
+        .run(owner, owner, id);
+      this.db
+        .prepare(
+          "DELETE FROM publications WHERE owner=? AND version_id IN (SELECT id FROM versions WHERE owner=? AND asset_id=?)",
+        )
+        .run(owner, owner, id);
+      this.db
+        .prepare("DELETE FROM assets WHERE owner=? AND id=?")
+        .run(owner, id);
+    });
+  }
   saveVersion(v: Version): void {
     invariant(this.asset(v.owner, v.assetId));
     this.db

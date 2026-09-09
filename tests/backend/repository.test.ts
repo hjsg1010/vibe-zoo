@@ -144,4 +144,18 @@ describe("Repository boundaries and durable state", () => {
     expect(() => repo.activate("alice", j.id, 0, v.id, 0)).toThrow("not_found");
     expect(repo.jobs("alice")).toHaveLength(0);
   });
+  it("deletes an owned asset, versions, and its publications without affecting another owner", () => {
+    const { asset, v } = candidate();
+    repo.db.prepare("INSERT INTO publications VALUES(?,?,?,?)").run(
+      "publication",
+      "alice",
+      v.id,
+      JSON.stringify({ id: "publication", owner: "alice", versionId: v.id }),
+    );
+    repo.deleteAsset("alice", asset.id);
+    expect(repo.assets("alice")).toHaveLength(0);
+    expect(repo.db.prepare("SELECT * FROM versions WHERE id=?").all(v.id)).toHaveLength(0);
+    expect(repo.db.prepare("SELECT * FROM publications WHERE id=?").all("publication")).toHaveLength(0);
+    expect(() => repo.deleteAsset("bob", asset.id)).toThrow("not_found");
+  });
 });

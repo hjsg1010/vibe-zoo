@@ -123,7 +123,7 @@ export type Job = {
     versionId: string;
     inputs: z.infer<typeof inputsSchema>;
     sourceInputs: z.infer<typeof inputsSchema>;
-    sourceJobId: string;
+    sourceJobId?: string;
   };
   validatorRepair?: "requested" | "finished";
   nonExecutionReview?: {

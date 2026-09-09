@@ -16,6 +16,73 @@ import { migrate } from "../../src/backend/storage/migrate.js";
 import { Registry } from "../../src/backend/assets/registry.js";
 import { job, binding } from "../helpers/fixtures.js";
 import type { BrowserCommand, Receipt } from "../../src/shared/contracts.js";
+it("settles lost discovery retries without the original tab and releases its slot", async () => {
+  const db = openDatabase(":memory:");
+  migrate(db);
+  const repo = new Repository(db);
+  repo.actor("alice", "hash");
+  let current: typeof binding | undefined = binding;
+  let dispatches = 0;
+  let lose = true;
+  const browser: BrowserPort = {
+    current: () => current,
+    enqueue: async (_owner, command) => {
+      dispatches++;
+      if (lose) throw Error("disconnected");
+      return {
+        type: "receipt",
+        actionId: command.actionId,
+        jobId: command.jobId,
+        controlRevision: command.controlRevision,
+        binding,
+        outcome: { status: "success", completed: [], reason: "observed" },
+      };
+    },
+  };
+  const c = new Coordinator(repo, browser, new Registry(repo));
+  try {
+    const a = repo.createJob(job());
+    for (let i = 0; i < 3; i++) {
+      await expect(
+        c.execute("alice", a.id, { kind: "observe" }, {}, [], i > 0),
+      ).rejects.toThrow("disconnected");
+    }
+    const cancelled = await c.cancel(
+      "alice",
+      a.id,
+      repo.getJob("alice", a.id).controlRevision,
+    );
+    current = undefined;
+    await expect(
+      c.reconcile("bob", a.id, cancelled.controlRevision),
+    ).rejects.toThrow();
+    await expect(
+      c.reconcile("alice", a.id, cancelled.controlRevision - 1),
+    ).rejects.toThrow("conflict");
+    const result = await c.reconcile("alice", a.id, cancelled.controlRevision);
+    expect(result.status).toBe("cancelled");
+    expect(result.outcome?.status).toBe("interrupted");
+    expect(
+      repo
+        .actions("alice", a.id)
+        .every(
+          (a) =>
+            a.state === "observed" &&
+            a.reconciliation?.outcome.status === "interrupted",
+        ),
+    ).toBe(true);
+    expect(dispatches).toBe(3);
+    current = binding;
+    lose = false;
+    const b = repo.createJob(job());
+    expect(
+      (await c.execute("alice", b.id, { kind: "observe" }, {})).status,
+    ).toBe("success");
+  } finally {
+    db.close();
+  }
+});
+
 it("keeps unknown token reservations and the browser reconciliation reserve", () => {
   const b = reserveModel(job().budget, 100);
   expect(settleModel(b, 4196)).toEqual(b);

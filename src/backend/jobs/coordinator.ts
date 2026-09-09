@@ -147,6 +147,45 @@ export class Coordinator {
     return `${j.owner}:${j.binding.instance}:${j.binding.tabId}`;
   }
   async reconcile(owner: string, id: string, revision: number): Promise<Job> {
+    // Discovery reads have no business postcondition and can be interrupted
+    // locally after losing their tab. Never settle mutations this way.
+    const interrupted = await this.control.run(id, () => {
+      const job = this.repo.getJob(owner, id);
+      invariant(job.controlRevision === revision, "conflict");
+      const actions = this.repo.actions(owner, id);
+      if (
+        !["failed", "cancelled", "unknown"].includes(job.status) ||
+        !actions.some((a) => a.state === "unknown") ||
+        !actions.every(
+          (a) =>
+            a.command.operation.kind === "observe" &&
+            a.command.postconditions.length === 0 &&
+            ["unknown", "observed"].includes(a.state),
+        )
+      )
+        return undefined;
+      const outcome: Outcome = {
+        status: "interrupted",
+        completed: [],
+        reason:
+          "응답을 받지 못한 읽기 전용 관찰을 중단 처리했습니다. 대상 탭을 연결하고 도구 준비를 다시 시작해주세요.",
+      };
+      const updated = this.repo.updateJob(owner, id, revision, (j) => {
+        for (const action of actions) {
+          if (action.state !== "unknown") continue;
+          this.repo.saveAction({
+            ...action,
+            state: "observed",
+            // Preserve receipts and record interruption, never success.
+            reconciliation: { actionId: action.id, outcome },
+          });
+        }
+        return { ...j, status: j.cancelled ? "cancelled" : "failed", outcome };
+      });
+      this.slots.release(this.targetKey(job), id);
+      return updated;
+    });
+    if (interrupted) return interrupted;
     const original = this.repo
       .actions(owner, id)
       .find(

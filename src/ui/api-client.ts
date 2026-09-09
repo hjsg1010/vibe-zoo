@@ -19,11 +19,15 @@ export class ApiClient {
     readonly origin: string,
     public token = "",
   ) {}
-  async call<T>(path: string, body?: unknown): Promise<T> {
+  async call<T>(
+    path: string,
+    body?: unknown,
+    method?: "GET" | "POST" | "DELETE",
+  ): Promise<T> {
     let response: Response;
     try {
       response = await fetch(this.origin + path, {
-        method: body === undefined ? "GET" : "POST",
+        method: method ?? (body === undefined ? "GET" : "POST"),
         credentials: "include",
         signal: AbortSignal.timeout(15000),
         headers: {
@@ -39,6 +43,7 @@ export class ApiClient {
       const data = (await response.json()) as { error?: string };
       throw Error(data.error ?? "connection_failed");
     }
+    if (response.status === 204) return undefined as T;
     return (await response.json()) as T;
   }
   state(): Promise<State> {
@@ -68,6 +73,8 @@ export function errorMessage(error: unknown): string {
       model_not_found: "모델 ID와 리전을 확인해주세요.",
       model_quota: "모델 할당량 또는 사용 한도를 확인해주세요.",
       budget_exhausted: "이번 작업의 실행 한도에 도달했습니다.",
+      not_observed: "이 후보는 먼저 새 입력으로 시험 실행해야 합니다.",
+      invalid_input: "입력값이 올바르지 않거나 이전 검증과 같은 값입니다.",
     }[code] ?? "요청을 완료하지 못했습니다. 연결과 입력을 확인해주세요."
   );
 }

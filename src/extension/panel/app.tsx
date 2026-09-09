@@ -413,6 +413,26 @@ export function Keeper() {
                         </span>
                       </div>
                       <p>{a.description}</p>
+                      <button
+                        className="secondary"
+                        data-testid={`delete-asset-${a.id}`}
+                        onClick={async () => {
+                          if (!window.confirm(`“${a.name}”을 삭제할까요?`)) return;
+                          try {
+                            await api.call(
+                              `/api/assets/${encodeURIComponent(a.id)}`,
+                              undefined,
+                              "DELETE",
+                            );
+                          } catch (e) {
+                            setError(errorMessage(e));
+                            return;
+                          }
+                          setState(await api.state());
+                        }}
+                      >
+                        삭제
+                      </button>
                       <AssetDetails assetId={a.id} api={api} />
                       <AssetSettings
                         asset={a}

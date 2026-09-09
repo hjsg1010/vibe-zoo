@@ -57,7 +57,7 @@ export class Router {
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization",
       );
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE");
     }
     if (method === "OPTIONS") {
       res.writeHead(204);
@@ -290,6 +290,13 @@ export class Router {
       });
       return true;
     }
+    const assetDelete = path.match(/^\/api\/assets\/([^/]+)$/);
+    if (assetDelete && method === "DELETE") {
+      c.repo.deleteAsset(owner, assetDelete[1]!);
+      res.writeHead(204);
+      res.end();
+      return true;
+    }
     if (path === "/api/catalog" && method === "GET") {
       this.json(res, 200, {
         items: c.repo.db
@@ -390,17 +397,19 @@ export class Router {
         "conflict",
       );
       const prior = c.repo.reports(owner, version.id).at(-1);
-      invariant(prior && prior.status !== "passed", "not_observed");
-      const source = c.repo.getJob(owner, prior.jobId);
+      if (prior) {
+        invariant(prior.status !== "passed", "not_observed");
+        const source = c.repo.getJob(owner, prior.jobId);
+        invariant(
+          ["failed", "completed", "cancelled"].includes(source.status) &&
+            !c.repo
+              .actions(owner, source.id)
+              .some((a) => ["unknown", "intent", "sent"].includes(a.state)),
+          "conflict",
+        );
+      }
       invariant(
-        ["failed", "completed", "cancelled"].includes(source.status) &&
-          !c.repo
-            .actions(owner, source.id)
-            .some((a) => ["unknown", "intent", "sent"].includes(a.state)),
-        "conflict",
-      );
-      invariant(
-        fingerprint(data.inputs) !== fingerprint(prior.inputs),
+        fingerprint(data.inputs) !== fingerprint(prior?.inputs ?? {}),
         "invalid_input",
       );
       let j = c.prepare(owner, data.request, "generation", {
@@ -410,13 +419,13 @@ export class Router {
       if (!j.assetValidation) {
         j = c.repo.updateJob(owner, j.id, j.controlRevision, (x) => ({
           ...x,
-          budget: { ...source.budget },
+          budget: prior ? { ...c.repo.getJob(owner, prior.jobId).budget } : x.budget,
           candidateId: version.id,
           assetValidation: {
             versionId: version.id,
             inputs: data.inputs,
-            sourceInputs: prior.inputs,
-            sourceJobId: source.id,
+            sourceInputs: prior?.inputs ?? {},
+            ...(prior ? { sourceJobId: prior.jobId } : {}),
           },
         }));
         if (this.workflow)
