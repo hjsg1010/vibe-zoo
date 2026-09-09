@@ -1940,3 +1940,29 @@ tbody tr:last-child td {
   font-size: 13px;
   line-height: 1.6;
 }
+
+/* The extension toggle stays in the browser toolbar, even with the panel closed. */
+.workspace {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.workspace > .browser-bar {
+  grid-column: 1 / -1;
+}
+.keeper-launcher {
+  min-width: 110px;
+  border: 1px solid #bdcbbd;
+  background: #fffdf7;
+  color: #315a4e;
+  border-radius: 9px;
+}
+.keeper-launcher[aria-expanded="true"] {
+  background: #dceee2;
+  border-color: #83ac97;
+  box-shadow: inset 0 -2px #3c7c60;
+}
+.keeper-launcher:hover {
+  background: #d2e7db;
+}
+.keeper-launcher .panel-state {
+  margin-left: 6px;
+}

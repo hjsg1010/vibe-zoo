@@ -391,3 +391,29 @@ it("shows capability meanings together and keeps a generated Skill visible acros
     "skill-visible-again",
   );
 });
+
+it("keeps the browser extension button available to close and reopen Keeper", () => {
+  start();
+  expect(
+    document.querySelector(".workspace > .browser-bar #keeper-toolbar-toggle"),
+  ).toBeTruthy();
+  expect(
+    document
+      .querySelector("#keeper-toolbar-toggle")!
+      .getAttribute("aria-expanded"),
+  ).toBe("true");
+  click("#keeper-toolbar-toggle");
+  expect(document.querySelector("#keeper-panel")).toBeNull();
+  expect(
+    document
+      .querySelector("#keeper-toolbar-toggle")!
+      .getAttribute("aria-expanded"),
+  ).toBe("false");
+  click("#keeper-toolbar-toggle");
+  expect(document.querySelector("#keeper-panel")).toBeTruthy();
+  expect(
+    document
+      .querySelector("#keeper-toolbar-toggle")!
+      .getAttribute("aria-expanded"),
+  ).toBe("true");
+});
