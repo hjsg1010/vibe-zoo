@@ -38,6 +38,15 @@ it("setup upgrades without resetting data; cleanup previews then removes only th
       ),
       join(root, "config/extension-manifest.json"),
     );
+    cpSync(
+      fileURLToPath(
+        new URL(
+          "../../config/release-extension-public-key.txt",
+          import.meta.url,
+        ),
+      ),
+      join(root, "config/release-extension-public-key.txt"),
+    );
     run("demo-setup.mjs");
     const access = readFileSync(join(root, ".local/demo-access.json"), "utf8");
     let db = new DatabaseSync(join(root, ".local/state/vibe-zoo.sqlite"));

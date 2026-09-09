@@ -94,7 +94,7 @@ npm run check:public
 
 촬영을 마친 뒤 개인 데모 영역을 정말 비워야 할 때만 Backend를 멈추고 `npm run demo:cleanup -- --owner demo-keeper --apply`를 실행합니다. 지정 사용자 개인 자산/설치/작업/세션을 정리하며 접근 코드·다른 사용자·게시된 Store 스냅샷·MinIO 데이터는 보존합니다. **현재 데모 데이터에 이 삭제 명령을 실행하지 않았습니다.**
 
-CI는 [공식 setup-node 사용법](https://github.com/actions/setup-node/tree/v4)에 맞춰 프로젝트 Node 버전을 선택하고 시크릿 없는 합성 단위/통합 검사와 빌드·공개 파일 점검을 수행하도록 작성했습니다. 원격 GitHub 실행 결과는 아직 없습니다. Bedrock 호출이나 개인 브라우저 실행은 CI에 포함하지 않습니다. `check:public`은 텍스트/파일 검사이며 스크린샷은 별도 육안 검토가 필요합니다.
+CI는 [공식 setup-node 사용법](https://github.com/actions/setup-node/tree/v4)에 맞춰 프로젝트 Node 버전을 선택하고 시크릿 없는 합성 단위/통합 검사와 빌드·공개 파일 점검을 수행하도록 작성했습니다. 원격 실행 결과는 [GitHub Actions](https://github.com/hjsg1010/vibe-zoo/actions)에서 확인할 수 있습니다. Bedrock 호출이나 개인 브라우저 실행은 CI에 포함하지 않습니다. `check:public`은 텍스트/파일 검사이며 스크린샷은 별도 육안 검토가 필요합니다.
 
 ## 알려진 제약과 문제 해결
 
