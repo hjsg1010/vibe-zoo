@@ -152,7 +152,7 @@ it("returns to the guided action after tab exploration and resumes after skippin
   vi.advanceTimersByTime(2700);
   click('[data-action="guide"]');
   expect(document.querySelector("#welcome-card h2")!.textContent).toContain(
-    "어떤 도구",
+    "‘도구’",
   );
   click('[data-tab="learn"]');
   expect(document.querySelector("#tool-detail")).toBeNull();
@@ -213,5 +213,25 @@ it("replaces the fixed tour with numbered welcome cards and preserves state whil
   ).toBe("보존할 초안");
   expect(document.querySelector("#welcome-card")!.textContent).toContain(
     "2 / 10",
+  );
+});
+
+it("explains unfamiliar tabs on first visit without losing the guided action", () => {
+  vi.useFakeTimers();
+  start();
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "버킷은 파일을 담는 보관함",
+  );
+  click('[data-tab="tools"]');
+  expect(document.querySelector("#welcome-card h2")!.textContent).toContain(
+    "Keeper에게 맡길 수 있는 일",
+  );
+  click('[data-action="focus-step"]');
+  expect(
+    document.querySelector("#discover")!.classList.contains("focus-target"),
+  ).toBe(true);
+  click('[data-tab="learn"]');
+  expect(document.querySelector("#welcome-card")!.textContent).toContain(
+    "클릭·입력 순서",
   );
 });

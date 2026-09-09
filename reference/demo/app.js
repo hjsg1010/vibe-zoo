@@ -18,6 +18,8 @@
     stage: 0,
     guided: true,
     panelOpen: true,
+    tabTip: null,
+    seenTabs: ["chat"],
     tab: "chat",
     page: "buckets",
     discovered: false,
@@ -55,38 +57,38 @@
     timer;
   const minioSteps = [
     [
-      "새 웹앱도 Keeper와 함께",
-      "Discover를 눌러 이 페이지에서 반복할 수 있는 일을 찾아보세요.",
+      "MinIO는 파일을 모아두는 보관소예요",
+      "버킷은 파일을 담는 보관함이에요. Keeper에게 새 보관함 만들기를 맡겨볼까요? Discover를 눌러 이 화면에서 할 수 있는 일을 찾아보세요.",
       "#discover",
-      "현재 화면을 관찰해 도구 후보를 만듭니다.",
+      "Discover는 화면을 살펴보는 과정이에요. Keeper가 배운 작업이 ‘도구’ 후보로 나타납니다.",
     ],
     [
-      "어떤 도구인지 먼저 살펴봐요",
-      "‘구성 보기’를 눌러 입력, 작업 순서, 성공 확인 조건을 확인하세요.",
+      "‘도구’는 Keeper가 대신할 수 있는 일이에요",
+      "‘버킷 생성’은 새 파일 보관함을 만드는 일이에요. ‘구성 확인’을 눌러 무엇을 입력하고 어떤 순서로 실행하는지 살펴보세요.",
       "#tool-detail",
       "도구가 무엇을 하는지 이해한 뒤 시험합니다.",
     ],
     [
-      "내 입력으로 시험해보세요",
-      "새 버킷 이름을 입력하고 ‘내 탭에서 시험 실행’을 누르세요.",
+      "시험 실행은 작은 리허설이에요",
+      "후보는 아직 한 번도 시험하지 않은 작업이에요. 새 보관함 이름을 입력하고 시험하면 왼쪽 목록에 같은 이름이 생깁니다.",
       "#validate-form",
       "왼쪽 목록에 같은 이름이 생기면 준비 완료입니다.",
     ],
     [
-      "이제 말로 요청해보세요",
-      "아래 예시의 이름을 바꿔도 좋아요. 채팅을 전송하면 목록도 함께 바뀝니다.",
+      "‘대화’에서는 원하는 일을 말해요",
+      "이제 버튼을 직접 찾지 않아도 돼요. ‘launch-assets 버킷을 만들어줘’에서 이름을 바꿔 보내보세요. Keeper가 준비된 도구로 보관함을 만듭니다.",
       "#chat-form",
       "입력한 이름이 채팅과 버킷 목록에 함께 나타납니다.",
     ],
     [
-      "한 번 보여주면 다음엔 Skill로",
-      "Record 시작을 누른 뒤 웹앱에서 버킷 하나를 직접 만들어보세요.",
+      "‘가르치기’에서는 내 작업 방식을 보여줘요",
+      "Record는 클릭과 입력 순서를 기록하는 기능이에요. 시작을 누른 뒤 왼쪽 웹앱에서 보관함을 하나 직접 만들어주세요.",
       "#record-start",
       "웹앱에서 한 행동과 바뀌는 입력을 배웁니다.",
     ],
     [
-      "평소처럼 웹앱을 사용하세요",
-      "왼쪽 Create Bucket을 누르고, 새로운 이름으로 버킷을 만드세요.",
+      "내가 하는 작업을 Keeper가 보고 있어요",
+      "Create Bucket은 ‘새 보관함 만들기’예요. 버튼을 누르고 새 이름을 입력해 만들어보세요. 이 행동이 Record에 남습니다.",
       "#web-action",
       "내가 직접 수행한 버킷 생성이 기록됩니다.",
     ],
@@ -103,8 +105,8 @@
       "도구 순서와 바뀔 입력이 Skill에 연결됩니다.",
     ],
     [
-      "다른 이름으로 다시 해보세요",
-      "새 이름을 넣고 Skill을 실행하세요. 방금 보여준 작업을 재사용합니다.",
+      "Skill은 내 작업을 다시 쓰는 방법이에요",
+      "도구가 한 가지 일이라면 Skill은 내가 보여준 순서와 의도를 묶은 작업 방식이에요. 새 이름으로 실행해 같은 일을 다시 해보세요.",
       "#reuse-form",
       "새 버킷·Skill 입력·채팅 결과가 같은 값을 가리킵니다.",
     ],
@@ -117,32 +119,32 @@
   ];
   const waferSteps = [
     [
-      "새 업무 화면을 발견해요",
-      "Discover를 눌러 계측 대시보드의 조회 도구를 준비하세요.",
+      "WaferSight는 반도체 측정 결과를 보는 곳이에요",
+      "웨이퍼는 반도체를 만드는 얇은 원판이에요. 여기서는 회로 선의 폭을 측정한 결과를 봅니다. Discover로 조건 조회를 Keeper에게 가르쳐볼까요?",
       "#discover",
       "제품·설비 조건과 결과 확인을 연결합니다.",
     ],
     [
-      "조회 도구의 구성을 확인하세요",
-      "입력 조건과 결과 확인 방법을 ‘구성 보기’에서 살펴보세요.",
+      "‘도구’는 Keeper가 대신할 수 있는 일이에요",
+      "‘계측 조건 조회’는 제품·설비를 골라 측정 결과를 찾는 일이에요. 구성 확인을 눌러 어떤 조건을 입력하고 무엇을 확인하는지 보세요.",
       "#tool-detail",
       "파라미터·제품·설비와 계측 결과가 연결됩니다.",
     ],
     [
-      "합성 조건으로 시험해보세요",
-      "제품과 설비를 고르고 시험 실행을 누르세요.",
+      "시험 실행으로 조건과 결과를 맞춰봐요",
+      "제품은 무엇을 만들었는지, 설비는 어느 장비를 썼는지예요. 하나씩 골라 시험하면 그 조건에 해당하는 측정값만 남습니다.",
       "#validate-form",
       "왼쪽 필터·트렌드·측정 건수가 함께 바뀝니다.",
     ],
     [
-      "다른 조건을 말로 요청하세요",
-      "예시의 제품을 DEMO-B 또는 DEMO-C로 바꾸고 보내보세요.",
+      "‘대화’에서는 원하는 조건을 말해요",
+      "필터를 직접 바꾸는 대신 ‘DEMO-B, ETCH-02 조건으로 조회해줘’처럼 요청하세요. Keeper가 도구를 써서 표와 요약을 함께 바꿉니다.",
       "#chat-form",
       "같은 조회 결과가 대시보드와 채팅에 표시됩니다.",
     ],
     [
-      "내 조회 방법을 보여주세요",
-      "Record를 시작해 반복할 조건 설정을 보여주세요.",
+      "‘가르치기’에서는 내 조회 방식을 보여줘요",
+      "Record는 클릭과 선택 순서를 기록해요. 시작한 뒤 왼쪽에서 제품이나 설비를 바꾸면 Keeper가 그 조회 방법을 배웁니다.",
       "#record-start",
       "제품·설비 선택 행동을 기록합니다.",
     ],
@@ -165,8 +167,8 @@
       "조건 조회와 결과 확인을 개인 Skill로 만듭니다.",
     ],
     [
-      "새 조건으로 Skill을 실행하세요",
-      "시연과 다른 제품·설비로 다시 조회하세요.",
+      "Skill로 같은 조회를 다른 조건에 써봐요",
+      "Skill은 시연한 작업 순서와 설명을 묶은 나만의 방법이에요. 다른 제품·설비로 실행해도 그 조건에 맞는 결과를 가져옵니다.",
       "#reuse-form",
       "조건에 맞는 합성 결과가 양쪽 화면에서 일치합니다.",
     ],
@@ -194,6 +196,7 @@
       "reuse",
     ];
     if (event === expected[s.stage]) {
+      s.tabTip = null;
       s.stage++;
       if ([4, 5, 6, 7, 8].includes(s.stage)) s.tab = "learn";
       if (s.stage === 3) s.tab = "chat";
@@ -217,11 +220,33 @@
   function landing() {
     return `${header()}<main class="landing"><div class="eyebrow">THE WEB YOU KNOW. A NEW WAY TO WORK.</div><h1>웹은 그대로.<br><em>일하는 방식은 새롭게.</em></h1><p>쓰던 웹앱에서 말하고, 한 번 보여주고,<br>나만의 업무 Skill로 다시 해보세요.</p><div class="site-choices"><button class="site-choice" data-site="minio"><span class="site-icon minio-icon">M</span><div><small>OBJECT STORAGE</small><h2>MinIO</h2><p>버킷을 만들고, 프로젝트 준비를 Skill로.</p><strong>약 3분 · 체험 시작 →</strong></div></button><button class="site-choice" data-site="wafer"><span class="site-icon wafer-icon">Si</span><div><small>SEMICONDUCTOR METROLOGY</small><h2>WaferSight</h2><p>조건을 바꾸고, 계측 결과를 한눈에.</p><strong>약 3분 · 체험 시작 →</strong></div></button></div><p class="landing-note">설치·계정·API 키 없이 바로 시작합니다.<br>모든 데이터와 실행은 브라우저 안의 합성 시뮬레이션입니다.</p><div class="zoo-art" aria-hidden="true">🌳 <span>🦒</span> 🌿</div></main>`;
   }
+  const tabExplanations = {
+    chat: [
+      "대화 · 원하는 일을 말하는 곳",
+      "Keeper에게 하고 싶은 일을 문장으로 요청하세요. 준비된 도구로 실행하고, 결과를 왼쪽 웹앱과 함께 보여줘요.",
+    ],
+    tools: [
+      "도구 · Keeper에게 맡길 수 있는 일",
+      "웹앱의 버튼과 입력 순서를 Keeper가 배운 작업 목록이에요. 각 작업의 구성과 필요한 입력을 살펴보고 시험한 뒤 사용할 수 있어요.",
+    ],
+    learn: [
+      "가르치기 · 내 업무 방식을 배우는 곳",
+      "Record로 클릭·입력 순서를 보여주고 설명을 덧붙여주세요. 그 방법을 개인 Skill로 저장해 다른 입력으로 다시 쓸 수 있어요.",
+    ],
+  };
+  function tabContext() {
+    const [title, description] = tabExplanations[s.tab];
+    return `<div class="tab-context"><strong>${title}</strong><p>${description}</p></div>`;
+  }
   function welcomeCard() {
-    const [title, description, , result] = steps()[s.stage];
+    const [stepTitle, stepDescription, , result] = steps()[s.stage];
+    const [title, description] = s.tabTip
+      ? tabExplanations[s.tabTip]
+      : [stepTitle, stepDescription];
     return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · ${s.stage + 1} / ${steps().length}</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>${s.busy ? "이 페이지에서 할 수 있는 일을 찾고 있어요" : title}</h2><p>${s.busy ? "화면 관찰부터 후보 구성까지 진행 상황을 확인하세요. 완료되면 바로 대화할 수 있어요." : description}</p><div class="coach-result">${result}</div><div class="coach-actions"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step">${s.stage === 9 ? "체험 완료 ✓" : "할 일 위치로 →"}</button></div></section>`;
   }
   function coachTarget() {
+    if (s.tabTip) return root.querySelector(`[data-tab="${s.tabTip}"]`);
     return (
       root.querySelector(steps()[s.stage][2]) ||
       root.querySelector(
@@ -280,7 +305,7 @@
       )
       .join(
         "",
-      )}<small class="nav-bottom">Console · demo-user<br>합성 데이터</small></aside><section class="web-main"><div class="web-heading"><div><p class="breadcrumb">Console / ${s.page === "keys" ? "Access Keys" : s.page === "monitor" ? "Monitoring" : "Object Browser"}</p><h2>${s.page === "keys" ? "Access Keys" : s.page === "monitor" ? "Bucket Monitoring" : "Object Browser"}</h2></div><span class="web-badge">DEMO</span></div>${s.page === "buckets" ? `<div class="stats"><div><span>BUCKETS</span><strong>${s.buckets.length}</strong></div><div><span>OBJECTS</span><strong>${total}</strong></div><div><span>STORAGE</span><strong>${s.buckets.reduce((a, b) => a + b.size, 0)} <small>MB</small></strong></div></div><div id="web-action" class="web-action"><div class="section-heading"><h3>Buckets <span>${s.buckets.length}</span></h3><button class="web-button" data-action="open-create">＋ Create Bucket</button></div>${s.pageCreate ? bucketForm() : ""}</div><div class="table-wrap"><table><thead><tr><th>BUCKET NAME</th><th>ACCESS</th><th>OBJECTS</th><th>SIZE</th></tr></thead><tbody>${s.buckets.map((b) => `<tr class="${s.highlight === b.name ? "new-row" : ""}"><td><button class="bucket-link" data-bucket="${esc(b.name)}">▱ ${esc(b.name)}</button></td><td><span class="private">Private</span></td><td>${b.objects}</td><td>${b.size} MB</td></tr>`).join("")}</tbody></table></div><p class="web-footnote">버킷을 누르면 해당 버킷의 모니터링 정보를 볼 수 있어요.</p>` : s.page === "monitor" ? monitor() : keys()}</section></div>`;
+      )}<small class="nav-bottom">Console · demo-user<br>합성 데이터</small></aside><section class="web-main"><div class="web-heading"><div><p class="breadcrumb">Console / ${s.page === "keys" ? "Access Keys" : s.page === "monitor" ? "Monitoring" : "Object Browser"}</p><h2>${s.page === "keys" ? "Access Keys" : s.page === "monitor" ? "Bucket Monitoring" : "Object Browser"}</h2><p class="web-term">${s.page === "keys" ? "Access Key는 프로그램이 접속할 때 쓰는 출입증이에요." : s.page === "monitor" ? "보관함별로 파일 수와 사용 용량을 확인하는 화면이에요." : "버킷은 파일을 모아두는 보관함이에요. 하나 만들어볼까요?"}</p></div><span class="web-badge">DEMO</span></div>${s.page === "buckets" ? `<div class="stats"><div><span>BUCKETS</span><strong>${s.buckets.length}</strong></div><div><span>OBJECTS</span><strong>${total}</strong></div><div><span>STORAGE</span><strong>${s.buckets.reduce((a, b) => a + b.size, 0)} <small>MB</small></strong></div></div><div id="web-action" class="web-action"><div class="section-heading"><h3>보관함 · Buckets <span>${s.buckets.length}</span></h3><button class="web-button" data-action="open-create">＋ Create Bucket</button></div>${s.pageCreate ? bucketForm() : ""}</div><div class="table-wrap"><table><thead><tr><th>BUCKET NAME</th><th>ACCESS</th><th>OBJECTS</th><th>SIZE</th></tr></thead><tbody>${s.buckets.map((b) => `<tr class="${s.highlight === b.name ? "new-row" : ""}"><td><button class="bucket-link" data-bucket="${esc(b.name)}">▱ ${esc(b.name)}</button></td><td><span class="private">Private</span></td><td>${b.objects}</td><td>${b.size} MB</td></tr>`).join("")}</tbody></table></div><p class="web-footnote">버킷을 누르면 해당 버킷의 모니터링 정보를 볼 수 있어요.</p>` : s.page === "monitor" ? monitor() : keys()}</section></div>`;
   }
   function monitor() {
     const b = s.buckets.find((b) => b.name === s.selected) || s.buckets[0];
@@ -500,7 +525,7 @@
       )
       .join(
         "",
-      )}</nav><div class="keeper-body">${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}</div></aside>`;
+      )}</nav><div class="keeper-body">${tabContext()}${s.error ? `<p class="error" role="alert">${esc(s.error)}</p>` : ""}${s.notice ? `<p class="notice" role="status">${esc(s.notice)}</p>` : ""}${!s.discovered ? `<button id="discover" class="full discover-button" data-action="discover" ${s.busy ? "disabled" : ""}>${s.busy ? "화면 관찰 → 후보 구성 중…" : s.discovered ? "Discover 다시 살펴보기" : "✧ Discover · 도구 준비"}</button>` : ""}${s.busy ? discoveryProgress() : ""}${s.tab === "tools" ? toolsPanel() : s.tab === "learn" ? learnPanel() : chatPanel()}</div></aside>`;
   }
   function render() {
     if (!s) {
@@ -552,6 +577,8 @@
     if (!s) return;
     if (element.dataset.tab) {
       s.tab = element.dataset.tab;
+      s.tabTip = s.seenTabs.includes(s.tab) ? null : s.tab;
+      if (s.tabTip) s.seenTabs.push(s.tab);
       render();
       return;
     }
@@ -594,6 +621,7 @@
     }
     if (action === "focus-step") {
       s.panelOpen = true;
+      s.tabTip = null;
       s.tab =
         s.stage === 0
           ? "chat"
@@ -662,6 +690,7 @@
     }
     if (action === "detail") {
       s.tab = "tools";
+      s.tabTip = null;
       s.detail = !s.detail;
       if (s.detail) advance("detail");
       render();

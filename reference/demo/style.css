@@ -1559,3 +1559,26 @@ tbody tr:last-child td {
     min-height: 600px;
   }
 }
+
+.tab-context {
+  padding: 0 0 13px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.tab-context strong {
+  font-size: 11px;
+  color: var(--green);
+}
+.tab-context p {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.65;
+  margin: 6px 0 0;
+}
+.web-term {
+  font-size: 10px;
+  color: #74849b;
+  line-height: 1.6;
+  margin: -7px 0 12px;
+  max-width: 390px;
+}
