@@ -1188,3 +1188,180 @@ tbody tr:last-child td {
     margin: 10px 0 16px;
   }
 }
+
+.wafer-app {
+  background: #f5f6fc;
+}
+.wafer-app .web-nav {
+  background: #11192c;
+  border-color: #20283b;
+}
+.wafer-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 12px;
+  font-weight: 750;
+  margin: 0 0 28px;
+}
+.wafer-logo > span {
+  font-size: 17px;
+  border-radius: 9px;
+  background: #6153df;
+  padding: 8px;
+}
+.wafer-logo small {
+  display: block;
+  font-size: 7px;
+  color: #99abc9;
+  font-weight: 400;
+  margin-top: 3px;
+}
+.wafer-app .web-nav > button {
+  color: #b3bfd7;
+}
+.wafer-app .web-nav > button.selected {
+  background: #5546df;
+  color: white;
+}
+.wafer-app .web-heading h2 small {
+  font-size: 9px;
+  font-weight: 400;
+  color: #8894a6;
+  display: block;
+  margin-top: 5px;
+}
+.wafer-filters {
+  display: grid;
+  grid-template-columns: auto minmax(100px, 1fr);
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 1px solid #e2e6f2;
+  padding: 18px;
+  border-radius: 10px;
+}
+.wafer-filters label {
+  font-size: 9px;
+  color: #6e7e98;
+}
+.wafer-filters select {
+  border-color: #e2e6f2;
+  font-size: 11px;
+}
+.scope {
+  font-size: 10px;
+  color: #6e7e98;
+  margin: 15px 0;
+}
+.wafer-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin-bottom: 18px;
+}
+.wafer-stats strong {
+  font-size: 23px;
+}
+.chart-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 15px 0;
+}
+.chart-tabs button {
+  background: white;
+  color: #7e8bae;
+  border: 1px solid #e2e6f2;
+  border-radius: 6px;
+  font-size: 10px;
+}
+.chart-tabs button.active {
+  background: #5949df;
+  color: white;
+}
+.wafer-app .chart-card {
+  padding: 18px;
+  border-color: #e2e6f2;
+}
+.wafer-app .chart-card h3 {
+  font-size: 12px;
+}
+.wafer-app .chart-card svg {
+  width: 100%;
+  display: block;
+}
+.wafer-app .chart-card p {
+  font-size: 9px;
+  margin: 8px 0 0;
+}
+.measurement-table {
+  margin-top: 18px;
+}
+.wafer-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+}
+.wafer-disc {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  padding: 10%;
+  background: #dbe8e8;
+  overflow: hidden;
+  transform: rotate(var(--offset));
+}
+.wafer-disc i {
+  border-radius: 1px;
+}
+.wafer-item p {
+  font-size: 9px;
+  color: #6e7e98;
+  line-height: 1.7;
+  margin: 10px 0;
+  text-align: center;
+}
+.test-form select {
+  margin: 6px 0 10px;
+}
+@media (max-width: 1150px) {
+  .wafer-logo {
+    font-size: 9px;
+    gap: 4px;
+  }
+  .wafer-logo > span {
+    font-size: 13px;
+    padding: 6px;
+  }
+  .wafer-logo small {
+    font-size: 6px;
+  }
+  .wafer-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 850px) {
+  .wafer-logo > div {
+    display: none;
+  }
+  .wafer-logo > span {
+    margin: auto;
+  }
+  .wafer-filters {
+    padding: 12px;
+    gap: 8px;
+  }
+  .wafer-filters select {
+    font-size: 10px;
+  }
+  .wafer-gallery {
+    padding: 12px;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+  }
+}

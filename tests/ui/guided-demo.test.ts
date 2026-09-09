@@ -91,3 +91,51 @@ it("rejects duplicate names, supports previous checkpoints and keeps keys scoped
     "DEMO-ONLY-001",
   );
 });
+
+it("reuses a recorded wafer query with new product and equipment and matching measured results", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="wafer"]');
+  expect(document.querySelector("#measurement-count")!.textContent).toBe("48");
+  click("#discover");
+  vi.advanceTimersByTime(600);
+  click("#tool-detail");
+  submit("#validate-form");
+  expect(document.querySelector("#query-scope")!.textContent).toContain(
+    "DEMO-A · ETCH-01 · 8건",
+  );
+  fill("#chat-input", "DEMO-B, ETCH-02 조건으로 조회해줘");
+  submit("#chat-form");
+  expect(document.querySelector("#query-scope")!.textContent).toContain(
+    "DEMO-B · ETCH-02 · 8건",
+  );
+  const mean = document.querySelector("#measurement-mean")!.textContent;
+  expect(document.querySelector('[role="status"]')!.textContent).toContain(
+    mean,
+  );
+  click("#record-start");
+  fireEvent.change(document.querySelector("#web-product")!, {
+    target: { value: "DEMO-C" },
+  });
+  expect(document.querySelector(".record-actions")!.textContent).toContain(
+    "DEMO-C",
+  );
+  click("#record-stop");
+  fill("#intent", "매일 제품별 계측 현황을 확인하고 싶어요");
+  submit("#intent-form");
+  fireEvent.change(document.querySelector("#reuse-product")!, {
+    target: { value: "DEMO-A" },
+  });
+  submit("#reuse-form");
+  expect(document.querySelector("#query-scope")!.textContent).toContain(
+    "DEMO-A · ETCH-01 · 8건",
+  );
+  expect(document.querySelector(".guide")!.textContent).toContain("체험 완료");
+  click('[data-action="guide"]');
+  click('[data-page="wafermap"]');
+  expect(document.querySelectorAll(".wafer-item")).toHaveLength(8);
+  click('[data-action="reset"]');
+  expect(document.querySelector("#measurement-count")!.textContent).toBe("48");
+  expect(document.querySelector("#discover")).toBeTruthy();
+});
