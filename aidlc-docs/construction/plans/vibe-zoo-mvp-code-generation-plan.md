@@ -2,7 +2,7 @@
 
 ## 1. 상태와 실행 기준
 
-**상태**: 승인된 Part 2 Step 1–16 구현·필수 검증·검토 준비 완료. Store 동료 검증은 사용자 전달 결과이며, 개선은 사용자 승인 오류 주입 통제 데모로 실제 완주했다. 실제 화면 01~04와 촬영 계획을 준비했다. 코드 산출물 승인 대기이며 Build and Test 단계는 아직 시작하지 않았다. 이 문서는 U-01 Code Generation의 단일 실행 기준이다.
+**상태**: 승인된 Part 2 Step 1–16 구현·필수 검증·검토 준비 완료. Store 동료 검증은 사용자 전달 결과이며, 개선은 사용자 승인 오류 주입 통제 데모로 실제 완주했다. 실제 화면 01~04와 촬영 계획을 준비했다. 코드 산출물은 사용자 “응 진행해줘.”로 승인됐다. 정식 Build and Test 결과는 별도 단계 요약에서 검토한다. 이 문서는 U-01 Code Generation의 단일 실행 기준이다.
 
 **대상**: Greenfield / U-01 `vibe-zoo-mvp`, US-01~09 전체. 별도 선행 유닛은 없다. [유닛·내부 순서](../../inception/application-design/unit-of-work.md), [스토리 배정](../../inception/application-design/unit-of-work-story-map.md), [요구사항/AC](../../inception/requirements/requirements.md)를 따른다. 전체 유닛은 미완료이며 기능별 구현·검증 범위는 아래 단계와 공통 구현 요약을 따른다.
 
@@ -151,4 +151,4 @@ Security Baseline / Resiliency Baseline / Property-Based Testing은 모두 Enabl
 
 **계획 검토**: 16개 순차 단계와 미완료 체크박스, 원본 9개 스토리의 모든 AC 연결(총 10종), 계층별 생성/테스트/요약·migration·문서·로컬 실행 산출물을 대조했다. 관련 14개 문서의 표·fence·로컬 참조/anchor, 감사 append-only, .env Git 제외를 확인했다. 제품 코드·패키지 설치·브라우저/모델 실행은 수행하지 않았다.
 
-**승인 상태**: 계획 승인 완료. Part 1 완료, Part 2 구현·검증 완료. 코드 산출물 검토 승인을 별도로 요청하며 승인 전 Build and Test로 전환하지 않는다.
+**승인 상태**: 계획 승인 완료. Part 1 완료, Part 2 구현·검증 완료. 코드 산출물 승인 완료. 후속 Build and Test 실행/결과는 해당 단계 산출물에서 관리한다.

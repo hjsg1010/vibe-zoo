@@ -10,14 +10,14 @@
 - **Project Type**: Greenfield (`brownfield = false`)
 - **Start Date**: 2026-09-08T08:55:25Z
 - **Current Phase**: CONSTRUCTION
-- **Current Stage**: Code Generation Part 2 — implementation and mandatory evidence complete; awaiting code artifact approval
+- **Current Stage**: AI-DLC v1.0.1 substantive workflow complete — Build and Test results approved
 - **Requirements Depth**: Comprehensive, concise artifacts appropriate to a 1-night/2-day, 5-person hackathon
-- **Last Completed**: Infrastructure Design — U-01 two unit artifacts and shared-resource note approved, 2026-09-09T01:37:45Z
+- **Last Completed**: Build and Test — execution and explicit result approval complete
 
 ## Workspace State
 
 - **Existing Product Code**: Yes — Backend, Extension and Store implemented during this workflow
-- **Reference Languages**: HTML/CSS/JavaScript in mockups only
+- **Product Languages**: TypeScript/TSX, CSS and SQL; original HTML mockups retained
 - **Build System**: npm / TypeScript / esbuild; Vitest
 - **Project Structure**: src/, tests/, scripts/, config/, screenshots/; original rules/requirements/mockups preserved
 - **Reverse Engineering Needed**: No — Greenfield; skipped
@@ -65,8 +65,8 @@
 - [x] NFR Requirements — U-01 complete; two artifacts explicitly approved, 2026-09-09T01:15:35Z
 - [x] NFR Design — U-01 two artifacts explicitly approved, 2026-09-09T01:27:56Z
 - [x] Infrastructure Design — U-01 local demo artifacts explicitly approved, 2026-09-09T01:37:45Z
-- [ ] Code Generation — U-01 Part 1 approved; Part 2 complete, artifact approval pending
-- [ ] Build and Test — planned EXECUTE after all units; not started
+- [x] Code Generation — U-01 artifacts explicitly approved
+- [x] Build and Test — isolated reproduction passed; four instruction/summary artifacts complete, results approved
 
 ### OPERATIONS
 
@@ -244,14 +244,21 @@ Existing CC/BR policies and basic quality constraints are carried forward; no op
 
 **Plan scope**: One integrated unit, first generated-tool/basic-Skill product roundtrip at Step 10, personal learning/settings at Steps 11–12, Store at Step 13, improvement at Step 14, local commands/CI/README/evidence and unit review at Steps 15–16. Repository/business/API/frontend summaries share one future Markdown document. React/CSS + esbuild and Vitest are proposed implementation tools; no dependencies, product code, screenshots or runtime validation were generated in Part 1.
 
+## Build and Test Progress — U-01
+
+- [x] User explicitly approved Code Generation artifacts: “응 진행해줘.”
+- [x] Loaded Build and Test rules and assessed unit/integration/contract/security/E2E/performance scope against approved hackathon constraints
+- [x] Copied only source/config/lockfile into an isolated directory, excluding secrets, DB, demo assets and prior builds
+- [x] Reproduced cached lockfile installation, typecheck, lint, 61 tests across 18 files and all three builds; tested files match current workspace
+- [x] Reused previously verified real workflows and user-reported Store evidence without model/browser replay or data reset
+- [x] Created four concise build/test instruction and summary artifacts; optional standalone load/security/contract/E2E files unnecessary
+- [x] Completed public-artifact/secret exclusion and document validation
+- [x] Received explicit Build and Test result approval — 2026-09-09T04:47:49.682302+00:00
+
 ## Next Step
 
-Request explicit U-01 Code Generation artifact approval, then proceed to the mandatory Build and Test stage. All 16 plan steps and US-01~09 generation/required representative evidence are complete. Stage completion approval itself is still pending.
+The user approved the [Build and Test results](construction/build-and-test/build-and-test-summary.md). All applicable substantive AI-DLC v1.0.1 stages and their approvals are complete. Operations remains the repository-defined placeholder, with no executable deployment/monitoring stage to add.
 
-Actual improvement verification passed under the user's approved **controlled fault-injection demo**: isolated unready copy → real failure → real related success and normal activation → Bedrock candidate changing one locator → actual failed-case/regression passes → explicit Keeper apply → improved-version chat/postcondition → Keeper previous-version restore. The improved version was reselected for filming; original assets/versions/publications/installations and MinIO data were preserved. No fabricated success report or relaxed condition was used. Natural-failure search is closed.
+The [implementation summary](construction/vibe-zoo-mvp/code/implementation-summary.md) remains the single AC/actual-evidence record. Improvement passed as an authorized controlled fault-injection demo; Store second-user evidence is user-reported. Models were not called again in this stage (13 total / 49,352 reported tokens). Original demo assets/data and the running Backend were not changed by the isolated checks.
 
-Store second-user verification remains user-reported colleague-environment evidence, distinguished from direct publication/API checks. AC-10 passed actual local Store-page observation with a visible scope restriction and zero model calls. See the single [implementation summary](construction/vibe-zoo-mvp/code/implementation-summary.md) for all AC evidence and limits.
-
-Final local checks passed: 61 tests across 18 files, typecheck, lint, all three builds. Commands/config/README/CI and actual screenshots 01–04 are ready. README includes filming order, initial states, fresh inputs and visible outcomes. Actual video recording and a fresh filming data directory have not been run. Remote CI remains unverified. Product model total is 13 calls / 49,352 reported tokens; expiry/remaining credit remain unknown. Enabled extensions remain No / N/A.
-
-The one-off fixture bootstrap has been stopped and the standard demo Backend restored. No later AI-DLC approval is assumed. Production routing/HA, extra management UI, broader site support and unrelated refactoring remain out of scope.
+README already contains six-feature filming order, initial states, fresh inputs and visible outcomes; actual recording has not started. Remote CI, Whale and external participant routing remain unverified/out of the current local-demo scope. Enabled extensions remain No / N/A. AI-DLC v1.0.1 Operations is a placeholder; the substantive workflow ends at Construction Build and Test. The remaining project objective is demo filming/submission preparation, outside the completed substantive AI-DLC stages. The current user question requests an explanation of remaining process and does not start recording or expand deployment scope.
