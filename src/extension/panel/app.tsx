@@ -465,6 +465,12 @@ export function Keeper() {
               </p>
               <a
                 data-testid="open-store"
+                onClick={(event) => {
+                  event.preventDefault();
+                  void chrome.tabs
+                    .create({ url: origin })
+                    .catch((e) => setError(errorMessage(e)));
+                }}
                 href={origin}
                 target="_blank"
                 rel="noreferrer"

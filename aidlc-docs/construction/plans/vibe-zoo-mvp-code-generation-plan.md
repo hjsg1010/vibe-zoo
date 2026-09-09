@@ -2,7 +2,7 @@
 
 ## 1. 상태와 실행 기준
 
-**상태**: Part 1 승인 완료 — 2026-09-09T01:46:19Z “계획 승인. 구현 시작!”에 따라 16단계 전체와 순서를 승인했다. Part 2 Step 1–13 구현을 마쳤다. Step 13은 사용자 지정 시연 범위에 따라 실제 게시 UI·Store API 설치까지 확인했고, 두 번째 사용자 브라우저 실행은 미검증이다. 다음은 Step 14 개선 후보 구현이다. 이 문서는 U-01 Code Generation의 단일 실행 기준이다.
+**상태**: 승인된 Part 2 Step 1–16 구현·필수 검증·검토 준비 완료. Store 동료 검증은 사용자 전달 결과이며, 개선은 사용자 승인 오류 주입 통제 데모로 실제 완주했다. 실제 화면 01~04와 촬영 계획을 준비했다. 코드 산출물 승인 대기이며 Build and Test 단계는 아직 시작하지 않았다. 이 문서는 U-01 Code Generation의 단일 실행 기준이다.
 
 **대상**: Greenfield / U-01 `vibe-zoo-mvp`, US-01~09 전체. 별도 선행 유닛은 없다. [유닛·내부 순서](../../inception/application-design/unit-of-work.md), [스토리 배정](../../inception/application-design/unit-of-work-story-map.md), [요구사항/AC](../../inception/requirements/requirements.md)를 따른다. 전체 유닛은 미완료이며 기능별 구현·검증 범위는 아래 단계와 공통 구현 요약을 따른다.
 
@@ -96,40 +96,46 @@
 ### Step 13 — Store 게시·다른 사용자 설치/검증
 
 - [x] `src/backend/assets/store.ts`, `src/store/catalog.tsx`, `src/store/detail.tsx`, `src/store/publish.tsx`, `tests/backend/store.test.ts`, `tests/ui/store.test.tsx`를 작성하고 Store app·API·개인 설정의 공유 진입점을 완성한다. 선택 버전·의존성·공개 투영을 게시하고 설치자 개인 영역에 연결한다.
-- **확인/요약**: 자동 게시 없음, 개인 기본값/시연/비공개 사이트/자격 미공개, 게시 투영의 실행 의미 보존, 중복 설치·정확한 버전·본인 재검증을 검사한다. 실제 게시·별도 Store 화면·설치 결과를 `screenshots/03-store-install.png`에 연결한다(Step 15 취합). 사용자 후속 지시로 별도 프로필 준비가 불가능하므로 두 번째 사용자 자기 탭 실행은 보류하고 미검증으로 명시한다. 해당 실행 경계와 자체 검증 요구는 코드·합성 검사에 유지한다. 외부 접속 경로 구축은 이 검증의 선행 조건이 아니다. (US-06·07·09 / AC-07, BR-12·15)
+- **확인/요약**: 자동 게시 없음, 개인 기본값/시연/비공개 사이트/자격 미공개, 게시 투영의 실행 의미 보존, 중복 설치·정확한 버전·본인 재검증을 검사한다. 실제 게시·별도 Store 화면·설치 결과를 `screenshots/03-store-install.png`에 연결한다(Step 15 취합). 최신 사용자 보고로 동료 환경의 두 번째 사용자 검증 완료를 기록하고 외부 대기를 해제한다. 직접 수행 증거와 출처를 구분한다. 해당 실행 경계와 자체 검증 요구는 코드·합성 검사에 유지한다. 외부 접속 경로 구축은 이 검증의 선행 조건이 아니다. (US-06·07·09 / AC-07, BR-12·15)
 
 ### Step 14 — 개선 후보·회귀·명시 적용/이전 버전
 
-**구현 진행**: Backend/API/Panel·불변 후보·새 입력 두 사례·명시 적용/복구와 11개 관련 검사를 구현했다. 실제 현재 버전의 재현 실패를 고친 제품 시연은 아직 미검증이므로 단계 완료 체크는 보류한다. 기존 입력 처리 결함의 해결 기록을 새로운 개선 성과로 재사용하지 않는다.
+**통제 데모 승인**: 사용자가 자연 발생 실패 탐색을 종료하고 별도 복사본의 locator 오류 1개 주입을 승인했다. 원본과 의존성을 보존하며 성공 기록/활성화를 조작하지 않는다. 대기 locator가 `legacyHeading` 설정을 잘못 참조하는 복사본에서 낡은 제목 실패와 실제 제목 성공을 실제로 확보한다. 이후 제품 개선에서 모델이 locator를 수정하고 같은 입력 계약·업무 사후 조건으로 두 새 사례, 명시 적용·채팅·복구를 확인한다. 준비 과정은 자연 발생 결함/AI 생성으로 주장하지 않는다.
 
-- [ ] `src/backend/generation/improvement.ts`, `src/extension/panel/improvement.tsx`, `tests/backend/improvement.test.ts`, `tests/ui/improvement.test.tsx`를 작성하고 기존 API/Registry·MCP·검증을 재사용한다. 재현 실패와 관련 성공 사례, 선택적 수정/추가 시연에서 이유가 있는 새 후보를 만든다.
+**현재 결과**: 구현과 관련 11개 검사를 포함한 최종 61개 검사가 통과했다. 승인된 통제 복사본의 실제 실패·성공 → 모델 후보 → 두 사례 → Keeper 명시 적용 → 개선 버전 채팅 → 이전 버전 복구를 완료했다. 과거 실행기 수정 실패를 재사용하지 않았다. 상세 실제/API/UI 출처는 공통 구현 요약에만 기록한다.
+
+- [x] `src/backend/generation/improvement.ts`, `src/extension/panel/improvement.tsx`, `tests/backend/improvement.test.ts`, `tests/ui/improvement.test.tsx`를 작성하고 기존 API/Registry·MCP·검증을 재사용한다. 재현 실패와 관련 성공 사례, 선택적 수정/추가 시연에서 이유가 있는 새 후보를 만든다.
 - **확인**: 후보에 실패/관련 성공 검증 결과를 연결하고 통과 뒤 명시 ‘적용’만 향후 포인터를 바꾼다. 현재 버전 충돌·취소·off·진행 중 버전 보존과 이전 버전 복구를 테스트한다. 실제 재현 사례·후보·사후 상태의 범위를 정직하게 기록하고 `screenshots/04-improvement.png`에 연결한다. 기존 웹앱을 임의 수정하거나 테스트 대역을 실제 개선 증거로 쓰지 않는다. (US-08·09 / AC-08·09, BR-13~14)
 
 ### Step 15 — 로컬 실행·문서·간단한 CI 완성
 
 사용자의 후속 명시 지시에 따라 Step 14 실제 개선 사례 준비와 독립적으로 진행한다. Store 두 번째 사용자 검증은 사용자에게 전달받은 동료 환경 완료 보고로 외부 대기를 해제하며 직접 검증과 구분한다.
 
-- [ ] `scripts/demo-cleanup.mjs`, `scripts/check-public-artifacts.mjs`, `.github/workflows/ci.yml`, `README.md`를 작성하고 기존 build/demo/setup·설정 예시를 완성한다. `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run demo:setup`, `npm run demo`, `npm run demo:cleanup`을 실제 동작에 맞춰 제공한다. 정리는 소유/대상 범위를 명시하며 무조건 전체 삭제하지 않는다.
+- [x] `scripts/demo-stop.mjs`, `scripts/demo-cleanup.mjs`, `scripts/check-public-artifacts.mjs`, `.github/workflows/ci.yml`, `README.md`를 작성하고 기존 build/demo/setup·설정 예시를 완성한다. `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run demo:setup`, `npm run demo`, `npm run demo:stop`, `npm run demo:cleanup`을 실제 동작에 맞춰 제공한다. 정리는 소유/대상 범위를 명시하며 무조건 전체 삭제하지 않는다.
 - **확인/요약**: 세 빌드·로컬 시작/종료·동일 DB 재시작·미확인 상태를 확인하고 실제 실행 결과의 `screenshots/02-personal-skill.png`, `03-store-install.png`, `04-improvement.png`를 취합한다. 촬영 준비 때문에 기능 구현을 지연하지 않는다. CI는 시크릿 없는 단위/합성 통합 검사를 수행하고 실제 Bedrock/개인 브라우저 호출은 CI에 넣지 않는다. README에 설치·환경변수·인증서/신뢰·실제 기능·API/계약 참조·제약/오류·시연 증거를 정리한다. 네 계층 요약은 공통 구현 요약에만 모으고 별도 API/화면 문서를 중복 생성하지 않는다. (모든 US / NFR-07·08)
+
+**현재 결과**: 명령·README·CI 구현 완료. 실제 setup 재실행·정상 종료/재시작·데이터 보존 확인, 정리 apply는 임시 DB에서만 검사했다. 전체 61개 검사·타입·린트·빌드 통과. 화면 01~04 확보와 육안 검토 완료. README에 기능별 촬영 준비를 연결했다. 원격 CI 실행은 미확인이다.
 
 ### Step 16 — 유닛 완료 검토와 코드 산출물 제시
 
-- [ ] 아래 스토리 표와 공통 구현 요약에 코드·필요 검사·실제 증거를 연결하고 완료된 항목만 표시한다. 바뀐 모듈의 필요한 회귀 검사와 전체 빌드/기본 품질 확인을 마친 뒤, 누락·핵심 TODO/빈 함수·성공 스텁·시크릿/비공개 자료·README/화면 불일치를 해결한다.
+- [x] 아래 스토리 표와 공통 구현 요약에 코드·필요 검사·실제 증거를 연결하고 완료된 항목만 표시한다. 바뀐 모듈의 필요한 회귀 검사와 전체 빌드/기본 품질 확인을 마친 뒤, 누락·핵심 TODO/빈 함수·성공 스텁·시크릿/비공개 자료·README/화면 불일치를 해결한다.
 - **제시**: 전체 US-01~09·AC-01~10 구현/검증 결과, 실제/합성/미검증 범위, 알려진 지원 한계를 보고하고 Code Generation 산출물 승인을 요청한다. 아직 필요한 실제 검증이 남아 있으면 완료 처리하지 않는다. 전체 Build and Test 단계는 해당 코드 산출물 승인 후 진행한다.
 
 ## 4. 스토리 추적과 완료 표시
 
 | 완료 | 스토리 | 주요 단계 | 원본 AC 연결 |
 |---|---|---|---|
-| [ ] | US-01 | 5~10, 12 | AC-06 |
-| [ ] | US-02 | 2~10 | AC-01, AC-02, AC-04, AC-10 |
-| [ ] | US-03 | 5~10 | AC-03, AC-09 |
-| [ ] | US-04 | 11~12 | AC-04, AC-05 |
-| [ ] | US-05 | 12 | AC-05, AC-06 |
-| [ ] | US-06 | 13 | AC-07 |
-| [ ] | US-07 | 13 | AC-07 |
-| [ ] | US-08 | 14 | AC-08 |
-| [ ] | US-09 | 2~16, 첫 실행부터 | AC-09 |
+| [x] | US-01 | 5~10, 12 | AC-06 |
+| [x] | US-02 | 2~10 | AC-01, AC-02, AC-04, AC-10 |
+| [x] | US-03 | 5~10 | AC-03, AC-09 |
+| [x] | US-04 | 11~12 | AC-04, AC-05 |
+| [x] | US-05 | 12 | AC-05, AC-06 |
+| [x] | US-06 | 13 | AC-07 |
+| [x] | US-07 | 13 | AC-07 |
+| [x] | US-08 | 14 | AC-08 |
+| [x] | US-09 | 2~16, 첫 실행부터 | AC-09 |
+
+AC-10은 실제 로컬 Store 페이지 관찰/제한 표시/모델 0회로 확인했다. US-08은 승인된 오류 주입 통제 데모로 실제 개선을 확인했고 US-09 최종 통합 검토를 마쳤다. 완료 표시와 검증 출처는 공통 구현 요약의 현재 상태 표를 따른다.
 
 공통 CC/NFR는 개별 테스트 이름·증거 위치로 구현 요약에 연결한다. 스토리 완료는 코드 존재만으로 체크하지 않으며 첫 실제 실행 성공만으로 전체 U-01을 완료하지 않는다. 경미한 내부 리팩터링/결함 수정은 해당 단계의 기재 경로에서 수행하고, 책임·계약·의존성·순서가 달라지면 계획을 갱신한다. 승인 범위를 바꾸는 변경은 차이/영향을 설명하고 재확인한다.
 
@@ -145,4 +151,4 @@ Security Baseline / Resiliency Baseline / Property-Based Testing은 모두 Enabl
 
 **계획 검토**: 16개 순차 단계와 미완료 체크박스, 원본 9개 스토리의 모든 AC 연결(총 10종), 계층별 생성/테스트/요약·migration·문서·로컬 실행 산출물을 대조했다. 관련 14개 문서의 표·fence·로컬 참조/anchor, 감사 append-only, .env Git 제외를 확인했다. 제품 코드·패키지 설치·브라우저/모델 실행은 수행하지 않았다.
 
-**승인 상태**: 승인 완료. Part 1 완료, Part 2 실행 중. 코드 산출물 승인은 구현·검증 후 별도로 받는다.
+**승인 상태**: 계획 승인 완료. Part 1 완료, Part 2 구현·검증 완료. 코드 산출물 검토 승인을 별도로 요청하며 승인 전 Build and Test로 전환하지 않는다.

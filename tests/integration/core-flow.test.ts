@@ -19,9 +19,26 @@ it("uses the same preparation entry for an unregistered site but blocks model tr
     repo,
     {
       current: () => unknown,
-      enqueue: async () => {
+      enqueue: async (_owner, command) => {
         observed = true;
-        throw Error();
+        return {
+          type: "receipt",
+          actionId: command.actionId,
+          jobId: command.jobId,
+          controlRevision: command.controlRevision,
+          binding: command.binding,
+          outcome: {
+            status: "success",
+            completed: [],
+            reason: "Synthetic observation",
+            observation: {
+              title: "Synthetic unsupported site",
+              path: "/",
+              elements: [],
+              limitations: ["canvas"],
+            },
+          },
+        };
       },
     },
     new Registry(repo),
@@ -46,9 +63,13 @@ it("uses the same preparation entry for an unregistered site but blocks model tr
       purpose: "페이지 도구 준비",
       inputs: {},
     });
-    await expect(generator.run(created)).rejects.toThrow("forbidden");
+    await generator.run(created);
+    expect(repo.getJob("alice", created.id).outcome?.reason).toContain(
+      "canvas",
+    );
+    expect(repo.getJob("alice", created.id).status).toBe("failed");
     expect(sent).toBe(false);
-    expect(observed).toBe(false);
+    expect(observed).toBe(true);
     expect(repo.jobs("alice")).toHaveLength(1);
   } finally {
     db.close();

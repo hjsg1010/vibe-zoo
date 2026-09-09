@@ -59,7 +59,6 @@ export class ToolGenerator {
       await this.resumeCandidate(job);
       return;
     }
-    invariant(job.binding.origin === this.allowedOrigin, "forbidden");
     if (job.snapshots.length) {
       this.finish(job, "이미 준비된 개인 자산을 사용할 수 있습니다.");
       return;
@@ -73,6 +72,14 @@ export class ToolGenerator {
     invariant(observed.observation, "not_observed");
     const observation = observationSchema.parse(observed.observation);
     assertSafeData(observation);
+    if (job.binding.origin !== this.allowedOrigin) {
+      this.finish(
+        job,
+        `현재 페이지를 관찰했습니다. 모델 전송은 합성 MinIO 데모에만 허용되어 도구 생성은 보류합니다. 관찰 제한: ${observation.limitations.join(", ") || "표준 DOM 범위"}.`,
+        false,
+      );
+      return;
+    }
     const response = await this.model.converse(job.owner, job.id, {
       system: [{ text: generationPrompt }],
       toolConfig: {

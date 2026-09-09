@@ -1411,3 +1411,95 @@ demo-access.json 값을 넣어도 연결에 성공하진 못했음. [Image #1]
 **AI Response**: Store 동료 검증을 사용자 전달 결과로 접수하고 외부 대기를 해제한다. Step 14 실제 사례 확인과 독립적인 Step 15 마무리를 병행 순서로 진행하며 정식 단계 승인은 유지한다. 기존 자산과 데모 데이터를 보존한다.
 
 ---
+
+## 2026-09-09T04:18:40.116799+00:00 — Code Generation 마무리 진행
+
+- 사용자 전달 Store 동료 환경 검증 완료를 직접 수행한 게시/UI·설치/API 근거와 구분하고 외부 대기를 해제했다. 같은 두 번째 사용자 설정/검증은 반복하지 않았다.
+- 승인된 Step 15를 독립 진행: 실행·정상 종료·소유자별 정리 명령, 데이터 보존 setup, 설정 예시, README, 시크릿 없는 CI와 공개 파일 검사. 실제 데모 정리는 미적용; 임시 DB에서만 apply 검사. 실제 재시작 전후 기존 자산/버전/게시/설치 데이터 보존 확인.
+- 실제 화면 02·03을 직접 캡처하고 민감정보 제외를 육안 확인. 03은 Store 상세/설치 진입이며 설치 성공 화면으로 주장하지 않는다.
+- 현재 사이트 자산 필터와 범위 밖 페이지 관찰 후 모델 전송 보류를 보완했다. Store 열기는 명시적인 새 탭 API 사용. 전체 61개 검사(18파일), 타입·린트·세 빌드와 공개 파일 검사 통과. 최신 Backend 실행 및 Extension 새로고침 수행.
+- 실제 개선 사례는 미확보: 이미 실행기 수정으로 해결한 과거 실패를 재사용하지 않는다. 현재 미해결 정상 입력 실패 한 사례를 사용자에게 질문했고 독립 작업은 계속했다. AC-08 실제 검증/화면 04/최종 촬영 계획은 미완료다. 새 모델 호출 또는 MinIO 데이터 변경 없음.
+- 계획·상태·공통 구현 요약에서 구현/실제/대역/사용자 전달/미검증을 구분했다. 정식 코드 산출물 승인 및 Build & Test 단계는 아직 요청하지 않았다. 확장 규칙 3종은 기존 No/N/A 유지.
+
+## 2026-09-09T04:21:09.636243+00:00 — AC-10 실제 관찰 확인
+
+Keeper의 명시 새 탭 API로 실제 Store 탭을 열고 기존 MinIO 탭 보존을 확인했다. 같은 사용자 Extension에서 로컬 Store 페이지를 대상으로 동일 prepare 경로를 실행하여 Action observed 1개·모델 요청 0회를 확인했다. Keeper에 실제 관찰/합성 MinIO 전송 범위 제한 이유가 표시됐다. 다른 사용자 Store 검증 반복이나 MinIO 변경은 수행하지 않았다. AC-10의 실제 확인을 공통 요약·상태·계획에 반영했다. 최종 코드 검토에서 핵심 TODO/미구현 표식과 diff 공백 오류가 없고 비공개 파일 Git 제외가 유지됨을 확인했다. AC-08 실제 검증은 여전히 대기다.
+
+## 2026-09-09T04:22:23.362356+00:00 — 연결 복원 및 남은 검증 조건
+
+AC-10 확인 후 원래 일반 Chrome의 MinIO 탭과 기존 demo Actor Keeper 연결을 복원했다. 현재 Backend는 최신 빌드로 실행 중이며 TLS health 200/ok다. 기존 자산/데모 데이터는 유지했다. 자연 발생 개선 사례가 없는 경우의 최소 대안으로 별도 도구 복사본의 locator 1개에 통제된 실패를 주입하고 실제 모델/브라우저 개선 흐름을 검증하는 방법을 공통 구현 요약에 제안했다. 이 대안은 미수행이며 자연 발생 결함 해결로 주장하지 않는다. 현재 사용자 사례 질문은 대기 중이고 AC-08/화면 04/최종 촬영 계획/정식 코드 산출물 승인은 미완료다.
+
+## 2026-09-09 — Controlled improvement verification authorization
+
+**User request (verbatim)**:
+
+제안한 최소 대안을 승인합니다. 원본을 보존한 별도 데모용 복사본에 locator 오류 하나를 주
+  입해, 개선 기능의 실제 전체 흐름을 검증해주세요.
+
+  자연 발생 실패 사례를 찾는 작업은 여기서 마치고, 아래 범위로 남은 작업을 완주해주세요.
+
+  1. 검증 환경 준비
+
+  - 기존 정상 도구·Skill·공유 자산·데이터는 보존합니다.
+  - 별도 데모용 복사본과 합성 입력을 사용하고, 필요한 의존 자산도 원본에 영향이 없도록 분
+  리합니다.
+  - 주입한 오류와 기대 실패·성공 조건을 먼저 명확히 정합니다.
+  - 오류 주입은 검증용 준비 과정임을 기록합니다. 제품이 자연 발생 문제를 발견한 것으로 표
+  현하지 않습니다.
+  - 일반 제품의 검증·활성화 규칙을 약화하거나, 성공 기록을 만들어 넣어 준비 상태를 조작하
+  지 마세요.
+
+  2. 실제 개선 흐름 검증
+
+  다음 흐름을 실제 Bedrock·MCP·Extension·MinIO 실행으로 확인해주세요.
+
+  오류가 있는 복사본 실행
+  → 실제 실패 관찰·기록
+  → 제품의 개선 기능으로 후보 생성
+  → 실패 사례와 관련 성공 사례 검증
+  → Keeper에서 명시적으로 적용
+  → 채팅에서 개선된 버전 실행
+  → 실제 사후 상태 확인
+  → 이전 버전 복구 동작 확인.
+
+  수동으로 정답 locator를 고쳐 넣은 것을 AI 개선 성공으로 기록하지 마세요. 성공 조건을 느
+  슨하게 바꾸는 방식으로 통과시키지도 마세요.
+
+  실제 결과와 합성 테스트 결과를 구분하고, 필요한 성공·실패 근거는 실제 실행으로 확보해주
+  세요.
+
+  3. 검증 완료 후 마무리
+
+  검증이 통과하면 개선 기능의 실제 화면 증거를 저장하고, README와 구현·검증 기록에 ‘오류를
+  주입한 통제된 데모’라는 조건을 명시해주세요.
+
+  관련 회귀 검사와 최종 통합 점검을 수행한 뒤, 전체 기능의 구현·검증 상태와 남은 제한을 정
+  리해주세요. 이미 통과했고 영향받지 않은 실험이나 전체 자산 생성은 반복하지 마세요.
+
+  이후 Code Generation 산출물 검토와 Build and Test 등 남은 AI-DLC 절차를 순서대로 완료할
+  수 있도록 진행해주세요. 이미 승인된 작업 중간에 매번 멈추지 말고, 정식 승인이 필요한 지
+  점에서만 검토 결과와 다음 진행 요청을 제시해주세요.
+
+  전체 제품 완성과 필수 검증 이후에는 기능별 촬영 순서·초기 상태·입력값·확인할 결과를 정리
+  해 촬영 준비까지 마무리해주세요.
+
+  이번 작업을 위해 새로운 일반화 기능이나 추가 관리 UI를 확장하지 말고, 이미 구현된 개선
+  기능을 검증하고 제품을 완성하는 데 집중해주세요.
+
+**Decision**: Natural-failure search stops. Use an isolated tool copy with no dependencies; initial current/previous pointers are null. One wait locator incorrectly takes a `legacyHeading` fixture input. Old heading `Create a Bucket` must fail before input/create; actual heading `Create Bucket` must pass with a new synthetic bucket. Input contract and original business postconditions remain fixed during model improvement. Fixture preparation adds no success reports and bypasses no activation checks. The existing Backend startup export is used by an ignored, local-only bootstrap to invoke the normal workflow for the first validation; product API/UI handles subsequent validation, improvement and control. No new product API/UI is introduced.
+
+## 2026-09-09T04:37:08.020313+00:00 — Controlled actual failure and candidate validation
+
+복사본은 미준비/null 포인터로 생성했다. 정상 제품 Validator→공식 MCP tools/list·tools/call→기존 사용자 Extension/MinIO에서 낡은 제목 대기가 실패하여 실제 failed 보고서가 저장됐다. 같은 버전의 정상 제목/새 버킷은 실제 사후 조건 통과 후 일반 activate 규칙으로 준비됐다. 성공 기록을 주입하지 않았다.
+
+제품 Improvement API에 실제 실패/성공 두 보고서를 전달했다. Bedrock 1회·보고 usage 6,460 tokens로 생성된 불변 후보는 대기 locator의 입력 참조를 실제 관찰된 제목 상수로 바꿨다. 다른 동작·입력 계약·업무 사후 조건·시간 제한은 동일하다. 수동 정답 수정/성공 조건 완화 없음. 후보 검증에서 서로 다른 새 입력의 failure_reproduction 및 success_regression이 각각 실제 Action 4개와 passed 사후 보고서를 남겼다. 현재 포인터는 아직 이전 버전이며 Keeper 명시 적용/채팅/복구는 다음 확인이다.
+
+## 2026-09-09T04:44:01.564974+00:00 — Code Generation complete; artifact review request
+
+- 실제 Keeper 명시 적용 후 개선 버전의 채팅 실행이 낡은 제목 입력 그대로 passed 사후 보고서/Action 4개를 남겼다. 모델 2회·5,145 tokens. 통제 검증 추가 모델 총 3회·11,605 tokens, 제품 누계 13회·49,352 tokens.
+- Keeper 이전 버전 복구를 클릭해 실제 current/previous 포인터 변경과 설정 보존을 확인한 뒤 촬영용으로 개선 버전을 재선택했다. 기존 원본 자산/버전/게시/설치 행은 모두 동일하며 데이터 삭제 없음.
+- 실제 개선 화면을 screenshots/04-improvement.png에 저장하고 주소/프로필/자격정보 제외를 육안 확인했다. 일회성 준비 실행을 종료하고 표준 npm run demo로 복귀했다.
+- 최종 18파일 61개 검사·타입·린트·세 빌드, 공개 파일/시크릿 제외 검사, diff 공백 및 4문서 링크/fence 검사가 통과했다. 계획 16단계·9개 스토리 체크를 실제 완료 상태로 갱신했다. README에는 오류 주입 조건과 기능별 촬영 순서/초기 상태/새 입력/확인 결과를 정리했다. 실제 새 영상/촬영용 데이터 영역 준비는 수행하지 않았다.
+- 실제/합성/사용자 전달 Store 근거와 지원 한계를 공통 구현 요약에서 구분한다. 원격 CI 미실행, 운영 접속/Whale 미확정, 키 만료/크레딧 미확인. 세 확장은 기존 비활성/N/A로 유지했다.
+
+**Artifact review request**: README, src/, tests/, scripts/, screenshots/01~04 및 공통 구현 요약을 검토하고 U-01 Code Generation 산출물을 승인할까요? 승인 후 AWS AI-DLC v1.0.1의 정식 Build and Test 단계로 진행합니다. 현재 승인은 요청 상태이며 후속 단계 승인을 미리 기록하지 않습니다.

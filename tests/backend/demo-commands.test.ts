@@ -31,6 +31,13 @@ it("setup upgrades without resetting data; cleanup previews then removes only th
       join(root, "src/backend/storage/migrations"),
       { recursive: true },
     );
+    mkdirSync(join(root, "config"), { recursive: true });
+    cpSync(
+      fileURLToPath(
+        new URL("../../config/extension-manifest.json", import.meta.url),
+      ),
+      join(root, "config/extension-manifest.json"),
+    );
     run("demo-setup.mjs");
     const access = readFileSync(join(root, ".local/demo-access.json"), "utf8");
     let db = new DatabaseSync(join(root, ".local/state/vibe-zoo.sqlite"));
