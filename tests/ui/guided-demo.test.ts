@@ -295,3 +295,37 @@ it("puts mail first and completes search, Record, prefilled notes and reuse with
   click('[data-action="reset"]');
   expect(document.querySelectorAll(".mail-row")).toHaveLength(6);
 });
+
+it("next-step buttons execute real demo actions and wait for a recorded user input", () => {
+  vi.useFakeTimers();
+  start();
+  const next = () => click('[data-action="focus-step"]');
+  expect(document.querySelector('[data-action="focus-step"]')!.textContent).toBe("다음 단계 →");
+  next();
+  expect(document.querySelector("progress")).toBeTruthy();
+  expect(document.querySelector('[data-action="focus-step"]')).toHaveProperty("disabled", true);
+  vi.advanceTimersByTime(2700);
+  next();
+  expect(document.querySelector("#validate-form")).toBeTruthy();
+  fill("#trial-name", "research-data");
+  next();
+  expect(document.querySelector('[role="alert"]')!.textContent).toContain("같은 이름");
+  fill("#trial-name", "next-trial");
+  next();
+  expect(document.querySelector(".table-wrap")!.textContent).toContain("next-trial");
+  next();
+  next();
+  next();
+  expect(document.activeElement?.id).toBe("bucket-name");
+  expect(document.querySelector("#record-stop")).toHaveProperty("disabled", true);
+  fill("#bucket-name", "next-record");
+  submit("#bucket-form");
+  next();
+  expect(document.querySelector<HTMLTextAreaElement>("#intent")!.value).toContain("next-record");
+  next();
+  fill("#reuse-name", "next-reuse");
+  next();
+  expect(document.querySelector(".table-wrap")!.textContent).toContain("next-reuse");
+  next();
+  expect(document.querySelector("#welcome-card")).toBeNull();
+});

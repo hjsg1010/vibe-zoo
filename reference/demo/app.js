@@ -324,7 +324,7 @@
     const [title, description] = s.tabTip
       ? tabExplanations[s.tabTip]
       : [stepTitle, stepDescription];
-    return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · ${s.stage + 1} / ${steps().length}</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>${s.busy ? "이 페이지에서 할 수 있는 일을 찾고 있어요" : title}</h2><p>${s.busy ? "화면 관찰부터 후보 구성까지 진행 상황을 확인하세요. 완료되면 바로 대화할 수 있어요." : description}</p><div class="coach-result">${result}</div><div class="coach-actions"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step">${s.stage === 9 ? "체험 완료 ✓" : "할 일 위치로 →"}</button></div></section>`;
+    return `<section id="welcome-card" class="welcome-card" role="note" aria-label="다음 행동 안내"><div class="coach-top"><span>🦁 KEEPER · ${s.stage + 1} / ${steps().length}</span><button class="quiet" data-action="guide" aria-label="말풍선 안내 닫기">×</button></div><h2>${s.busy ? "이 페이지에서 할 수 있는 일을 찾고 있어요" : title}</h2><p>${s.busy ? "화면 관찰부터 후보 구성까지 진행 상황을 확인하세요. 완료되면 바로 대화할 수 있어요." : description}</p><div class="coach-result">${result}</div><div class="coach-actions"><button class="quiet" data-action="back" ${s.stage === 0 || s.busy ? "disabled" : ""}>← 이전 단계</button><button class="quiet" data-action="focus-step" ${s.busy ? "disabled" : ""}>${s.stage === 9 ? "체험 완료 ✓" : "다음 단계 →"}</button></div></section>`;
   }
   function coachTarget() {
     if (s.tabTip) return root.querySelector(`[data-tab="${s.tabTip}"]`);
@@ -887,6 +887,8 @@
       return;
     }
     if (action === "focus-step") {
+      if (s.busy) return;
+      const explainingTab = Boolean(s.tabTip);
       s.panelOpen = true;
       s.tabTip = null;
       s.tab =
@@ -907,7 +909,33 @@
             : s.site === "wafer"
               ? "dashboard"
               : "buckets";
+      if (explainingTab) {
+        render();
+        return;
+      }
+      if (s.stage === 9) {
+        s.guided = false;
+        render();
+        return;
+      }
+      if (s.stage === 5) {
+        if (s.site === "minio") s.pageCreate = true;
+        s.notice = s.site === "minio"
+          ? "왼쪽에 새 보관함 이름을 입력하고 Create Bucket을 눌러주세요. 이 동작이 녹화됩니다."
+          : s.site === "mail"
+            ? "왼쪽 메일 검색창에 출장처럼 다른 검색어를 입력하고 검색을 눌러주세요."
+            : "왼쪽 제품 선택에서 다른 제품으로 바꿔주세요. 조회 동작이 녹화됩니다.";
+        render();
+        const input = root.querySelector(s.site === "minio" ? "#bucket-name" : s.site === "mail" ? "#mail-search" : "#web-product");
+        input?.focus();
+        input?.select?.();
+        return;
+      }
       render();
+      const buttons = { 0: "#discover", 1: "#tool-detail", 4: "#record-start", 6: "#record-stop" };
+      const forms = { 2: "#validate-form", 3: "#chat-form", 7: "#intent-form", 8: "#reuse-form" };
+      if (buttons[s.stage]) root.querySelector(buttons[s.stage])?.click();
+      else if (forms[s.stage]) root.querySelector(forms[s.stage])?.requestSubmit();
       return;
     }
     if (action === "guide") {
