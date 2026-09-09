@@ -413,6 +413,35 @@ export function Keeper() {
                         </span>
                       </div>
                       <p>{a.description}</p>
+                      <button
+                        className="secondary"
+                        data-testid={`delete-asset-${a.id}`}
+                        onClick={async () => {
+                          if (
+                            !window.confirm(
+                              `“${a.name}”을 내 목록에서 삭제할까요? 게시된 Store 버전과 다른 사용자의 설치는 유지됩니다.`,
+                            )
+                          )
+                            return;
+                          try {
+                            await api.call(
+                              `/api/assets/${encodeURIComponent(a.id)}`,
+                              undefined,
+                              "DELETE",
+                            );
+                            setState(await api.state());
+                          } catch (e) {
+                            setError(
+                              e instanceof Error && e.message === "conflict"
+                                ? "다른 Skill이나 진행 중·미확인 작업에서 사용하는 자산입니다. 연결된 Skill과 작업 상태를 먼저 확인해주세요."
+                                : errorMessage(e),
+                            );
+                            return;
+                          }
+                        }}
+                      >
+                        삭제
+                      </button>
                       <AssetDetails assetId={a.id} api={api} />
                       <AssetSettings
                         asset={a}

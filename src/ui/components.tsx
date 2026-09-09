@@ -1,5 +1,6 @@
 import { useState, type PropsWithChildren } from "react";
 import type { Job, Confirmation } from "../shared/contracts.js";
+import { errorMessage } from "./api-client.js";
 export function Card({
   title,
   children,
@@ -265,7 +266,7 @@ export function AssetValidationForm({
           ),
           ...values,
         })
-          .catch(() => setError("필수 입력과 이전 검증 상태를 확인해주세요."))
+          .catch((e) => setError(errorMessage(e)))
           .finally(() => setBusy(false));
       }}
     >

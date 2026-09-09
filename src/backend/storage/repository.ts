@@ -226,6 +226,50 @@ export class Repository {
       .all(owner)
       .map((r) => parse<PersonalAsset>(r)!);
   }
+  deleteAsset(owner: string, id: string): void {
+    this.asset(owner, id);
+    transaction(this.db, () => {
+      const versionIds = new Set(this.versions(owner, id).map((v) => v.id));
+      // Skills pin tool versions, including versions retained for rollback.
+      for (const asset of this.assets(owner).filter((a) => a.id !== id))
+        invariant(
+          !this.versions(owner, asset.id).some(
+            (v) =>
+              "steps" in v.content &&
+              v.content.steps.some((s) => versionIds.has(s.toolVersionId)),
+          ),
+          "conflict",
+        );
+      for (const row of this.db
+        .prepare("SELECT data FROM jobs WHERE owner=?")
+        .all(owner)) {
+        const job = parse<Job>(row)!;
+        const usesAsset =
+          job.snapshots.some((s) => s.assetId === id) ||
+          versionIds.has(job.candidateId ?? "") ||
+          versionIds.has(job.assetValidation?.versionId ?? "") ||
+          job.improvement?.assetId === id;
+        if (usesAsset)
+          invariant(
+            ["completed", "failed", "cancelled"].includes(job.status) &&
+              !this.actions(owner, job.id).some((a) =>
+                ["unknown", "intent", "sent"].includes(a.state),
+              ),
+            "conflict",
+          );
+      }
+      // Remove only this user's installation pointer. Published snapshots and
+      // other users' copies survive deletion of the publisher's personal asset.
+      this.db
+        .prepare(
+          "DELETE FROM installations WHERE owner=? AND json_extract(data, '$.assetId')=?",
+        )
+        .run(owner, id);
+      this.db
+        .prepare("DELETE FROM assets WHERE owner=? AND id=?")
+        .run(owner, id);
+    });
+  }
   saveVersion(v: Version): void {
     invariant(this.asset(v.owner, v.assetId));
     this.db

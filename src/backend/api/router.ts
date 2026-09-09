@@ -57,7 +57,7 @@ export class Router {
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization",
       );
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE");
     }
     if (method === "OPTIONS") {
       res.writeHead(204);
@@ -290,6 +290,13 @@ export class Router {
       });
       return true;
     }
+    const assetDelete = path.match(/^\/api\/assets\/([^/]+)$/);
+    if (assetDelete && method === "DELETE") {
+      c.repo.deleteAsset(owner, assetDelete[1]!);
+      res.writeHead(204);
+      res.end();
+      return true;
+    }
     if (path === "/api/catalog" && method === "GET") {
       this.json(res, 200, {
         items: c.repo.db
@@ -386,12 +393,29 @@ export class Router {
       const asset = c.repo.asset(owner, assetValidation[1]!);
       const version = c.repo.version(owner, data.versionId);
       invariant(
-        version.assetId === asset.id && !asset.currentVersionId,
+        version.assetId === asset.id &&
+          !asset.currentVersionId &&
+          version.kind !== "personal_skill",
         "conflict",
       );
       const prior = c.repo.reports(owner, version.id).at(-1);
-      invariant(prior && prior.status !== "passed", "not_observed");
-      const source = c.repo.getJob(owner, prior.jobId);
+      invariant(!prior || prior.status !== "passed", "not_observed");
+      const candidateIds = new Set([version.id]);
+      if (version.kind === "basic_skill" && "steps" in version.content)
+        for (const step of version.content.steps)
+          candidateIds.add(step.toolVersionId);
+      const source = prior
+        ? c.repo.getJob(owner, prior.jobId)
+        : c.repo.db
+            .prepare("SELECT data FROM jobs WHERE owner=? ORDER BY rowid DESC")
+            .all(owner)
+            .map((row) => JSON.parse(String(row.data)) as Job)
+            .find(
+              (job) =>
+                job.kind === "generation" &&
+                candidateIds.has(job.candidateId ?? ""),
+            );
+      invariant(source, "not_observed");
       invariant(
         ["failed", "completed", "cancelled"].includes(source.status) &&
           !c.repo
@@ -399,8 +423,15 @@ export class Router {
             .some((a) => ["unknown", "intent", "sent"].includes(a.state)),
         "conflict",
       );
+      const sourceInputs =
+        prior?.inputs ??
+        source.validationRequest?.sourceInputs ??
+        c.repo
+          .actions(owner, source.id)
+          .find((a) => Object.keys(a.command.inputs).length)?.command.inputs ??
+        {};
       invariant(
-        fingerprint(data.inputs) !== fingerprint(prior.inputs),
+        fingerprint(data.inputs) !== fingerprint(sourceInputs),
         "invalid_input",
       );
       let j = c.prepare(owner, data.request, "generation", {
@@ -415,7 +446,7 @@ export class Router {
           assetValidation: {
             versionId: version.id,
             inputs: data.inputs,
-            sourceInputs: prior.inputs,
+            sourceInputs,
             sourceJobId: source.id,
           },
         }));

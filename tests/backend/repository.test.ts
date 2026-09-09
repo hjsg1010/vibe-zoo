@@ -144,4 +144,71 @@ describe("Repository boundaries and durable state", () => {
     expect(() => repo.activate("alice", j.id, 0, v.id, 0)).toThrow("not_found");
     expect(repo.jobs("alice")).toHaveLength(0);
   });
+  it("deletes only the personal asset and keeps publications and another user's installation", () => {
+    const { asset, v } = candidate();
+    repo.db
+      .prepare("INSERT INTO publications VALUES(?,?,?,?)")
+      .run(
+        "publication",
+        "alice",
+        v.id,
+        JSON.stringify({ id: "publication", owner: "alice", versionId: v.id }),
+      );
+    repo.db
+      .prepare("INSERT INTO installations VALUES(?,?,?,?)")
+      .run(
+        "installed",
+        "bob",
+        "publication",
+        JSON.stringify({ id: "installed", assetId: "bob-copy" }),
+      );
+    expect(() => repo.deleteAsset("bob", asset.id)).toThrow("not_found");
+    expect(repo.asset("alice", asset.id).id).toBe(asset.id);
+    repo.deleteAsset("alice", asset.id);
+    expect(repo.assets("alice")).toHaveLength(0);
+    expect(
+      repo.db.prepare("SELECT * FROM versions WHERE id=?").all(v.id),
+    ).toHaveLength(0);
+    expect(
+      repo.db
+        .prepare("SELECT * FROM publications WHERE id=?")
+        .all("publication"),
+    ).toHaveLength(1);
+    expect(
+      repo.db
+        .prepare("SELECT * FROM installations WHERE id=?")
+        .all("installed"),
+    ).toHaveLength(1);
+    expect(() => repo.deleteAsset("bob", asset.id)).toThrow("not_found");
+  });
+  it("blocks deletion of a tool used by a Skill or unresolved job", () => {
+    const { j, asset, v } = candidate();
+    repo.createAsset({ ...asset, id: "skill" });
+    repo.saveVersion({
+      ...v,
+      id: "skill-version",
+      assetId: "skill",
+      kind: "basic_skill",
+      content: {
+        name: "Skill",
+        description: "fixture",
+        inputContract: [],
+        steps: [{ toolVersionId: v.id, arguments: {}, bindings: {} }],
+      },
+    });
+    expect(() => repo.deleteAsset("alice", asset.id)).toThrow("conflict");
+    repo.deleteAsset("alice", "skill");
+    const active = repo.updateJob("alice", j.id, 0, (x) => ({
+      ...x,
+      candidateId: v.id,
+      status: "running",
+    }));
+    expect(() => repo.deleteAsset("alice", asset.id)).toThrow("conflict");
+    repo.updateJob("alice", j.id, active.controlRevision, (x) => ({
+      ...x,
+      status: "unknown",
+    }));
+    expect(() => repo.deleteAsset("alice", asset.id)).toThrow("conflict");
+    expect(repo.version("alice", v.id).id).toBe(v.id);
+  });
 });
