@@ -235,3 +235,21 @@ it("explains unfamiliar tabs on first visit without losing the guided action", (
     "클릭·입력 순서",
   );
 });
+
+it("preserves pending wafer filter choices when the panel closes", () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="wafer"]');
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click("#tool-detail");
+  fireEvent.change(document.querySelector("#trial-product")!, {
+    target: { value: "DEMO-C" },
+  });
+  click('[data-action="panel"]');
+  click('[data-action="panel"]');
+  expect(
+    (document.querySelector("#trial-product") as HTMLSelectElement).value,
+  ).toBe("DEMO-C");
+});

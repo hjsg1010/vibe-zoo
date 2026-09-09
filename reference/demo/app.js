@@ -36,6 +36,9 @@
       { name: "team-reports", objects: 12, size: 32 },
     ],
     keys: [],
+    keyDraft: "",
+    trialFilter: { product: "DEMO-A", tool: "ETCH-01" },
+    reuseFilter: { product: "DEMO-C", tool: "ETCH-01" },
     selected: "research-data",
     messages: [],
     error: "",
@@ -312,7 +315,7 @@
     return `<label class="field">Bucket<select id="monitor-bucket">${s.buckets.map((x) => `<option ${x.name === b.name ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></label><div class="stats"><div><span>OBJECTS</span><strong>${b.objects}</strong></div><div><span>STORAGE</span><strong>${b.size}<small> MB</small></strong></div></div><div class="chart-card"><h3>${esc(b.name)} · 사용 현황</h3><div class="usage-bar"><span style="width:${Math.max(1, Math.min(100, b.size / 2))}%"></span></div><p>${b.objects === 0 ? "새 버킷은 아직 비어 있어요." : "합성 객체와 용량을 보여줍니다."}</p><button class="secondary" data-action="add-object">합성 객체 1개 추가 · 4 MB</button></div><p class="web-footnote">추가한 객체 수와 용량은 Object Browser에도 반영됩니다. 합성 데이터이며 실제 서버 지표가 아닙니다.</p>`;
   }
   function keys() {
-    return `<p class="web-description">이 데모 안에서만 사용하는 Access Key를 만들고 삭제해보세요.</p><form id="key-form" class="inline-form"><label for="key-name">Key Name</label><input id="key-name" name="name" placeholder="demo-reader" required maxlength="40"><button class="web-button">Create Access Key</button></form><div class="table-wrap"><table><thead><tr><th>NAME</th><th>ACCESS KEY</th><th>STATUS</th><th></th></tr></thead><tbody>${s.keys.map((key, i) => `<tr><td>${esc(key.name)}</td><td><code>DEMO-ONLY-${String(key.number).padStart(3, "0")}</code></td><td>Enabled</td><td><button class="danger" data-delete-key="${i}">Delete</button></td></tr>`).join("") || '<tr><td colspan="4">아직 발급한 데모 키가 없습니다.</td></tr>'}</tbody></table></div>${s.deleteKey !== undefined ? `<div class="confirm-box"><p><strong>${esc(s.keys[s.deleteKey]?.name)}</strong> 데모 키를 삭제할까요?</p><button class="danger" data-action="confirm-delete">이 키 삭제</button><button class="quiet" data-action="cancel-delete">취소</button></div>` : ""}<p class="web-footnote">실제 인증에 쓸 수 없는 합성 키입니다. Secret Key를 발급하거나 저장하지 않습니다.</p>`;
+    return `<p class="web-description">이 데모 안에서만 사용하는 Access Key를 만들고 삭제해보세요.</p><form id="key-form" class="inline-form"><label for="key-name">Key Name</label><input id="key-name" name="name" value="${esc(s.keyDraft)}" placeholder="demo-reader" required maxlength="40"><button class="web-button">Create Access Key</button></form><div class="table-wrap"><table><thead><tr><th>NAME</th><th>ACCESS KEY</th><th>STATUS</th><th></th></tr></thead><tbody>${s.keys.map((key, i) => `<tr><td>${esc(key.name)}</td><td><code>DEMO-ONLY-${String(key.number).padStart(3, "0")}</code></td><td>Enabled</td><td><button class="danger" data-delete-key="${i}">Delete</button></td></tr>`).join("") || '<tr><td colspan="4">아직 발급한 데모 키가 없습니다.</td></tr>'}</tbody></table></div>${s.deleteKey !== undefined ? `<div class="confirm-box"><p><strong>${esc(s.keys[s.deleteKey]?.name)}</strong> 데모 키를 삭제할까요?</p><button class="danger" data-action="confirm-delete">이 키 삭제</button><button class="quiet" data-action="cancel-delete">취소</button></div>` : ""}<p class="web-footnote">실제 인증에 쓸 수 없는 합성 키입니다. Secret Key를 발급하거나 저장하지 않습니다.</p>`;
   }
 
   const products = ["전체 제품", "DEMO-A", "DEMO-B", "DEMO-C"];
@@ -397,10 +400,10 @@
     return `<div class="tool-detail"><div class="detail-label">필요한 입력</div><p><code>product</code> · 제품<br><code>tool</code> · 설비<br>파라미터: CD Line Width (nm)</p><div class="detail-label">브라우저 작업 순서</div><ol><li>대시보드 열기</li><li>제품·설비 조건 선택</li><li>측정 건수·평균·목록 확인</li></ol><div class="detail-label">실행 후 확인할 결과</div><p>선택 조건과 결과 목록의 제품·설비가 일치합니다.</p></div>`;
   }
   function waferTools() {
-    return `<div class="asset-card"><div class="asset-top"><span class="tool-icon">▥</span><div><h3>계측 조건 조회</h3><small>MCP TOOL · browser</small></div><span class="pill ${s.ready ? "ready" : ""}">${s.ready ? "준비 완료" : "시험 필요"}</span></div><p>제품·설비 조건을 적용하고 계측 결과를 확인합니다.</p><button id="tool-detail" class="text-button" data-action="detail" aria-expanded="${s.detail}">도구·Skill 구성 보기 ${s.detail ? "−" : "＋"}</button>${s.detail ? waferToolDetails() : ""}${!s.ready && s.detail ? `<form id="validate-form" class="test-form">${filterFields("trial", { product: "DEMO-A", tool: "ETCH-01" })}<p>조건과 합성 조회 결과를 함께 확인합니다.</p><button>내 탭에서 시험 실행</button></form>` : ""}</div><details class="asset-card"><summary>계측 결과 요약 <span class="pill">읽기</span></summary><p>현재 조건의 측정 건수와 평균, 규격 범위 밖의 OOS 표본을 요약합니다.</p></details>`;
+    return `<div class="asset-card"><div class="asset-top"><span class="tool-icon">▥</span><div><h3>계측 조건 조회</h3><small>MCP TOOL · browser</small></div><span class="pill ${s.ready ? "ready" : ""}">${s.ready ? "준비 완료" : "시험 필요"}</span></div><p>제품·설비 조건을 적용하고 계측 결과를 확인합니다.</p><button id="tool-detail" class="text-button" data-action="detail" aria-expanded="${s.detail}">도구·Skill 구성 보기 ${s.detail ? "−" : "＋"}</button>${s.detail ? waferToolDetails() : ""}${!s.ready && s.detail ? `<form id="validate-form" class="test-form">${filterFields("trial", s.trialFilter)}<p>조건과 합성 조회 결과를 함께 확인합니다.</p><button>내 탭에서 시험 실행</button></form>` : ""}</div><details class="asset-card"><summary>계측 결과 요약 <span class="pill">읽기</span></summary><p>현재 조건의 측정 건수와 평균, 규격 범위 밖의 OOS 표본을 요약합니다.</p></details>`;
   }
   function waferLearn() {
-    return `<div class="learn-intro"><span>◉</span><h3>매일 하던 조회를 나만의 Skill로.</h3><p>제품·설비를 바꾸는 시연과 조회 목적을 연결합니다.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((action) => `<li>${esc(action.label)}</li>`).join("") || "<li>왼쪽 제품이나 설비를 다른 값으로 바꾸세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required placeholder="매일 제품별 계측 현황을 확인하고 싶어요.">${esc(s.intent)}</textarea><p>시연 ${s.recorded.length}개 행동 · 제품과 설비를 바뀌는 입력으로 연결합니다.</p><button>개인 Skill 만들기</button></form>` : ""}${s.skill ? `<div class="asset-card skill-card"><span class="eyebrow">MY SKILL</span><h3>${esc(s.skill.name)}</h3><p>${esc(s.skill.intent)}</p><details><summary>Skill 구성 보기</summary><ol><li>입력: product, tool</li><li>계측 조건 조회 도구에 연결</li><li>선택 조건과 결과 목록 확인</li></ol></details><form id="reuse-form" class="test-form">${filterFields("reuse", { product: "DEMO-C", tool: "ETCH-01" })}<button>이 입력으로 Skill 실행</button></form></div>` : ""}`;
+    return `<div class="learn-intro"><span>◉</span><h3>매일 하던 조회를 나만의 Skill로.</h3><p>제품·설비를 바꾸는 시연과 조회 목적을 연결합니다.</p></div>${!s.recording ? `<button id="record-start" class="secondary full" data-action="record" ${!s.ready ? "disabled" : ""}>● Record 시작</button>` : `<div class="recording"><span class="record-dot"></span>기록 중 · ${s.actions.length}개 행동</div><ol class="record-actions">${s.actions.map((action) => `<li>${esc(action.label)}</li>`).join("") || "<li>왼쪽 제품이나 설비를 다른 값으로 바꾸세요.</li>"}</ol><button id="record-stop" class="full" data-action="stop" ${!s.actions.length ? "disabled" : ""}>■ Record 종료</button>`}${s.recorded.length && !s.recording ? `<form id="intent-form" class="test-form"><label for="intent">녹화 내용을 정리했어요. 설명을 덧붙여주세요.</label><textarea id="intent" name="intent" required placeholder="매일 제품별 계측 현황을 확인하고 싶어요.">${esc(s.intent)}</textarea><p>시연 ${s.recorded.length}개 행동 · 제품과 설비를 바뀌는 입력으로 연결합니다.</p><button>개인 Skill 만들기</button></form>` : ""}${s.skill ? `<div class="asset-card skill-card"><span class="eyebrow">MY SKILL</span><h3>${esc(s.skill.name)}</h3><p>${esc(s.skill.intent)}</p><details><summary>Skill 구성 보기</summary><ol><li>입력: product, tool</li><li>계측 조건 조회 도구에 연결</li><li>선택 조건과 결과 목록 확인</li></ol></details><form id="reuse-form" class="test-form">${filterFields("reuse", s.reuseFilter)}<button>이 입력으로 Skill 실행</button></form></div>` : ""}`;
   }
   function query(filter) {
     if (!products.includes(filter.product) || !machines.includes(filter.tool))
@@ -756,6 +759,13 @@
     }
   });
   root.addEventListener("change", (event) => {
+    const draft = event.target.id.match(/^(trial|reuse)-(product|tool)$/);
+    if (s && draft) {
+      s[draft[1] === "trial" ? "trialFilter" : "reuseFilter"][draft[2]] =
+        event.target.value;
+      return;
+    }
+
     if (
       s?.site === "wafer" &&
       ["web-product", "web-tool"].includes(event.target.id)
@@ -783,6 +793,7 @@
     if (!s) return;
     const map = {
       "bucket-name": "newBucket",
+      "key-name": "keyDraft",
       "trial-name": "trial",
       "chat-input": "chatDraft",
       intent: "intent",
