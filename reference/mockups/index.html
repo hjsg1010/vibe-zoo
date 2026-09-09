@@ -10,6 +10,7 @@
 @media(max-width:1000px){.web-layout{grid-template-columns:1fr}.web-nav{display:flex;padding:7px 12px;border-right:0;border-bottom:1px solid #e2e8ed}.web-nav button{width:auto;white-space:nowrap}.web-main{padding:18px}.workspace.open{grid-template-columns:minmax(0,1fr) 340px}.browser-note{display:none}.brand .subtle{display:none}.guide-progress{display:none}.stat{padding:10px}.stat strong{font-size:20px}}
 @media(max-width:720px){main{padding:0 12px}.page-head{padding:0 13px;height:56px}.page-head nav{gap:7px;font-size:10px}.brand{font-size:17px}.intro{margin:6px 0 12px}h1{font-size:16px}.demo-label{display:none}.browser-tabs{gap:12px;padding:0 10px}#site-tabs button{min-width:0;padding:9px 11px;font-size:11px}.toolbar{gap:8px;padding:7px 10px}.navigation-icons{display:none}.address{font-size:10px;padding:7px}.workspace{height:550px}.workspace.open{height:auto;display:flex;flex-direction:column}.workspace.open .website{height:350px}.keeper{height:530px;border-left:0;border-top:1px solid var(--line)}.web-head{height:48px;padding:0 15px}.web-title h2{font-size:19px}.web-main{padding:16px}.web-nav button{padding:7px;font-size:10px}.web-layout{min-height:0}.web-title{margin-bottom:14px}.stat strong{font-size:18px}th,td{padding:10px;font-size:11px}.guide{padding:12px;gap:9px;flex-wrap:wrap}.guide-copy{min-width:190px}.guide>button{margin-left:auto}.guide-copy p{font-size:11px}.step-number{width:28px;height:28px}.page-foot{flex-wrap:wrap;font-size:9px}.page-foot>span:last-child{display:none}.welcome-card{right:14px;left:14px;top:18px;max-width:none}dialog{padding:18px}.tool-row summary{flex-direction:column;gap:2px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+.board-main{padding:27px;background:#f7f8fc;min-height:calc(100% - 60px)}.board-tabs{display:flex;gap:20px;align-items:center;border-bottom:1px solid #e0e3ed;padding:3px 0 14px;margin-bottom:20px;font-size:12px;color:#7b849a}.board-tabs strong{color:#5d70a3}.board-tabs .pill{margin-left:auto;background:#eef0fb;color:#7683b1}.kanban{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.kanban-column{background:#eef0f6;padding:10px;border-radius:9px;min-height:240px}.kanban-column h3{display:flex;align-items:center;gap:7px;font-size:12px;margin:3px 0 14px}.kanban-column h3 small{margin-left:auto}.board-dot{width:7px;height:7px;background:#a6afc2;border-radius:50%}.dot-1{background:#ddb264}.dot-2{background:#7cac92}.task-card{padding:14px 12px;background:white;border:1px solid #e5e7ef;box-shadow:0 3px 7px #35457405;border-radius:7px;margin:9px 0}.task-card>small{font-size:9px;color:#a0a9b9}.task-card h4{font-size:12px;font-weight:600;margin:9px 0 17px;overflow-wrap:anywhere}.owner-avatar{width:21px;height:21px;border-radius:50%;background:#e9edfa;display:grid;place-items:center;font-size:9px;color:#8090b6}.task-card .small{font-size:10px;padding:4px}.board-main .web-button{background:#6c7cb4}@media(max-width:1100px){.board-main{padding:18px}.kanban{gap:7px}.kanban-column{padding:7px}.task-card{padding:10px 8px}.task-card .row{flex-wrap:wrap}}@media(max-width:720px){.kanban{min-width:550px}.board-main{overflow:auto}}
   </style>
 
 </head>
@@ -61,15 +62,15 @@ function initialSite() {
     buckets:[{name:'research-datasets',objects:72,usage:5.2},{name:'model-artifacts',objects:38,usage:2.7},{name:'team-reports',objects:14,usage:.5}],
     keys:[], nextKey:1, selectedBucket:'research-datasets', monitored:false, done:[], skill:null, draft:null, recording:false, traces:[], recordedName:'', teachStage:'intro', shared:false, installed:false};
 }
-let sites = {minio:initialSite()};
+let sites = {minio:initialSite(),board:initialBoard()};
 let currentSite = 'minio';
 let keeperOpen = false;
 let guided = true;
 let toastTimer;
-let generationTimer;
+const generationTimers = {};
 let lastDialogFocus;
 const site = () => sites[currentSite];
-const toolsForSite = () => bucketTools;
+const toolsForSite = () => currentSite==='board'?boardTools:bucketTools;
 const steps = [
   {id:'opened',title:'지금 쓰는 웹에 Keeper를 열어보세요',text:'오른쪽 위 Keeper 버튼을 누르면 이 사이트의 도구를 준비합니다.',label:'Keeper 열기',action:'keeper',target:'#keeper-toggle'},
   {id:'tools',title:'무엇을 할 수 있는지 살펴보세요',text:'도구 꾸러미를 열어 입력과 결과를 확인하세요.',label:'도구 살펴보기',action:'tools',target:'[data-action="tools"]'},
@@ -79,14 +80,16 @@ const steps = [
   {id:'key-deleted',title:'발급한 키를 삭제해보세요',text:'정확한 키를 선택하고 삭제하면 웹 목록에서도 제거됩니다.',label:'키 삭제 요청',action:'example-delete-key',target:'[data-action="example-delete-key"]'},
   {id:'recorded',title:'반복할 업무를 한 번 보여주세요',text:'녹화를 켜고 왼쪽 웹에서 다른 버킷을 만들어보세요.',label:'업무 가르치기',action:'teach',target:'[data-action="start-record"]'},
   {id:'saved',title:'업무 순서를 내 Skill로 저장하세요',text:'의도와 바꿀 입력, 성공 조건을 확인하고 초안을 저장하세요.',label:'Skill 이어 만들기',action:'teach',target:'[data-action="save-skill"]'},
-  {id:'reused',title:'다른 입력으로 다시 실행해보세요',text:'버킷 이름을 바꿔도 배운 순서대로 실행되는지 확인하세요.',label:'다른 이름으로 실행',action:'reuse',target:'[data-action="reuse"]'}
+  {id:'reused',title:'다른 입력으로 다시 실행해보세요',text:'버킷 이름을 바꿔도 배운 순서대로 실행되는지 확인하세요.',label:'다른 이름으로 실행',action:'reuse',target:'[data-action="reuse"]'},
+  {id:'second-site',title:'처음 보는 다른 웹에서도 시작해보세요',text:'업무 보드 탭에서 새로운 도구를 준비하고 업무를 생성·완료해보세요.',label:'다른 사이트 체험',action:'site',value:'board',target:'[data-action="site"][data-value="board"]'}
 ];
 function mark(id) { if (!site().done.includes(id)) site().done.push(id); }
 function toast(message) { $('#toast').textContent=message; $('#toast').hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>$('#toast').hidden=true,3500); }
 function message(text,type='assistant') { site().messages.push({text,type}); }
 function showDialog(id) { lastDialogFocus=document.activeElement; if (!$(id).open) $(id).showModal(); }
 function closeDialog(id) { $(id).close(); if(lastDialogFocus?.isConnected) lastDialogFocus.focus(); }
-function currentStep() { return steps.find(step=>!site().done.includes(step.id)); }
+function journeyForSite() {return currentSite==='board'?boardSteps:steps;}
+function currentStep() { return journeyForSite().find(step=>!site().done.includes(step.id)); }
 function render() {
   const s=site();
   $('#site-tabs').innerHTML=Object.entries(sites).map(([id,data])=>`<button role="tab" aria-selected="${id===currentSite}" data-action="site" data-value="${id}">${id==='minio'?'▣':'◈'} &nbsp; ${escapeHTML(data.name)}</button>`).join('');
@@ -104,13 +107,14 @@ function render() {
   renderGuide();
 }
 function renderGuide() {
-  const s=site(), next=currentStep();
-  $('#journey').innerHTML=steps.map(step=>`<li>${s.done.includes(step.id)?'✓ ':''}${step.title}</li>`).join('');
+  const s=site(), next=currentStep(),journey=journeyForSite();
+  $('#journey').innerHTML=journey.map(step=>`<li>${s.done.includes(step.id)?'✓ ':''}${step.title}</li>`).join('');
   let content;
   if (!guided) content=`<div class="guide-copy"><strong>자유롭게 체험하고 있어요</strong><p>안내를 다시 켜도 지금까지의 진행과 데이터는 유지됩니다.</p></div>${button('안내 다시 켜기','guide','','small')}`;
   else if(!keeperOpen&&s.done.includes('opened')) content=`<span class="step-number">🦁</span><div class="guide-copy"><strong>Keeper에서 체험을 이어가세요</strong><p>현재 사이트의 데이터와 진행은 그대로예요.</p></div>${button('Keeper 열기','keeper','','primary')}`;
   else if(keeperOpen&&!s.ready) content=`<span class="step-number">01</span><div class="guide-copy"><strong>${s.progress?'현재 페이지에서 도구를 준비하고 있어요':'도구 준비가 중단되었어요'}</strong><p>${s.progress?'모의 관찰 → 기능 정리 → 도구와 기본 Skill 준비':'다시 준비하면 현재 단계부터 체험할 수 있어요.'}</p></div>`;
-  else if(next) content=`<span class="step-number">${String(steps.indexOf(next)+1).padStart(2,'0')}</span><div class="guide-copy"><strong>${next.title}</strong><p>${next.text}</p></div><div class="guide-progress" aria-label="${s.done.length}개 행동 완료">${steps.map(step=>`<i class="${s.done.includes(step.id)?'done':''}"></i>`).join('')}</div>${button(next.label,next.action,'','primary')}${button('자유 체험','guide','','quiet small')}`;
+  else if(next) content=`<span class="step-number">${String(journey.indexOf(next)+1).padStart(2,'0')}</span><div class="guide-copy"><strong>${next.title}</strong><p>${next.text}</p></div><div class="guide-progress" aria-label="${s.done.length}개 행동 완료">${journey.map(step=>`<i class="${s.done.includes(step.id)?'done':''}"></i>`).join('')}</div>${button(next.label,next.action,next.value||'','primary')}${button('자유 체험','guide','','quiet small')}`;
+  else if(currentSite==='board') content=`<span class="step-number">✓</span><div class="guide-copy"><strong>새로운 웹에서도 업무를 마쳤어요.</strong><p>MinIO로 돌아가면 기존 버킷·키·Skill이 그대로 남아 있습니다.</p></div>${button('MinIO로 돌아가기','site','minio','primary')}${button('자유 체험','guide','','quiet small')}`;
   else content=`<span class="step-number">✓</span><div class="guide-copy"><strong>내 웹에서, 내 업무를 완주했어요.</strong><p>도구 준비부터 개인 Skill 재사용까지 체험했습니다. 팀 공유도 살펴보세요.</p></div>${button('팀 Store 살펴보기','store','','primary')}${button('자유 체험','guide','','quiet small')}`;
   $('#guide').innerHTML=content;
   if(guided&&next&&keeperOpen&&s.ready) {
@@ -120,6 +124,7 @@ function renderGuide() {
 }
 function renderWebsite() {
   const s=site();
+  if(currentSite==='board'){renderBoard();return;}
   $('#website').innerHTML=`<header class="web-head"><span class="web-brand">MINIO</span><small>Console · demo-user</small></header>${s.recording?'<div class="record-banner">● 녹화 중 · Create Bucket으로 새 버킷을 하나 만들어주세요.</div>':''}<div class="web-layout"><nav class="web-nav" aria-label="MinIO 메뉴">${button('▣ &nbsp; Buckets','web-view','buckets',s.view==='buckets'?'active':'')}${button('⌁ &nbsp; Monitoring','web-view','monitor',s.view==='monitor'?'active':'')}${button('⚿ &nbsp; Access Keys','web-view','keys',s.view==='keys'?'active':'')}</nav><div class="web-main">${s.view==='monitor'?renderMonitoring():s.view==='keys'?renderKeys():renderBuckets()}</div></div>`;
 }
 function renderBuckets() {
@@ -131,25 +136,29 @@ function renderPreparation() {
   return `<span class="eyebrow">A NEW HABITAT</span><h2>${s.progress?'이 사이트의 일하는 법을<br>알아가는 중이에요.':'도구 준비를 이어가세요.'}</h2><p>처음 방문한 사이트입니다.<br>현재 탭에서 사용할 도구를 준비합니다.</p><div class="progress"><span style="width:${s.progress/4*100}%"></span></div>${labels.map((label,i)=>`<div class="generation-step ${s.progress>i+1?'done':''}">${s.progress>i+1?'✓':'○'} &nbsp; ${label}</div>`).join('')}<div class="info">${toolsForSite().map(t=>t.name).join(' · ')}</div>${s.progress?button('준비 중단','cancel-generation','','wide small'):button('다시 준비하기','generate','','primary wide')}<p>미리 구성한 기능으로 진행하는 모의 체험입니다.</p>`;
 }
 function examples() {
+  if(currentSite==='board')return `${button('내 업무 목록 보여줘','example-list')}${button('데모 발표 준비 업무 만들어줘','task-create')}${button('업무 상태 변경하기','task-status')}`;
   return `${button('내 버킷 목록 보여줘','example-list')}${button('demo-assets 버킷 만들어줘','example-create')}${button('research-datasets 사용 현황 보여줘','example-monitor')}${button('데모용 접근 키 발급해줘','example-key')}${site().keys.length?button('접근 키 삭제하기','example-delete-key'):''}`;
 }
 function renderChat() {
   const s=site();
-  return `${s.messages.length?s.messages.map(m=>`${m.type==='assistant'?'<div class="message-name">🦁 KEEPER</div>':''}<div class="bubble ${m.type}">${escapeHTML(m.text)}</div>`).join(''):`<span class="pill">● ${toolsForSite().length}개 도구 준비됨</span><h2>이제 말로 일해보세요.</h2><p>요청하면 왼쪽 웹 화면에서 결과를 함께 확인할 수 있어요.</p><div class="card"><div class="row"><span class="avatar">🦫</span><div><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><small>MCP 도구 ${toolsForSite().length}개 · 기본 Skill 1개</small></div></div>${button('도구 구성 살펴보기 ↗','tools','','small wide')}</div>`}${s.pending?`<div class="card"><span class="eyebrow">실행 내용 확인</span><h3>${escapeHTML(pendingTitle())}</h3><p>대상: ${escapeHTML(s.name)} · 내 계정<br>${escapeHTML(s.pending.name)}${s.pending.bucket?'<br>버킷: '+escapeHTML(s.pending.bucket):''}${s.pending.keyId?'<br>식별자: '+escapeHTML(s.pending.keyId):''}</p><div class="row">${button('이 내용으로 실행','confirm','','primary small')}${button('취소','cancel','','small')}</div></div>`:''}<div class="suggestions">${examples()}${s.skill?.enabled?button(`${escapeHTML(s.skill.name)} · 다른 입력으로 실행`,'reuse'):''}</div>`;
+  return `${s.messages.length?s.messages.map(m=>`${m.type==='assistant'?'<div class="message-name">🦁 KEEPER</div>':''}<div class="bubble ${m.type}">${escapeHTML(m.text)}</div>`).join(''):`<span class="pill">● ${toolsForSite().length}개 도구 준비됨</span><h2>이제 말로 일해보세요.</h2><p>요청하면 왼쪽 웹 화면에서 결과를 함께 확인할 수 있어요.</p><div class="card"><div class="row"><span class="avatar">🦫</span><div><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><small>MCP 도구 ${toolsForSite().length}개 · 기본 Skill 1개</small></div></div>${button('도구 구성 살펴보기 ↗','tools','','small wide')}</div>`}${s.pending?`<div class="card"><span class="eyebrow">실행 내용 확인</span><h3>${escapeHTML(pendingTitle())}</h3><p>대상: ${escapeHTML(s.name)} · 내 계정<br>${escapeHTML(s.pending.name)}${s.pending.taskId?'<br>업무: '+escapeHTML(s.pending.taskId):''}${s.pending.bucket?'<br>버킷: '+escapeHTML(s.pending.bucket):''}${s.pending.keyId?'<br>식별자: '+escapeHTML(s.pending.keyId):''}</p><div class="row">${button('이 내용으로 실행','confirm','','primary small')}${button('취소','cancel','','small')}</div></div>`:''}<div class="suggestions">${examples()}${s.skill?.enabled?button(`${escapeHTML(s.skill.name)} · 다른 입력으로 실행`,'reuse'):''}</div>`;
 }
 function pendingTitle() {
+  if(site().pending?.type==='task-create')return '업무 보드에 새 업무를 만듭니다';
+  if(site().pending?.type==='task-status')return '선택한 업무의 상태를 '+site().pending.status+'로 바꿉니다';
   if(site().pending?.type==='key-create')return '선택한 버킷에 모의 접근 키를 발급합니다';
   if(site().pending?.type==='key-delete')return '선택한 접근 키를 삭제합니다';
   return site().pending?.skill?'개인 Skill로 버킷을 생성하고 확인합니다':'새 버킷을 생성하고 목록에서 확인합니다';}
 function renderAssets() {
   const s=site();
-  return `<span class="eyebrow">MY KEEPER / ${escapeHTML(s.name)}</span><h2>내 도구와 Skill</h2><p>도구는 하나의 기능, Skill은 도구를 사용하는 업무 순서입니다.</p><div class="section-title">이 사이트의 도구 <span class="pill">준비됨</span></div><div class="card"><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><p>MCP 도구 ${toolsForSite().length}개 · v0.1</p>${button('도구 목록 · 입력 · 결과 보기','tools','','small wide')}</div><div class="section-title">기본 Skill <small>도구와 함께 준비</small></div><div class="card"><h3>버킷 준비와 확인</h3><p>이름 확인 → 생성 → 목록 확인</p>${button('실행 순서와 구성 보기','basic-skill','','small wide')}</div><div class="section-title">내가 가르친 Skill ${button('＋ 새로 가르치기','teach','','quiet small')}</div>${s.skill?`<div class="card"><h3>${escapeHTML(s.skill.name)}</h3><p>기본값: ${escapeHTML(s.skill.default)} · ${s.shared?'팀 공유됨':'나만 사용'}</p><label class="toggle-row">대화에서 사용<input type="checkbox" data-action="toggle-skill" ${s.skill.enabled?'checked':''}></label><div class="row">${button('구성 · 편집','personal-skill','','small')}${button('팀에 공유','share','','small')}</div>${button('다른 입력으로 재실행','reuse','','small wide')}</div>`:'<div class="info">아직 개인 Skill이 없어요. 업무를 한 번 보여주면 이곳에 저장됩니다.</div>'}<div class="section-title">팀의 경험</div>${button('공유 Zoo 열기 ↗','store','','wide small')}`;
+  return `<span class="eyebrow">MY KEEPER / ${escapeHTML(s.name)}</span><h2>내 도구와 Skill</h2><p>도구는 하나의 기능, Skill은 도구를 사용하는 업무 순서입니다.</p><div class="section-title">이 사이트의 도구 <span class="pill">준비됨</span></div><div class="card"><h3>${escapeHTML(s.name)} 도구 꾸러미</h3><p>MCP 도구 ${toolsForSite().length}개 · v0.1</p>${button('도구 목록 · 입력 · 결과 보기','tools','','small wide')}</div><div class="section-title">기본 Skill <small>도구와 함께 준비</small></div><div class="card"><h3>${currentSite==='board'?'업무 생성과 완료':'버킷 준비와 확인'}</h3><p>${currentSite==='board'?'업무 생성 → 상태 변경 → 결과 확인':'이름 확인 → 생성 → 목록 확인'}</p>${button('실행 순서와 구성 보기','basic-skill','','small wide')}</div><div class="section-title">내가 가르친 Skill ${button('＋ 새로 가르치기','teach','','quiet small')}</div>${s.skill?`<div class="card"><h3>${escapeHTML(s.skill.name)}</h3><p>기본값: ${escapeHTML(s.skill.default)} · ${s.shared?'팀 공유됨':'나만 사용'}</p><label class="toggle-row">대화에서 사용<input type="checkbox" data-action="toggle-skill" ${s.skill.enabled?'checked':''}></label><div class="row">${button('구성 · 편집','personal-skill','','small')}${button('팀에 공유','share','','small')}</div>${button('다른 입력으로 재실행','reuse','','small wide')}</div>`:'<div class="info">아직 개인 Skill이 없어요. 업무를 한 번 보여주면 이곳에 저장됩니다.</div>'}<div class="section-title">팀의 경험</div>${button('공유 Zoo 열기 ↗','store','','wide small')}`;
 }
 function toolDetails() {
   return toolsForSite().map(t=>`<details class="tool-row"><summary><strong>${t.name}</strong><code>${t.id} ＋</code></summary><dl><dt>입력</dt><dd>${escapeHTML(t.input)}</dd><dt>결과</dt><dd>${escapeHTML(t.output)}</dd><dt>성공 조건</dt><dd>${escapeHTML(t.success)}</dd></dl><details><summary>도구 정의 보기</summary><pre>${escapeHTML(JSON.stringify({name:t.id,description:t.name,input:t.input,output:t.output,success:t.success},null,2))}</pre></details></details>`).join('');
 }
 function skillSteps() {return '<ol class="skill-steps"><li>입력한 이름과 기존 버킷을 확인합니다.<code>list_buckets</code></li><li>중복이 없으면 기본 옵션으로 생성합니다.<code>create_bucket(bucket_name)</code></li><li>새 목록에 정확한 이름이 있는지 확인합니다.<code>verify_bucket(bucket_name)</code></li></ol>';}
 function openDetails(kind) {
+  if(currentSite==='board'&&kind==='basic'){openBoardSkill();return;}
   const s=site(), personal=kind==='personal', skill=personal?s.skill:null;
   if(kind==='tools') {
     mark('tools');
@@ -162,15 +171,20 @@ function openDetails(kind) {
 }
 function renderTeach() {
   const s=site();
+  if(currentSite==='board')return `<span class="eyebrow">A DIFFERENT HABITAT</span><h2>사이트마다 도구도 달라져요.</h2><p>이 업무 보드에서는 업무 조회·생성·상태 변경과 기본 Skill을 체험합니다. 개인 Skill 녹화·학습은 MinIO 탭에서 이어가세요.</p>${button('업무 보드 기본 Skill 보기','basic-skill','','primary wide')}${button('MinIO에서 업무 가르치기','minio-teach','','quiet wide')}`;
   if(s.recording) return `<span class="pill">● 업무 시연 녹화 중</span><h2>왼쪽에서 평소처럼 해보세요.</h2><p>Create Bucket을 누르고 새로운 버킷을 만들어주세요.</p><strong>${s.traces.length}개 동작 기록</strong><ol class="trace">${s.traces.map(t=>`<li>${escapeHTML(t)}</li>`).join('')}</ol>${button('녹화 종료','stop-record','','primary wide')}${button('기록 버리기','cancel-record','','quiet wide')}`;
   if(s.teachStage==='form') return `<span class="eyebrow">RECORD → INTENT → SKILL</span><h2>어떤 업무였나요?</h2><p>기록에서 정리한 순서에 내 의도를 더해주세요.</p><form id="skill-form"><label class="field" for="skill-intent">하려던 업무</label><textarea class="text" id="skill-intent" required rows="2">${escapeHTML(s.draft?.intent||'프로젝트별 버킷을 만들고 생성 여부 확인하기')}</textarea><label class="field" for="skill-variable">다음에 바꿀 입력</label><input class="text" id="skill-variable" value="bucket_name" readonly><label class="field" for="skill-default">다음 실행의 기본 버킷 이름</label><input class="text" id="skill-default" value="${escapeHTML(s.draft?.default||'next-project')}" required><label class="field" for="skill-success">성공 조건</label><textarea class="text" id="skill-success" required rows="2">${escapeHTML(s.draft?.success||'입력한 이름이 버킷 목록에 표시된다')}</textarea><div class="info">시연한 이름: ${escapeHTML(s.recordedName)}<br>다음에는 다른 이름으로 재사용해보세요.</div><button class="primary wide" type="submit">Skill 초안 만들기</button></form>`;
   if(s.teachStage==='draft') return `<span class="pill">개인 Skill 초안</span><h2>프로젝트 버킷 준비</h2><p>${escapeHTML(s.draft.intent)}</p>${skillSteps()}<div class="info">입력: bucket_name<br>기본값: ${escapeHTML(s.draft.default)}<br>성공 조건: ${escapeHTML(s.draft.success)}</div>${button('내 Skill로 저장','save-skill','','primary wide')}${button('의도 · 입력 다시 수정','edit-draft','','quiet wide')}<p>이 시안에서는 저장 후 다른 입력으로 모의 재실행을 체험합니다.</p>`;
   return `<span class="eyebrow">TEACH YOUR KEEPER</span><h2>한 번 보여주고,<br>다음엔 말로 시키세요.</h2><p>녹화를 켠 다음 왼쪽 웹에서 버킷을 만들어보세요. 행동과 의도를 재사용 가능한 업무 순서로 정리합니다.</p><div class="info">① 녹화 시작<br>② Create Bucket으로 버킷 생성<br>③ 녹화 종료 후 의도 확인<br>④ Skill 저장 후 다른 이름으로 재실행</div>${button('업무 시연 시작','start-record','','primary wide')}`;
 }
 function generate() {
-  clearInterval(generationTimer);
-  const s=site(); s.progress=1;
-  generationTimer=setInterval(()=>{s.progress++; if(s.progress>=4){clearInterval(generationTimer);s.ready=true;s.progress=0;toast(`${s.name} 도구가 준비됐어요 · 모의 결과`);}render();},650);
+  const id=currentSite,s=site();
+  clearInterval(generationTimers[id]);s.progress=1;
+  generationTimers[id]=setInterval(()=>{
+    s.progress++;
+    if(s.progress>=4){clearInterval(generationTimers[id]);delete generationTimers[id];s.ready=true;s.progress=0;if(currentSite===id)toast(`${s.name} 도구가 준비됐어요 · 모의 결과`);}
+    if(currentSite===id)render();
+  },650);
   render();
 }
 function openBucketForm() {
@@ -192,6 +206,19 @@ function requestCreate(name,skill=false) {
 function confirmTask() {
   const s=site(), task=s.pending;
   if(!task) return;
+  if(task.type==='task-create'){
+    if(s.tasks.some(t=>t.title===task.name)){message('같은 제목의 업무가 있어요. 다른 제목을 입력해주세요.');s.pending=null;render();return;}
+    const created={id:'TASK-'+String(s.nextTask++).padStart(3,'0'),title:task.name,status:'할 일',owner:'나'};
+    s.tasks.push(created);s.lastCreated=created.id;mark('task-created');message(`${created.id} · ${created.title} 업무를 만들었어요.\n✓ 왼쪽 보드의 할 일 목록에서 확인했어요.`);
+    s.pending=null;render();return;
+  }
+  if(task.type==='task-status'){
+    const item=s.tasks.find(t=>t.id===task.taskId);
+    if(!item){message('업무를 찾을 수 없어요.');s.pending=null;render();return;}
+    item.status=task.status;
+    if(item.status==='완료'&&item.id===s.lastCreated){mark('task-completed');if(!sites.minio.done.includes('second-site'))sites.minio.done.push('second-site');}
+    message(`${item.id} · ${item.title} 상태를 ${item.status}로 변경했어요.\n✓ 같은 업무가 왼쪽 ${item.status} 열에 표시됩니다.`);s.pending=null;render();return;
+  }
   if(task.type==='key-create'){
     const error=keyError(task.name,task.bucket);
     if(error){message(error);s.pending=null;render();return;}
@@ -222,6 +249,7 @@ function reuse() {
 }
 function sendMessage(text) {
   if(!site().ready||!text.trim())return;
+  if(currentSite==='board'){sendBoardMessage(text);return;}
   if(/키|key/i.test(text)){
     message(text,'user');
     if(/삭제|제거/.test(text)){openKeyPicker();return;}
@@ -254,7 +282,7 @@ function handleAction(action,value) {
   const s=site();
   if(action==='keeper'){keeperOpen=!keeperOpen;if(keeperOpen){mark('opened');if(!s.ready&&!s.progress){generate();return;}}render();return;}
   if(action==='generate'){generate();return;}
-  if(action==='cancel-generation'){clearInterval(generationTimer);s.progress=0;render();return;}
+  if(action==='cancel-generation'){clearInterval(generationTimers[currentSite]);delete generationTimers[currentSite];s.progress=0;render();return;}
   if(action==='panel'){s.panel=value;render();return;}
   if(action==='tools'){openDetails('tools');return;}
   if(action==='basic-skill'){openDetails('basic');return;}
@@ -263,8 +291,11 @@ function handleAction(action,value) {
   if(action==='close-web'){closeDialog('#web-dialog');return;}
   if(action==='close-store'){closeDialog('#store-dialog');return;}
   if(action==='guide'){guided=!guided;render();return;}
-  if(action==='reset'){clearInterval(generationTimer);sites={minio:initialSite()};currentSite='minio';keeperOpen=false;guided=true;document.querySelectorAll('dialog[open]').forEach(d=>d.close());render();return;}
-  if(action==='site'){return;}
+  if(action==='reset'){Object.values(generationTimers).forEach(clearInterval);Object.keys(generationTimers).forEach(id=>delete generationTimers[id]);sites={minio:initialSite(),board:initialBoard()};currentSite='minio';keeperOpen=false;guided=true;document.querySelectorAll('dialog[open]').forEach(d=>d.close());render();return;}
+  if(action==='site'){switchSite(value);return;}
+  if(action==='minio-teach'){switchSite('minio');site().panel='teach';render();return;}
+  if(action==='task-create'){openTaskForm();return;}
+  if(action==='task-status'){openTaskStatus(value);return;}
   if(action==='web-view'){s.view=value;render();return;}
   if(action==='bucket-detail'){monitor(value,false);return;}
   if(action==='example-monitor'){monitor('research-datasets',true);return;}
@@ -272,7 +303,7 @@ function handleAction(action,value) {
   if(action==='example-delete-key'){openKeyPicker();return;}
   if(action==='delete-key'){requestKeyDelete(value);return;}
   if(action==='web-create'){openBucketForm();return;}
-  if(action==='example-list'){sendMessage('내 버킷 목록 보여줘');return;}
+  if(action==='example-list'){sendMessage(currentSite==='board'?'내 업무 목록 보여줘':'내 버킷 목록 보여줘');return;}
   if(action==='example-create'){requestCreate('demo-assets');return;}
   if(action==='confirm'){confirmTask();return;}
   if(action==='cancel'){s.pending=null;message('실행을 취소했어요. 웹 데이터는 바뀌지 않았어요.');render();return;}
@@ -347,10 +378,88 @@ function requestKeyDelete(id) {
 function sKeyList(){site().view='keys';message(site().keys.length?site().keys.map(k=>`${k.name} · ${k.id} · ${k.bucket}`).join('\n'):'발급된 접근 키가 없어요.');render();}
 document.addEventListener('change',event=>{if(event.target.id==='monitor-bucket')monitor(event.target.value,false);});
 
+
+function initialBoard() {
+  return {name:'Daylight Board',host:'tasks.example.com',path:'/team/board',ready:false,progress:0,panel:'chat',messages:[],pending:null,done:[],skill:null,shared:false,installed:false,
+    tasks:[{id:'TASK-001',title:'랜딩 페이지 문구 검토',status:'할 일',owner:'나'},{id:'TASK-002',title:'고객 피드백 정리',status:'진행 중',owner:'나'},{id:'TASK-003',title:'팀 회의록 공유',status:'완료',owner:'나'}],nextTask:4,lastCreated:null};
+}
+const boardTools=[
+  {id:'list_tasks',name:'업무 목록 조회',input:'없음 · 현재 팀 보드',output:'업무 식별자, 제목, 담당자와 상태',success:'현재 보드의 업무 목록과 일치함'},
+  {id:'create_task',name:'업무 생성',input:'title · 1~80자의 제목',output:'업무 식별자와 초기 상태',success:'새 업무가 할 일 열에 표시됨'},
+  {id:'update_task_status',name:'업무 상태 변경',input:'task_id, status · 할 일 / 진행 중 / 완료',output:'선택한 업무의 변경된 상태',success:'해당 식별자의 업무가 대상 상태의 열에 표시됨'}
+];
+const boardSteps=[
+  {id:'opened',title:'새 사이트에도 Keeper를 열어보세요',text:'MinIO 도구를 가져오지 않고 이 보드의 기능을 준비합니다.',label:'Keeper 열기',action:'keeper',target:'#keeper-toggle'},
+  {id:'tools',title:'새 사이트의 도구를 확인하세요',text:'이번에는 버킷 대신 업무를 조회·생성·변경하는 도구입니다.',label:'업무 도구 살펴보기',action:'tools',target:'[data-action="tools"]'},
+  {id:'task-created',title:'이 보드에 새 업무를 만들어보세요',text:'업무 제목을 입력하면 왼쪽 할 일 열에 카드가 나타납니다.',label:'업무 생성 요청',action:'task-create',target:'[data-action="task-create"]'},
+  {id:'task-completed',title:'방금 만든 업무를 완료해보세요',text:'해당 업무를 선택하고 완료로 바꾸면 카드가 이동합니다.',label:'업무 완료 요청',action:'task-status',target:'[data-action="task-status"]'}
+];
+function switchSite(id) {
+  if(!sites[id]||id===currentSite)return;
+  if(site().recording){toast('현재 사이트의 녹화를 종료하거나 기록을 버린 뒤 탭을 바꿔주세요.');return;}
+  currentSite=id;
+  if(keeperOpen){mark('opened');if(!site().ready&&!site().progress){generate();return;}}
+  render();
+}
+function renderBoard() {
+  const s=site();
+  $('#website').innerHTML=`<header class="web-head"><span class="web-brand" style="color:#6477b1">◈ Daylight</span><small>Product team · My workspace</small></header><div class="board-main"><div class="crumb">Workspace / Product team</div><div class="web-title"><div><h2>작은 일부터, 함께.</h2><small>우리 팀의 오늘 할 일을 한눈에.</small></div>${button('＋ 새 업무','task-create','','web-button')}</div><div class="board-tabs"><strong>보드</strong><span>내 업무 ${s.tasks.length}개</span><span class="pill">팀 데모</span></div><div class="kanban">${['할 일','진행 중','완료'].map((status,i)=>`<section class="kanban-column" aria-label="${status} 업무"><h3><span class="board-dot dot-${i}"></span>${status} <small>${s.tasks.filter(t=>t.status===status).length}</small></h3>${s.tasks.filter(t=>t.status===status).map(t=>`<article class="task-card"><small>${t.id}</small><h4>${escapeHTML(t.title)}</h4><div class="row between"><span class="owner-avatar">나</span>${button('상태 변경','task-status',t.id,'quiet small')}</div></article>`).join('')||'<div class="empty">아직 업무가 없어요.</div>'}</section>`).join('')}</div><p class="web-hint">가상의 업무 관리 웹사이트입니다. MinIO와 데이터·대화·도구를 따로 유지합니다.</p></div>`;
+}
+function openTaskForm() {
+  if(!site().ready){toast('Keeper를 열어 이 사이트의 도구를 먼저 준비해주세요.');return;}
+  $('#web-dialog-content').innerHTML=`<h2 id="web-dialog-title">새 업무 만들기</h2><p>이 사이트에서는 버킷 대신 팀의 업무를 다룹니다.</p><form id="task-form"><label class="field" for="task-title">업무 제목</label><input class="text" id="task-title" value="데모 발표 준비" required maxlength="80"><div class="actions">${button('취소','close-web')}<button class="primary" type="submit">생성 내용 확인</button></div></form>`;
+  showDialog('#web-dialog');
+}
+function requestTask(title) {
+  if(!title.trim()||title.length>80){toast('업무 제목을 1~80자로 입력해주세요.');return;}
+  keeperOpen=true;site().panel='chat';site().pending={type:'task-create',name:title.trim()};message(`${title.trim()} 업무 만들어줘`,'user');render();$('#panel-content').scrollTop=$('#panel-content').scrollHeight;
+}
+function openTaskStatus(id) {
+  const s=site();
+  if(!s.ready){toast('Keeper에서 도구를 먼저 준비해주세요.');return;}
+  const selected=id||s.lastCreated||s.tasks[0]?.id;
+  $('#web-dialog-content').innerHTML=`<h2 id="web-dialog-title">업무 상태 변경</h2><p>업무 식별자와 제목을 확인하세요.</p><form id="task-status-form"><label class="field" for="task-item">대상 업무</label><select class="wide" id="task-item">${s.tasks.map(t=>`<option value="${t.id}" ${t.id===selected?'selected':''}>${t.id} · ${escapeHTML(t.title)} (${t.status})</option>`).join('')}</select><label class="field" for="task-state">새 상태</label><select class="wide" id="task-state"><option>할 일</option><option>진행 중</option><option selected>완료</option></select><div class="actions">${button('취소','close-web')}<button class="primary" type="submit">변경 내용 확인</button></div></form>`;
+  showDialog('#web-dialog');
+}
+function sendBoardMessage(text) {
+  if(/버킷|접근 키/.test(text)){message(text,'user');message('현재는 업무 보드 탭입니다. 버킷과 접근 키는 MinIO 탭에서 사용할 수 있어요.');render();return;}
+  if(/완료|상태|진행 중/.test(text)){
+    const id=(text.match(/TASK-\d+/i)||[])[0]?.toUpperCase();
+    const named=site().tasks.filter(t=>text.includes(t.title));
+    if(id&&!site().tasks.some(t=>t.id===id)){message(text,'user');message('해당 업무 식별자를 찾을 수 없어요. 왼쪽 카드를 확인해주세요.');render();return;}
+    message(text,'user');openTaskStatus(id||(named.length===1?named[0].id:undefined));return;
+  }
+  if(/만들|생성|추가/.test(text)){
+    const quoted=text.match(/[“"「](.+?)[”"」]/)?.[1];
+    const title=quoted||text.replace(/\s*(업무|태스크)?\s*(만들어\s*줘|생성해\s*줘|추가해\s*줘)[.!]?\s*$/,'').trim();
+    requestTask(title);return;
+  }
+  message(text,'user');
+  if(/목록|조회|보여/.test(text))message(site().tasks.map(t=>`${t.id} · ${t.title} · ${t.status}`).join('\n')+'\n\n왼쪽 업무 보드와 일치합니다.');
+  else message('업무 목록 조회, 새 업무 생성, 상태 변경을 체험할 수 있어요. 아래 요청을 선택해보세요.');
+  render();
+}
+function openBoardSkill() {
+  $('#detail-content').innerHTML=`<h2 id="detail-title">업무 생성과 완료</h2><span class="pill">Daylight 기본 Skill · v0.1</span><p>업무를 만들고, 해당 업무의 상태를 변경한 뒤 결과를 확인합니다.</p><ol class="skill-steps"><li>업무 제목과 현재 목록을 확인합니다.<code>list_tasks</code></li><li>새 업무를 만들고 식별자를 받습니다.<code>create_task(title)</code></li><li>해당 식별자의 업무를 완료로 변경합니다.<code>update_task_status(task_id, "완료")</code></li><li>다시 조회해 같은 업무의 완료 상태를 확인합니다.<code>list_tasks</code></li></ol><div class="info">입력: title · 업무 제목<br>기본값: 데모 발표 준비<br>성공 조건: 생성한 업무 식별자가 완료 열에 표시된다</div><details class="tool-row"><summary>Skill 원문 보기</summary><pre># 업무 생성과 완료\n입력: title\n1. list_tasks로 기존 업무 확인\n2. create_task(title)의 task_id 보관\n3. update_task_status(task_id, "완료")\n4. list_tasks로 같은 task_id의 완료 상태 확인</pre></details>${button('닫고 체험 계속하기','close-detail','','primary wide')}`;
+  showDialog('#detail-dialog');
+}
+
 document.addEventListener('click',event=>{const target=event.target.closest('[data-action]');if(target&&!target.disabled)handleAction(target.dataset.action,target.dataset.value);});
 document.addEventListener('submit',event=>{
   const s=site(), id=event.target.id;
   event.preventDefault();
+  if(id==='task-form'){
+    const title=$('#task-title').value.trim();
+    if(!title||title.length>80){toast('업무 제목을 1~80자로 입력해주세요.');return;}
+    closeDialog('#web-dialog');requestTask(title);return;
+  }
+  if(id==='task-status-form'){
+    const item=s.tasks.find(t=>t.id===$('#task-item').value);
+    if(!item){toast('업무를 선택해주세요.');return;}
+    const status=$('#task-state').value;
+    closeDialog('#web-dialog');keeperOpen=true;s.panel='chat';s.pending={type:'task-status',name:item.title,taskId:item.id,status};
+    message(`${item.id} · ${item.title} 상태를 ${status}로 바꿔줘`,'user');render();$('#panel-content').scrollTop=$('#panel-content').scrollHeight;return;
+  }
   if(id==='key-form'){
     const name=$('#key-name').value.trim(),bucket=$('#key-bucket').value,error=keyError(name,bucket);
     if(error){toast(error);return;}
