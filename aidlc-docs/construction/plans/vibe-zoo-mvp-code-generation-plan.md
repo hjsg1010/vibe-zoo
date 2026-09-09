@@ -100,10 +100,14 @@
 
 ### Step 14 — 개선 후보·회귀·명시 적용/이전 버전
 
+**구현 진행**: Backend/API/Panel·불변 후보·새 입력 두 사례·명시 적용/복구와 11개 관련 검사를 구현했다. 실제 현재 버전의 재현 실패를 고친 제품 시연은 아직 미검증이므로 단계 완료 체크는 보류한다. 기존 입력 처리 결함의 해결 기록을 새로운 개선 성과로 재사용하지 않는다.
+
 - [ ] `src/backend/generation/improvement.ts`, `src/extension/panel/improvement.tsx`, `tests/backend/improvement.test.ts`, `tests/ui/improvement.test.tsx`를 작성하고 기존 API/Registry·MCP·검증을 재사용한다. 재현 실패와 관련 성공 사례, 선택적 수정/추가 시연에서 이유가 있는 새 후보를 만든다.
 - **확인**: 후보에 실패/관련 성공 검증 결과를 연결하고 통과 뒤 명시 ‘적용’만 향후 포인터를 바꾼다. 현재 버전 충돌·취소·off·진행 중 버전 보존과 이전 버전 복구를 테스트한다. 실제 재현 사례·후보·사후 상태의 범위를 정직하게 기록하고 `screenshots/04-improvement.png`에 연결한다. 기존 웹앱을 임의 수정하거나 테스트 대역을 실제 개선 증거로 쓰지 않는다. (US-08·09 / AC-08·09, BR-13~14)
 
 ### Step 15 — 로컬 실행·문서·간단한 CI 완성
+
+사용자의 후속 명시 지시에 따라 Step 14 실제 개선 사례 준비와 독립적으로 진행한다. Store 두 번째 사용자 검증은 사용자에게 전달받은 동료 환경 완료 보고로 외부 대기를 해제하며 직접 검증과 구분한다.
 
 - [ ] `scripts/demo-cleanup.mjs`, `scripts/check-public-artifacts.mjs`, `.github/workflows/ci.yml`, `README.md`를 작성하고 기존 build/demo/setup·설정 예시를 완성한다. `npm run build`, `npm run typecheck`, `npm run lint`, `npm test`, `npm run demo:setup`, `npm run demo`, `npm run demo:cleanup`을 실제 동작에 맞춰 제공한다. 정리는 소유/대상 범위를 명시하며 무조건 전체 삭제하지 않는다.
 - **확인/요약**: 세 빌드·로컬 시작/종료·동일 DB 재시작·미확인 상태를 확인하고 실제 실행 결과의 `screenshots/02-personal-skill.png`, `03-store-install.png`, `04-improvement.png`를 취합한다. 촬영 준비 때문에 기능 구현을 지연하지 않는다. CI는 시크릿 없는 단위/합성 통합 검사를 수행하고 실제 Bedrock/개인 브라우저 호출은 CI에 넣지 않는다. README에 설치·환경변수·인증서/신뢰·실제 기능·API/계약 참조·제약/오류·시연 증거를 정리한다. 네 계층 요약은 공통 구현 요약에만 모으고 별도 API/화면 문서를 중복 생성하지 않는다. (모든 US / NFR-07·08)

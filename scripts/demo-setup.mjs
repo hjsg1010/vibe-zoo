@@ -2,18 +2,27 @@ import { mkdir, readFile, writeFile, access, chmod } from "node:fs/promises";
 import { randomBytes, createHash, generateKeyPairSync } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { DatabaseSync } from "node:sqlite";
+import { resolve, dirname } from "node:path";
 import { config } from "dotenv";
 config({ path: ".env", quiet: true });
 if (!process.version.startsWith("v24.20."))
   throw Error("Use the project Node version in .node-version.");
-await mkdir(".local/state", { recursive: true, mode: 0o700 });
-await mkdir(".local/tls", { recursive: true, mode: 0o700 });
+const dataDir = resolve(process.env.VIBE_ZOO_DATA_DIR ?? ".local/state");
+await mkdir(dataDir, { recursive: true, mode: 0o700 });
+const certPath = resolve(
+  process.env.VIBE_ZOO_TLS_CERT_PATH ?? ".local/tls/localhost.crt",
+);
+const keyPath = resolve(
+  process.env.VIBE_ZOO_TLS_KEY_PATH ?? ".local/tls/localhost.key",
+);
+await mkdir(dirname(certPath), { recursive: true, mode: 0o700 });
+await mkdir(dirname(keyPath), { recursive: true, mode: 0o700 });
 const exists = async (path) =>
   access(path).then(
     () => true,
     () => false,
   );
-if (!(await exists(".local/tls/localhost.key")))
+if (!(await exists(keyPath)))
   execFileSync(
     "openssl",
     [
@@ -23,9 +32,9 @@ if (!(await exists(".local/tls/localhost.key")))
       "rsa:2048",
       "-nodes",
       "-keyout",
-      ".local/tls/localhost.key",
+      keyPath,
       "-out",
-      ".local/tls/localhost.crt",
+      certPath,
       "-days",
       "30",
       "-subj",
@@ -35,7 +44,8 @@ if (!(await exists(".local/tls/localhost.key")))
     ],
     { stdio: "ignore" },
   );
-await chmod(".local/tls/localhost.key", 0o600);
+await chmod(keyPath, 0o600);
+if (!(await exists(certPath))) throw Error("local_certificate_missing");
 if (!(await exists(".local/extension-public-key.txt"))) {
   const { publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   await writeFile(
@@ -71,24 +81,36 @@ await writeFile(
   "dist/extension/manifest.json",
   JSON.stringify(manifest, null, 2),
 );
-const db = new DatabaseSync(".local/state/vibe-zoo.sqlite");
+const db = new DatabaseSync(resolve(dataDir, "vibe-zoo.sqlite"));
 db.exec(
   "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL",
 );
 const version = Number(db.prepare("PRAGMA user_version").get().user_version);
-if (version === 0) {
+if (version > 2) throw Error("unsupported_schema_version");
+for (const [next, name] of [
+  [1, "001-initial.sql"],
+  [2, "002-shared-publications.sql"],
+]) {
+  if (version >= next) continue;
+  const sql = await readFile(`src/backend/storage/migrations/${name}`, "utf8");
   db.exec("BEGIN IMMEDIATE");
   try {
-    db.exec(
-      await readFile("src/backend/storage/migrations/001-initial.sql", "utf8"),
-    );
-    db.exec("PRAGMA user_version=1; COMMIT");
+    db.exec(sql);
+    db.exec(`PRAGMA user_version=${next}; COMMIT`);
   } catch (e) {
     db.exec("ROLLBACK");
     throw e;
   }
-} else if (version !== 1) throw Error("unsupported_schema_version");
+}
 if (!(await exists(".local/demo-access.json"))) {
+  if (
+    db
+      .prepare(
+        "SELECT count(*) AS n FROM actors WHERE id IN ('demo-keeper','demo-colleague')",
+      )
+      .get().n
+  )
+    throw Error("access_file_missing_existing_data");
   const credentials = {};
   for (const actor of ["demo-keeper", "demo-colleague"]) {
     const credential = randomBytes(32).toString("base64url");
@@ -104,6 +126,20 @@ if (!(await exists(".local/demo-access.json"))) {
     JSON.stringify(credentials, null, 2) + "\n",
     { mode: 0o600 },
   );
+}
+const saved = JSON.parse(await readFile(".local/demo-access.json", "utf8"));
+for (const actor of ["demo-keeper", "demo-colleague"]) {
+  const credential = saved[actor];
+  if (typeof credential !== "string" || !credential.trim())
+    throw Error("local_access_code_missing");
+  const hash = createHash("sha256").update(credential).digest("hex");
+  const existing = db
+    .prepare("SELECT credential_hash FROM actors WHERE id=?")
+    .get(actor);
+  if (existing && existing.credential_hash !== hash)
+    throw Error("local_access_code_mismatch");
+  if (!existing)
+    db.prepare("INSERT INTO actors VALUES(?,?,?)").run(actor, hash, Date.now());
 }
 db.close();
 console.log(

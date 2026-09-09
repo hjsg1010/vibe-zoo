@@ -15,3 +15,6 @@ coverage/
 *.key
 *.crt
 test-results/
+
+# Local handoff build archive
+dist.zip

@@ -108,7 +108,7 @@ export class Validator {
       );
     const before = this.c.repo.actions(owner, jobId).length;
     let outcome: Outcome;
-    if (version.kind === "tool")
+    if (version.kind === "tool" && caseKind !== "execution")
       outcome = await this.throughMcp(owner, jobId, version, inputs);
     else outcome = await this.executeVersion(owner, jobId, version, inputs);
     const report: ValidationReport = {
@@ -118,6 +118,7 @@ export class Validator {
       versionId: version.id,
       caseKind,
       inputs,
+      outcome,
       status:
         outcome.status === "success"
           ? "passed"

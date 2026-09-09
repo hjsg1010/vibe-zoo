@@ -1,3 +1,4 @@
+import type { Improvement } from "../generation/improvement.js";
 import type { AssetStore } from "../assets/store.js";
 import { installValidationSchema } from "../assets/store.js";
 import { Settings } from "../assets/settings.js";
@@ -23,6 +24,7 @@ export class Router {
   workflow?: Workflow;
   learner?: SkillLearner;
   store?: AssetStore;
+  improvement?: Improvement;
   constructor(
     readonly auth: Auth,
     readonly coordinator: Coordinator,
@@ -85,6 +87,66 @@ export class Router {
       : cookie;
     const owner = this.auth.owner(token);
     const c = this.coordinator;
+    const improveAsset = path.match(
+      /^\/api\/assets\/([^/]+)\/(improvement-cases|rollback)$/,
+    );
+    if (
+      improveAsset &&
+      ((improveAsset[2] === "improvement-cases" && method === "GET") ||
+        (improveAsset[2] === "rollback" && method === "POST"))
+    ) {
+      invariant(this.improvement, "not_found");
+      this.json(
+        res,
+        200,
+        improveAsset[2] === "rollback"
+          ? {
+              asset: this.improvement.rollback(
+                owner,
+                improveAsset[1]!,
+                await this.body(req),
+              ),
+            }
+          : this.improvement.cases(owner, improveAsset[1]!),
+      );
+      return true;
+    }
+    if (path === "/api/improvement" && method === "POST") {
+      invariant(this.improvement, "not_found");
+      const j = this.improvement.start(owner, await this.body(req));
+      if (j.improvement?.phase === "proposing" && this.workflow)
+        void this.workflow(j).catch((error) => this.fail(j, error));
+      this.json(res, 202, { job: j });
+      return true;
+    }
+    const improve = path.match(
+      /^\/api\/improvement\/([^/]+)(?:\/(validate|apply))?$/,
+    );
+    if (
+      improve &&
+      ((method === "GET" && !improve[2]) || (method === "POST" && improve[2]))
+    ) {
+      invariant(this.improvement, "not_found");
+      if (improve[2] === "validate") {
+        const j = this.improvement.queue(
+          owner,
+          improve[1]!,
+          await this.body(req),
+        );
+        if (j.improvement?.phase === "queued" && this.workflow)
+          void this.workflow(j).catch((error) => this.fail(j, error));
+        this.json(res, 202, { job: j });
+      } else if (improve[2] === "apply") {
+        this.json(res, 200, {
+          asset: this.improvement.apply(
+            owner,
+            improve[1]!,
+            await this.body(req),
+          ),
+        });
+      } else this.json(res, 200, this.improvement.detail(owner, improve[1]!));
+      return true;
+    }
     if (path.startsWith("/api/record/") && method === "POST") {
       invariant(this.learner, "not_found");
       if (path === "/api/record/start") {

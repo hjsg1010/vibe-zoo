@@ -1,3 +1,4 @@
+import { Improvement } from "./generation/improvement.js";
 import { AssetStore } from "./assets/store.js";
 import { SkillLearner } from "./generation/skills.js";
 import { BedrockGateway } from "./model/bedrock.js";
@@ -53,6 +54,13 @@ export function start() {
   router.learner = learner;
   const store = new AssetStore(coordinator, validator, config.syntheticOrigin);
   router.store = store;
+  const improvement = new Improvement(
+    coordinator,
+    model,
+    validator,
+    config.syntheticOrigin,
+  );
+  router.improvement = improvement;
   const agent = new Agent(coordinator, model, validator);
   const running = new Set<string>();
   router.workflow = async (job) => {
@@ -61,6 +69,7 @@ export function start() {
     try {
       if (job.kind === "generation") await generator.run(job);
       else if (job.kind === "learning") await learner.validate(job);
+      else if (job.kind === "improvement") await improvement.run(job);
       else if (job.kind === "install") await store.validate(job);
       else await agent.run(job);
     } finally {
