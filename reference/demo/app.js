@@ -1028,11 +1028,19 @@
       root.innerHTML = landing();
       return;
     }
+    const previousToolsScroll =
+      s.tab === "tools" &&
+      root.querySelector('.keeper-tabs [aria-selected="true"]')?.dataset.tab ===
+        "tools"
+        ? root.querySelector(".keeper-body")?.scrollTop || 0
+        : 0;
     root.innerHTML = `${header()}<main class="experience"><div class="experience-caption"><p>웹은 그대로. <strong>Keeper가 업무를 배웁니다.</strong></p><button class="quiet" data-action="guide">${s.guided ? "말풍선 안내 끄기" : "말풍선 안내 켜기"}</button></div><div class="workspace ${s.panelOpen ? "" : "panel-collapsed"}">${browserToolbar()}<section class="browser" aria-label="합성 웹앱">${s.site === "mail" ? mailbox() : s.site === "wafer" ? wafer() : minio()}</section>${s.panelOpen ? keeper() : ""}</div></main>${s.guided && (s.panelOpen || !s.entryStarted) ? welcomeCard() : ""}`;
+    if (s.tab === "tools" && root.querySelector(".keeper-body"))
+      root.querySelector(".keeper-body").scrollTop = previousToolsScroll;
     if (s.guided && (s.panelOpen || !s.entryStarted)) {
       const target = coachTarget();
       target?.classList.add("focus-target");
-      if (target && s.stage !== 5)
+      if (target && s.stage !== 5 && s.tab !== "tools")
         target.scrollIntoView?.({ block: "nearest", behavior: "instant" });
       positionCoach();
     }

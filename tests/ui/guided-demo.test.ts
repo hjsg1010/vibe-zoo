@@ -525,3 +525,17 @@ it("keeps all mail tools in one collapsed list and preserves expanded details af
     document.querySelector('[data-tool-row="read"] [role="status"]'),
   ).toBeTruthy();
 });
+
+it("enters tools at the top and preserves the reading position after a tool executes", () => {
+  vi.useFakeTimers();
+  start();
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  document.querySelector(".keeper-body")!.scrollTop = 250;
+  click("#tool-detail");
+  expect(document.querySelector(".keeper-body")!.scrollTop).toBe(0);
+  document.querySelector(".keeper-body")!.scrollTop = 120;
+  fill("#trial-name", "research-data");
+  submit("#validate-form");
+  expect(document.querySelector(".keeper-body")!.scrollTop).toBe(120);
+});
