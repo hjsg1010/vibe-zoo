@@ -4,7 +4,7 @@
 
 ## 바로 체험하거나 설치하기
 
-- **평가자용 [Live Demo](https://hjsg1010.github.io/vibe-zoo/)**: 설치·계정 없이 MinIO와 WaferSight를 체험합니다. Backend를 호출하지 않는 합성 시뮬레이션입니다. 실제 실행 증거는 데모의 별도 링크에서 확인합니다.
+- **평가자용 [Live Demo](https://hjsg1010.github.io/vibe-zoo/)**: 설치·계정 없이 **메일 → WaferSight → MinIO** 순서로 체험합니다. Backend를 호출하지 않는 합성 시뮬레이션입니다. 실제 실행 증거는 데모의 별도 링크에서 확인합니다.
 - **실제 Extension [최신 Release 다운로드](https://github.com/hjsg1010/vibe-zoo/releases/latest)**: `vibe-zoo-keeper-*.zip`을 받아 압축을 푼 뒤 Chrome 개발자 모드에서 `manifest.json`이 있는 폴더를 로드합니다. 자동 생성 Source code ZIP은 설치용이 아닙니다. ZIP을 Chrome에 직접 끌어넣는 방식은 지원하지 않습니다.
 - **Backend 운영자**: 아래 설치·설정 절차를 따릅니다. `git pull`만으로 빌드 파일이나 키·접속 환경이 준비되지는 않습니다. 설치자는 공용 Backend에 연결할 수 있고, 각자 Backend를 실행하려면 자신의 설정과 키가 필요합니다.
 
@@ -22,6 +22,8 @@ gh release create v0.1.1 dist/releases/* --target main --title "Vibe Zoo Keeper 
 이미 게시된 버전은 덮어쓰지 않고 다음 버전으로 배포합니다.
 
 ## 구현과 검증 상태
+
+현재 [wrap-up과 최신 기능 캡처](docs/wrap-up-2026-09-09.md): 동료 PR #1 반영, 87개 검사·전체 빌드 통과. 실제 Discover는 **한 도구와 한 기본 Skill 생성**까지 구현되어 있으며, 페이지의 여러 기능을 한 번에 Tool/MCP로 준비하는 확장은 후속 검토입니다. 아래의 기존 실제 검증은 이 구현 범위에서 수행했습니다. 이번 PR 수정은 main에서 빌드해야 하며 기존 Release ZIP은 이전 버전입니다.
 
 | 기능 | 구현 | 실제 검증과 출처 |
 |---|---|---|
