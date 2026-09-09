@@ -262,7 +262,10 @@ export function AssetValidationForm({
         void onSubmit({
           ...Object.fromEntries(
             contract
-              .filter((f) => f.required && f.type !== "number")
+              .filter(
+                (f) =>
+                  f.type === "string" || (f.required && f.type === "boolean"),
+              )
               .map((f) => [f.name, f.type === "boolean" ? false : ""]),
           ),
           ...values,

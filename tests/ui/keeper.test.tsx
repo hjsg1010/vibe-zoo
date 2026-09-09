@@ -173,7 +173,7 @@ it("submits an empty all-products filter as a present string while preserving re
           name: "product",
           description: "제품 (빈 값은 전체)",
           type: "string",
-          required: true,
+          required: false,
         },
         {
           name: "limit",
