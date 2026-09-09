@@ -72,12 +72,10 @@ it("opens Store in an explicit new tab instead of navigating the connected busin
   vi.stubGlobal("chrome", {
     storage: {
       session: {
-        get: vi
-          .fn()
-          .mockResolvedValue({
-            token: "synthetic-token",
-            backendOrigin: "https://demo.example.org",
-          }),
+        get: vi.fn().mockResolvedValue({
+          token: "synthetic-token",
+          backendOrigin: "https://demo.example.org",
+        }),
         set: vi.fn().mockResolvedValue(undefined),
       },
     },
@@ -97,4 +95,71 @@ it("opens Store in an explicit new tab instead of navigating the connected busin
     state.mockRestore();
     vi.unstubAllGlobals();
   }
+});
+
+it("keeps confirmations and uncertain results visible while completed history is collapsed", async () => {
+  const { ActivityList } =
+    await import("../../src/extension/panel/activity.js");
+  const jobs = [
+    job("alice", {
+      conversationId: "older",
+      status: "completed",
+      purpose: "지난 작업",
+    }),
+    job("alice", {
+      conversationId: "older",
+      status: "waiting_confirmation",
+      purpose: "승인 대기",
+    }),
+    job("alice", {
+      conversationId: "older",
+      status: "unknown",
+      purpose: "결과 미확인",
+    }),
+    job("alice", {
+      conversationId: "current",
+      kind: "execution",
+      status: "completed",
+      purpose: "현재 대화",
+    }),
+  ];
+  render(
+    <ActivityList
+      jobs={jobs}
+      conversationId="current"
+      renderJob={(j) => <p key={j.id}>{j.purpose}</p>}
+    />,
+  );
+  expect(screen.getByText("승인 대기").closest("details")).toBeNull();
+  expect(screen.getByText("결과 미확인").closest("details")).toBeNull();
+  expect(screen.getByText("현재 대화").closest("details")?.open).toBe(false);
+  expect(document.querySelectorAll("details")).toHaveLength(2);
+  cleanup();
+});
+
+it("explains how to validate candidates and does not claim discovery success while running", async () => {
+  const { DiscoveryGuide } =
+    await import("../../src/extension/panel/activity.js");
+  const onTools = vi.fn();
+  const asset = {
+    id: "candidate",
+    name: "합성 도구",
+    candidateVersionId: "v1",
+  } as import("../../src/ui/api-client.js").State["assets"][number];
+  const view = render(
+    <DiscoveryGuide jobs={[]} assets={[asset]} onTools={onTools} />,
+  );
+  expect(screen.getByText(/합성 입력으로/)).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: /도구 목록/ }));
+  expect(onTools).toHaveBeenCalledOnce();
+  view.rerender(
+    <DiscoveryGuide
+      jobs={[job("alice", { status: "running" })]}
+      assets={[asset]}
+      onTools={onTools}
+    />,
+  );
+  expect(screen.getByText("도구를 준비하고 있어요")).toBeTruthy();
+  expect(screen.queryByText(/후보 1개를 시험/)).toBeNull();
+  cleanup();
 });

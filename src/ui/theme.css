@@ -319,3 +319,77 @@ nav button[aria-selected="true"] {
     transition: background 0.12s;
   }
 }
+
+/* Keeper keeps the website in focus: compact navigation, one next action. */
+.keeper .brand {
+  margin: 2px 0 16px;
+}
+.keeper .brandmark {
+  background: #f3e5c4;
+}
+.keeper .brand h1 {
+  font-size: 20px;
+}
+.keeper .target {
+  padding: 9px 12px;
+  margin-bottom: 10px;
+}
+.keeper nav {
+  margin-bottom: 12px;
+}
+.keeper .hero {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.keeper .hero-icon {
+  float: right;
+  margin: 0 0 10px 10px;
+  font-size: 42px;
+}
+.keeper .hero h2 {
+  font-size: 20px;
+}
+.discovery-guide {
+  border-left: 3px solid var(--teal);
+  padding: 12px 14px;
+  background: var(--mint);
+  border-radius: 0 12px 12px 0;
+  margin: 14px 0;
+}
+.discovery-guide h2 {
+  font-size: 14px;
+  margin: 6px 0;
+}
+.discovery-guide p {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.discovery-guide button {
+  font-size: 12px;
+  padding: 8px 10px;
+}
+.activity {
+  margin: 18px 0;
+}
+.history-list {
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.history-list summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 650;
+  padding: 5px 0;
+}
+.history-list summary span {
+  color: var(--muted);
+  margin-left: 6px;
+}
+.history-list[open] summary {
+  margin-bottom: 12px;
+}
+summary:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}

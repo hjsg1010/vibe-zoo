@@ -1,3 +1,4 @@
+import { ActivityList, DiscoveryGuide } from "./activity.js";
 import { AssetImprovement } from "./improvement.js";
 import { Publish } from "../../store/publish.js";
 import { AssetSettings } from "./settings.js";
@@ -172,14 +173,14 @@ export function Keeper() {
     }
   };
   return (
-    <main className="shell">
+    <main className="shell keeper">
       <header className="brand">
         <div className="brandmark" aria-hidden="true">
-          ❧
+          🦁
         </div>
         <div>
           <div className="eyebrow">VIBE ZOO</div>
-          <h1>나의 Keeper</h1>
+          <h1>Keeper</h1>
           <p className="subtitle">당신의 업무를 배우는 작은 동물원</p>
         </div>
       </header>
@@ -298,7 +299,16 @@ export function Keeper() {
                   </p>
                   <button
                     data-testid="prepare-tools"
-                    disabled={!state.binding}
+                    disabled={
+                      !state.binding ||
+                      state.jobs.some(
+                        (job) =>
+                          job.kind === "generation" &&
+                          !["completed", "failed", "cancelled"].includes(
+                            job.status,
+                          ),
+                      )
+                    }
                     onClick={() => {
                       void submit(
                         "/api/prepare",
@@ -313,62 +323,65 @@ export function Keeper() {
                   </p>
                 </section>
               )}
+              <DiscoveryGuide
+                jobs={state.jobs.filter(
+                  (job) => job.conversationId === conversation.current,
+                )}
+                assets={state.assets}
+                onTools={() => setTab("도구")}
+              />
               <Card title="Keeper와 대화">
                 <Chat
                   disabled={!state.binding}
                   onSend={(text) => submit("/api/chat", text)}
                 />
               </Card>
-              <Card title="진행 상황">
-                {state.jobs.length ? (
-                  state.jobs.map((job) => (
-                    <JobCard
-                      key={job.id}
-                      job={job}
-                      onRepair={async (source) => {
-                        await api.call(
-                          `/api/jobs/${source.id}/repair-validator`,
-                          { revision: source.controlRevision },
-                        );
-                        setState(await api.state());
-                      }}
-                      onReview={async (source, reason) => {
-                        await api.call(`/api/jobs/${source.id}/control`, {
-                          action: "review_not_executed",
-                          revision: source.controlRevision,
-                          reviewReason: reason,
-                        });
-                        setState(await api.state());
-                      }}
-                      onValidate={async (source, toolInputs, skillInputs) => {
-                        if (!api || !state.binding) throw Error("disconnected");
-                        await api.call("/api/validate-candidate", {
-                          sourceJobId: source.id,
-                          revision: source.controlRevision,
-                          request: {
-                            requestKey: crypto.randomUUID(),
-                            conversationId: conversation.current,
-                            binding: state.binding,
-                            purpose: "고정 후보를 새 입력으로 검증",
-                            inputs: {},
-                          },
-                          toolInputs,
-                          skillInputs,
-                          newCase: true,
-                        });
-                        setState(await api.state());
-                      }}
-                      onControl={(j, a, id) => {
-                        void control(j, a, id);
-                      }}
-                    />
-                  ))
-                ) : (
-                  <Empty>
-                    요청하면 진행 상황과 확인한 결과가 여기에 표시돼요.
-                  </Empty>
+              <ActivityList
+                jobs={state.jobs}
+                conversationId={conversation.current}
+                renderJob={(job) => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    onRepair={async (source) => {
+                      await api.call(
+                        `/api/jobs/${source.id}/repair-validator`,
+                        { revision: source.controlRevision },
+                      );
+                      setState(await api.state());
+                    }}
+                    onReview={async (source, reason) => {
+                      await api.call(`/api/jobs/${source.id}/control`, {
+                        action: "review_not_executed",
+                        revision: source.controlRevision,
+                        reviewReason: reason,
+                      });
+                      setState(await api.state());
+                    }}
+                    onValidate={async (source, toolInputs, skillInputs) => {
+                      if (!api || !state.binding) throw Error("disconnected");
+                      await api.call("/api/validate-candidate", {
+                        sourceJobId: source.id,
+                        revision: source.controlRevision,
+                        request: {
+                          requestKey: crypto.randomUUID(),
+                          conversationId: conversation.current,
+                          binding: state.binding,
+                          purpose: "고정 후보를 새 입력으로 검증",
+                          inputs: {},
+                        },
+                        toolInputs,
+                        skillInputs,
+                        newCase: true,
+                      });
+                      setState(await api.state());
+                    }}
+                    onControl={(j, a, id) => {
+                      void control(j, a, id);
+                    }}
+                  />
                 )}
-              </Card>
+              />
             </>
           )}
           <div hidden={tab !== "내 Skill"}>
@@ -415,6 +428,7 @@ export function Keeper() {
                         a.candidateVersionId &&
                         a.kind !== "personal_skill" && (
                           <AssetValidationForm
+                            submitLabel="내 탭에서 시험 실행"
                             contract={a.inputContract ?? []}
                             onSubmit={async (inputs) => {
                               if (!state.binding) throw Error("disconnected");
@@ -451,7 +465,13 @@ export function Keeper() {
                 data-testid="disconnect"
                 onClick={() => {
                   void api.call("/api/logout", {}).finally(() => {
-                    void chrome.storage.session.remove(["token", "binding"]);
+                    void chrome.storage.session.remove([
+                      "token",
+                      "binding",
+                      "conversationId",
+                    ]);
+                    conversation.current = crypto.randomUUID();
+                    prepared.current.clear();
                     setApi(undefined);
                     setState({ binding: null, jobs: [], assets: [] });
                   });
