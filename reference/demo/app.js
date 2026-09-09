@@ -19,6 +19,7 @@
     guided: true,
     panelOpen: false,
     entryStarted: false,
+    expandedTools: {},
     tabTip: null,
     seenTabs: ["chat"],
     tab: "chat",
@@ -336,7 +337,11 @@
     if (s.tabTip) return root.querySelector(`[data-tab="${s.tabTip}"]`);
     return (
       root.querySelector(
-        s.stage === 8 ? ".installed-skill" : steps()[s.stage][2],
+        s.stage === 8
+          ? ".installed-skill"
+          : s.stage === 2
+            ? ".tool-catalog"
+            : steps()[s.stage][2],
       ) ||
       root.querySelector(
         `[data-tab="${s.stage <= 2 ? "tools" : s.stage === 3 ? "chat" : "learn"}"]`,
@@ -558,8 +563,21 @@
     s.mailToolResults[kind] = result;
     return result;
   }
+  function toolRow(id, number, name, description, contents) {
+    return `<details class="capability-card compact-tool" data-tool-row="${id}" ${s.expandedTools[id] ? "open" : ""}><summary><span class="capability-number">${String(number).padStart(2, "0")}</span><span class="tool-row-label"><strong>${name}</strong><span>${description}</span></span><span class="tool-chevron" aria-hidden="true">⌄</span></summary><div class="tool-row-details">${contents}</div></details>`;
+  }
   function mailToolExtras() {
-    return `<section class="mail-extra-tools"><h3>메일 정리도 맡겨보세요</h3><p>각 작업에서 대상을 선택하고 실행하세요. 검색 연습과 별도로 직접 확인할 수 있어요.</p>${mailExtraTools.map(([id, name, desc, example], i) => `<article class="asset-card capability-card"><span class="capability-number">0${i + 3}</span><div><h3>${name}</h3><p>${desc}</p><div class="capability-example">${example}</div><form class="mail-tool-form" data-mail-tool="${id}">${id === "starred" ? "" : `<label>${id === "sender" ? "발신자" : "대상 메일"}<select name="target">${demoMail.map((m) => `<option value="${id === "sender" ? esc(m.from) : m.id}">${esc(id === "sender" ? m.from : m.subject)}</option>`).join("")}</select></label>`}<button ${!s.ready ? "disabled" : ""}>${name} 실행</button></form>${!s.ready ? "<small>먼저 위에서 검색 흐름을 확인해주세요.</small>" : ""}${s.mailToolResults[id] ? `<p class="tool-run-result" role="status">${esc(s.mailToolResults[id])}</p>` : ""}</div></article>`).join("")}</section>`;
+    return mailExtraTools
+      .map(([id, name, desc, example], i) =>
+        toolRow(
+          id,
+          i + 3,
+          name,
+          desc,
+          `<p>${desc}</p><div class="capability-example">${example}</div><form class="mail-tool-form" data-mail-tool="${id}">${id === "starred" ? "" : `<label>${id === "sender" ? "발신자" : "대상 메일"}<select name="target">${demoMail.map((m) => `<option value="${id === "sender" ? esc(m.from) : m.id}">${esc(id === "sender" ? m.from : m.subject)}</option>`).join("")}</select></label>`}<button ${!s.ready ? "disabled" : ""}>${name} 실행</button></form>${!s.ready ? "<small>목록 아래에서 기본 실행을 확인하면 사용할 수 있어요.</small>" : ""}${s.mailToolResults[id] ? `<p class="tool-run-result" role="status">${esc(s.mailToolResults[id])}</p>` : ""}`,
+        ),
+      )
+      .join("");
   }
   function mailCompoundTask(text) {
     const read = /읽|본문|열어/.test(text);
@@ -952,7 +970,7 @@
       s.site === "wafer"
         ? filterFields("trial", s.trialFilter)
         : `<label for="trial-name">${s.site === "mail" ? "찾아볼 검색어" : "만들어볼 새 보관함 이름"}</label><input id="trial-name" name="name" value="${esc(s.trial)}" required>`;
-    return `<section class="tool-overview"><span class="eyebrow">KEEPER가 할 수 있는 일</span><h2>이 화면에서 배운 작업 ${s.site === "mail" ? 7 : 2}개</h2><p>‘도구’는 Keeper가 대신 누르고 입력할 수 있는 작업이에요.</p><strong class="tool-readiness">${s.ready ? "✓ 기본 흐름 확인 완료 · 이제 말로 요청하세요" : "먼저 아래 두 작업을 함께 확인해보세요"}</strong></section><div class="tool-catalog">${[0, 1].map((n) => `<article class="asset-card capability-card"><span class="capability-number">0${n + 1}</span><div><h3>${copy[n ? 3 : 0]}</h3><p>${copy[n ? 4 : 1]}</p><div class="capability-example">${copy[n ? 5 : 2]}</div>${s.site === "mail" && n === 1 ? `<form data-mail-tool="results" class="mail-tool-form"><button ${!s.ready ? "disabled" : ""}>현재 검색 결과 확인</button></form>${s.mailToolResults.results ? `<p role="status">${esc(s.mailToolResults.results)}</p>` : ""}` : ""}</div></article>`).join("")}</div><button id="tool-detail" class="text-button" data-action="detail" aria-expanded="${s.detail}">작업 순서와 입력 확인 ${s.detail ? "−" : "＋"}</button>${s.detail ? `<section class="tool-detail"><h4>한 번 실행하면 두 작업이 이어져요</h4><p>① ${copy[0]} → ② ${copy[3]}</p><p>한 번 실행하면 결과 확인까지 이어집니다. 각각 시험할 필요가 없어요.</p></section>${!s.ready ? `<form id="validate-form" class="test-form tool-trial"><h3>두 작업을 함께 확인하기</h3><p>${s.site === "minio" ? "왼쪽 데모에 보관함을 만들고, 목록에 같은 이름이 있는지 확인해요." : "왼쪽 데모에서 조건을 적용하고, 표시된 결과를 확인해요."}</p>${fields}<button>실행하고 결과 확인하기</button></form>` : '<button class="secondary full" data-tab="chat">대화로 이 작업 요청하기 →</button>'}` : ""}${s.site === "mail" ? mailToolExtras() : ""}<section class="my-skills-heading"><h2>내가 가르친 Skill ${s.skill ? "1개" : "0개"}</h2><p>도구를 내 순서와 목적에 맞게 묶어 기억한 작업이에요.</p></section>${installedSkill(true)}`;
+    return `<section class="tool-overview"><h2>사용할 수 있는 도구 <span>${s.site === "mail" ? 7 : 2}</span></h2><p>항목을 펼치면 입력·예시·실행 방법을 볼 수 있어요.</p></section><div class="tool-catalog">${[0, 1].map((n) => toolRow(n ? "results" : "primary", n + 1, copy[n ? 3 : 0], copy[n ? 4 : 1], `<p>${copy[n ? 4 : 1]}</p><div class="capability-example">${copy[n ? 5 : 2]}</div>${s.site === "mail" && n === 1 ? `<form data-mail-tool="results" class="mail-tool-form"><button ${!s.ready ? "disabled" : ""}>현재 검색 결과 확인</button></form>${s.mailToolResults.results ? `<p role="status">${esc(s.mailToolResults.results)}</p>` : ""}` : '<p class="muted">목록 아래의 기본 실행에서 입력하고 결과를 확인할 수 있어요.</p>'}`)).join("")}${s.site === "mail" ? mailToolExtras() : ""}</div><section class="tool-setup"><h3>기본 실행 확인</h3><p>${s.ready ? "✓ 확인 완료 · 도구를 펼쳐 실행하거나 대화로 요청하세요." : "검색·생성부터 결과 확인까지 한 번 실행해보세요."}</p><button id="tool-detail" class="text-button" data-action="detail" aria-expanded="${s.detail}">작업 순서와 입력 확인 ${s.detail ? "−" : "＋"}</button>${s.detail ? `<section class="tool-detail"><h4>한 번 실행하면 두 작업이 이어져요</h4><p>① ${copy[0]} → ② ${copy[3]}</p><p>한 번 실행하면 결과 확인까지 이어집니다. 각각 시험할 필요가 없어요.</p></section>${!s.ready ? `<form id="validate-form" class="test-form tool-trial"><h3>두 작업을 함께 확인하기</h3><p>${s.site === "minio" ? "왼쪽 데모에 보관함을 만들고, 목록에 같은 이름이 있는지 확인해요." : "왼쪽 데모에서 조건을 적용하고, 표시된 결과를 확인해요."}</p>${fields}<button>실행하고 결과 확인하기</button></form>` : '<button class="secondary full" data-tab="chat">대화로 이 작업 요청하기 →</button>'}` : ""}</section><section class="my-skills-heading"><h2>내가 가르친 Skill ${s.skill ? "1개" : "0개"}</h2><p>도구를 내 순서와 목적에 맞게 묶어 기억한 작업이에요.</p></section>${installedSkill(true)}`;
   }
   function messages() {
     return s.messages
@@ -1331,6 +1349,15 @@
       return;
     }
   });
+  root.addEventListener(
+    "toggle",
+    (event) => {
+      const row = event.target;
+      if (s && row.isConnected && row.dataset.toolRow)
+        s.expandedTools[row.dataset.toolRow] = row.open;
+    },
+    true,
+  );
   root.addEventListener("change", (event) => {
     if (s?.site === "mail" && event.target.id === "mail-sender") {
       s.mailSender = event.target.value;

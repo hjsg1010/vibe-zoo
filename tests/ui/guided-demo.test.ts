@@ -495,3 +495,33 @@ it("starts the tutorial with the closed extension and only discovers after openi
   click('[data-action="focus-step"]');
   expect(document.querySelector("#discover")).toBeTruthy();
 });
+
+it("keeps all mail tools in one collapsed list and preserves expanded details after execution", async () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<div id="app"></div>';
+  window.eval(readFileSync("reference/demo/app.js", "utf8"));
+  click('[data-site="mail"]');
+  click("#keeper-toolbar-toggle");
+  click("#discover");
+  vi.advanceTimersByTime(2700);
+  click("#tool-detail");
+  const catalog = document.querySelector(".tool-catalog")!;
+  expect(catalog.querySelectorAll(":scope > details")).toHaveLength(7);
+  expect(catalog.querySelectorAll("details[open]")).toHaveLength(0);
+  expect(catalog.querySelector("#validate-form")).toBeNull();
+  expect(document.querySelector(".tool-setup #validate-form")).toBeTruthy();
+  submit("#validate-form");
+  click('[data-tab="tools"]');
+  const row = document.querySelector<HTMLDetailsElement>(
+    '[data-tool-row="read"]',
+  )!;
+  row.open = true;
+  fireEvent(row, new Event("toggle"));
+  submit('[data-mail-tool="read"]');
+  expect(
+    document.querySelector<HTMLDetailsElement>('[data-tool-row="read"]')!.open,
+  ).toBe(true);
+  expect(
+    document.querySelector('[data-tool-row="read"] [role="status"]'),
+  ).toBeTruthy();
+});

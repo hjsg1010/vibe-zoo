@@ -2108,3 +2108,101 @@ button.chrome-icon:hover {
     gap: 2px;
   }
 }
+
+/* One uninterrupted scan list; inputs and guidance live outside collapsed rows. */
+.tool-catalog {
+  border: 1px solid #dce4dc;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.compact-tool.capability-card {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: white;
+}
+.compact-tool + .compact-tool {
+  border-top: 1px solid #e7ece7;
+}
+.compact-tool summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.compact-tool summary::-webkit-details-marker {
+  display: none;
+}
+.compact-tool summary:hover {
+  background: #f2f7f3;
+}
+.compact-tool summary:focus-visible {
+  outline: 2px solid #397c63;
+  outline-offset: -2px;
+}
+.compact-tool .capability-number {
+  font-size: 10px;
+  font-weight: 600;
+  color: #789084;
+  padding: 0;
+}
+.tool-row-label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.tool-row-label strong {
+  font-size: 14px;
+  line-height: 1.25;
+}
+.tool-row-label > span {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #738078;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tool-chevron {
+  color: #738078;
+  font-size: 16px;
+  transition: transform 0.15s;
+}
+.compact-tool[open] > summary .tool-chevron {
+  transform: rotate(180deg);
+}
+.compact-tool[open] > summary {
+  background: #f2f7f3;
+}
+.tool-row-details {
+  padding: 0 12px 14px 31px;
+  font-size: 13px;
+}
+.tool-row-details > p {
+  padding-top: 10px;
+}
+.tool-setup {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #dce4dc;
+}
+.tool-setup > h3 {
+  font-size: 14px;
+  margin: 0 0 7px;
+}
+.tool-setup > p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #738078;
+}
+.tool-overview h2 span {
+  font-size: 12px;
+  color: #397c63;
+  margin-left: 6px;
+}
