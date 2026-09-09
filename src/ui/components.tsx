@@ -262,8 +262,8 @@ export function AssetValidationForm({
         void onSubmit({
           ...Object.fromEntries(
             contract
-              .filter((f) => f.type === "boolean" && f.required)
-              .map((f) => [f.name, false]),
+              .filter((f) => f.required && f.type !== "number")
+              .map((f) => [f.name, f.type === "boolean" ? false : ""]),
           ),
           ...values,
         })
@@ -288,7 +288,7 @@ export function AssetValidationForm({
                   ? "number"
                   : "text"
             }
-            required={field.required && field.type !== "boolean"}
+            required={field.required && field.type === "number"}
             {...(field.type === "boolean"
               ? { checked: values[field.name] === true }
               : { value: String(values[field.name] ?? "") })}
