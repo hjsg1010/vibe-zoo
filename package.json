@@ -13,7 +13,9 @@
     "test": "vitest run",
     "demo:setup": "node scripts/demo-setup.mjs",
     "demo": "node scripts/demo.mjs",
-    "demo:cleanup": "node scripts/demo-cleanup.mjs"
+    "demo:cleanup": "node scripts/demo-cleanup.mjs",
+    "demo:stop": "node scripts/demo-stop.mjs",
+    "check:public": "node scripts/check-public-artifacts.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "3.1128.0",

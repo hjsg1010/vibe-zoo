@@ -76,11 +76,16 @@ export type PersonalAsset = {
   siteKey: string;
 };
 export type ValidationReport = {
+  outcome?: import("./contracts.js").Outcome;
   id: string;
   owner: string;
   jobId: string;
   versionId: string;
-  caseKind: "different_input" | "failure_reproduction" | "success_regression" | "execution";
+  caseKind:
+    | "different_input"
+    | "failure_reproduction"
+    | "success_regression"
+    | "execution";
   inputs: z.infer<typeof inputsSchema>;
   status: "passed" | "failed" | "unknown";
   actionIds: string[];

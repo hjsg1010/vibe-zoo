@@ -28,6 +28,17 @@ export async function serveJobTools(
     { defaults: Inputs; name?: string; description?: string }
   > = new Map(),
 ) {
+  // Multiple fixed versions can coexist after an improvement; keep each callable.
+  const usedNames = new Set<string>();
+  const names = versions.map((version, index) => {
+    const base =
+      version.kind === "tool" ? version.content.name : `skill_${index + 1}`;
+    let name = base;
+    let suffix = 1;
+    while (usedNames.has(name)) name = `${base.slice(0, 52)}_v${++suffix}`;
+    usedNames.add(name);
+    return name;
+  });
   const secret = randomBytes(32).toString("base64url");
   const sessions = new Set<McpServer>();
   const http = createServer((req, res) => {
@@ -52,7 +63,7 @@ export async function serveJobTools(
         for (const key of Object.keys(defaults))
           if (shape[key]) shape[key] = shape[key].optional();
         mcp.registerTool(
-          version.kind === "tool" ? tool.name : `skill_${index + 1}`,
+          names[index]!,
           {
             description: [
               personal?.name ?? tool.name,

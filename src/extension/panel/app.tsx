@@ -1,3 +1,4 @@
+import { AssetImprovement } from "./improvement.js";
 import { Publish } from "../../store/publish.js";
 import { AssetSettings } from "./settings.js";
 import { Learning } from "./learning.js";
@@ -404,6 +405,12 @@ export function Keeper() {
                         onSaved={async () => setState(await api.state())}
                       />
                       <Publish asset={a} api={api} />
+                      <AssetImprovement
+                        asset={a}
+                        api={api}
+                        state={state}
+                        onChanged={async () => setState(await api.state())}
+                      />
                       {!a.currentVersionId &&
                         a.candidateVersionId &&
                         a.kind !== "personal_skill" && (

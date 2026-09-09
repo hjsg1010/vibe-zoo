@@ -35,7 +35,17 @@ export class Agent {
     }
     const server = await serveJobTools(
       [...tools.values()],
-      (v, args) => this.validator.executeVersion(job.owner, job.id, v, args),
+      async (v, args) => {
+        const report = await this.validator.run(
+          job.owner,
+          job.id,
+          v,
+          args,
+          args,
+          "execution",
+        );
+        return report.outcome!;
+      },
       new Map(
         job.snapshots.map((s) => [
           s.versionId,
@@ -154,23 +164,41 @@ export class Agent {
             { name: use.name, arguments: use.input as Record<string, unknown> },
             { timeout: 300000 },
           );
+          let callOutcome: Outcome | undefined;
           const resultText = result.content.find((c) => c.type === "text");
           if (resultText?.type === "text") {
             try {
               const parsed = outcomeSchema.safeParse(
                 JSON.parse(resultText.text),
               );
-              if (parsed.success) lastOutcome = parsed.data;
+              if (parsed.success) callOutcome = parsed.data;
             } catch {
               /* Non-outcome MCP errors are handled below. */
             }
           }
-          if (result.isError && !lastOutcome)
-            lastOutcome = {
+          if (!callOutcome)
+            callOutcome = {
               status: "failure",
               completed: [],
               reason: "도구 실행 실패",
             };
+          lastOutcome = callOutcome;
+          if (callOutcome.status !== "success") {
+            const current = this.c.repo.getJob(job.owner, job.id);
+            if (!current.cancelled)
+              this.c.repo.updateJob(
+                job.owner,
+                job.id,
+                current.controlRevision,
+                (j) => ({
+                  ...j,
+                  status:
+                    callOutcome!.status === "unknown" ? "unknown" : "failed",
+                  outcome: callOutcome,
+                }),
+              );
+            return; // Preserve the failed/partial case; no implicit mutation replay.
+          }
           results.push({
             toolResult: {
               toolUseId: use.toolUseId,

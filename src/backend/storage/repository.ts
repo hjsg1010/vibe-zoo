@@ -298,7 +298,13 @@ export class Repository {
     invariant(r.changes === 1);
     return next;
   }
-  applyImprovement(owner: string, id: string, revision: number, assetRevision: number, digest: string): PersonalAsset {
+  applyImprovement(
+    owner: string,
+    id: string,
+    revision: number,
+    assetRevision: number,
+    digest: string,
+  ): PersonalAsset {
     return transaction(this.db, () => {
       const j = this.getJob(owner, id);
       const m = j.improvement;
@@ -309,15 +315,43 @@ export class Repository {
         return a; // A later rollback must not cause a repeated apply to switch again.
       }
       invariant(!j.cancelled && j.controlRevision === revision, "cancelled");
-      invariant(j.status === "completed" && m.phase === "review" && a.currentVersionId === m.baseVersionId, "conflict");
+      invariant(
+        j.status === "completed" &&
+          m.phase === "review" &&
+          a.currentVersionId === m.baseVersionId,
+        "conflict",
+      );
       const v = this.version(owner, j.candidateId);
       invariant(v.assetId === a.id && v.previousId === m.baseVersionId);
-      const reports = this.reports(owner, v.id).filter(r => r.jobId === id);
-      invariant(["failure_reproduction", "success_regression"].every(kind => reports.some(r => r.caseKind === kind && r.status === "passed")));
-      invariant(reports.every(r => r.status === "passed"));
-      const next = this.editAssetInside(owner, a.id, assetRevision, old => ({...old, previousVersionId: old.currentVersionId, currentVersionId: v.id}));
-      const updated = {...j, controlRevision: revision + 1, updatedAt: Date.now(), improvement: {...m, appliedDigest: digest}};
-      const r = this.db.prepare("UPDATE jobs SET revision=?,data=? WHERE owner=? AND id=? AND revision=?").run(updated.controlRevision, JSON.stringify(updated), owner, id, revision);
+      const reports = this.reports(owner, v.id).filter((r) => r.jobId === id);
+      invariant(
+        ["failure_reproduction", "success_regression"].every((kind) =>
+          reports.some((r) => r.caseKind === kind && r.status === "passed"),
+        ),
+      );
+      invariant(reports.every((r) => r.status === "passed"));
+      const next = this.editAssetInside(owner, a.id, assetRevision, (old) => ({
+        ...old,
+        previousVersionId: old.currentVersionId,
+        currentVersionId: v.id,
+      }));
+      const updated = {
+        ...j,
+        controlRevision: revision + 1,
+        updatedAt: Date.now(),
+        improvement: { ...m, appliedDigest: digest },
+      };
+      const r = this.db
+        .prepare(
+          "UPDATE jobs SET revision=?,data=? WHERE owner=? AND id=? AND revision=?",
+        )
+        .run(
+          updated.controlRevision,
+          JSON.stringify(updated),
+          owner,
+          id,
+          revision,
+        );
       invariant(r.changes === 1);
       return next;
     });
