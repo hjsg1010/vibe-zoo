@@ -13,7 +13,7 @@
 | Store 공유·설치·자기 환경 사용 | 완료 | 직접 수행: 게시 UI와 별도 사용자 API 설치. **사용자 전달 결과**: 동료 환경의 두 번째 사용자 검증 완료 |
 | 개선 후보·두 사례 검증·적용·이전 버전 | 완료 | 직접 수행: **오류를 주입한 통제된 데모**에서 실제 실패·Bedrock 후보·두 사례·Keeper 적용·채팅·복구 통과 |
 
-검사 대역은 실제 모델/브라우저 성공으로 계산하지 않습니다. 상세 코드·AC 연결과 증거 한계는 [공통 구현 요약](aidlc-docs/construction/vibe-zoo-mvp/code/implementation-summary.md)을 참조하세요. 승인된 기능 구현과 필수 실제 검증을 마쳤으며, AI-DLC Code Generation 산출물 검토를 기다립니다. 정식 Build and Test 단계는 코드 승인 후 진행합니다.
+검사 대역은 실제 모델/브라우저 성공으로 계산하지 않습니다. 상세 코드·AC 연결과 증거 한계는 [공통 구현 요약](aidlc-docs/construction/vibe-zoo-mvp/code/implementation-summary.md)을 참조하세요. Code Generation 산출물 승인을 받았고, 별도 깨끗한 작업 디렉터리에서 설치·타입·린트·61개 검사·세 빌드를 재현했습니다. 정식 [Build and Test 결과](aidlc-docs/construction/build-and-test/build-and-test-summary.md)까지 사용자 승인을 받았습니다.
 
 ## 설치와 설정
 

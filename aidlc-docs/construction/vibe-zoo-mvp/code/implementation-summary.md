@@ -1,6 +1,6 @@
 # U-01 구현·검증 기록
 
-Code Generation Part 2 구현·필수 검증 완료, 코드 산출물 승인 대기. 원본 수용조건은 [stories.md](../../../inception/user-stories/stories.md)를 참조한다. 실제 제품 검증은 아래에 별도로 기록한다. 단위/합성 검사를 실제 브라우저·모델 성공 증거로 사용하지 않는다.
+Code Generation Part 2 구현·필수 검증 및 사용자 승인 완료. 정식 [Build and Test 결과](../../build-and-test/build-and-test-summary.md)는 별도 단계 요약을 참조한다. 원본 수용조건은 [stories.md](../../../inception/user-stories/stories.md)를 참조한다. 실제 제품 검증은 아래에 별도로 기록한다. 단위/합성 검사를 실제 브라우저·모델 성공 증거로 사용하지 않는다.
 
 ## 현재 완료 상태와 수용조건 근거
 

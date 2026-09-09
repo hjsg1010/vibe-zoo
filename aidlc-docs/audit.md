@@ -1503,3 +1503,25 @@ AC-10 확인 후 원래 일반 Chrome의 MinIO 탭과 기존 demo Actor Keeper �
 - 실제/합성/사용자 전달 Store 근거와 지원 한계를 공통 구현 요약에서 구분한다. 원격 CI 미실행, 운영 접속/Whale 미확정, 키 만료/크레딧 미확인. 세 확장은 기존 비활성/N/A로 유지했다.
 
 **Artifact review request**: README, src/, tests/, scripts/, screenshots/01~04 및 공통 구현 요약을 검토하고 U-01 Code Generation 산출물을 승인할까요? 승인 후 AWS AI-DLC v1.0.1의 정식 Build and Test 단계로 진행합니다. 현재 승인은 요청 상태이며 후속 단계 승인을 미리 기록하지 않습니다.
+
+## 2026-09-09T04:44:53.189424+00:00 — Code Generation approval / Build and Test start
+
+**User (verbatim)**: 응 진행해줘.
+
+Code Generation 산출물 승인 및 정식 Build and Test 진행으로 해석한다. 이후 결과 승인이나 운영 배포 승인을 선취하지 않는다. 기존 실제 실행/동료 보고/통제 개선 근거는 재사용하고, 비공개 설정·데이터를 복사하지 않는 별도 작업 디렉터리에서 lockfile 설치와 전체 빌드/검사 재현성을 확인한다. 성능/보안/계약 별도 문서는 승인 범위상 불필요하며 관련 경계 검사는 기존 테스트와 통합 지침에서 참조한다.
+
+## 2026-09-09T04:47:08.960785+00:00 — Build and Test Stage
+
+**Build Status**: Success — isolated cached lockfile install; typecheck/lint; Backend/Extension/Store builds.
+**Test Status**: Pass — 61/61, 18 files, 0 failures. Backend 41, Extension 11, integration directory 1, UI 8; directory-based counts, no double counting. Tested source/config/lockfile matches current workspace. Coverage percentage not measured.
+**Files Generated**: construction/build-and-test/build-instructions.md, unit-test-instructions.md, integration-test-instructions.md, build-and-test-summary.md.
+
+Source-only isolated reproduction excluded .env, private data and previous build artifacts. No actual model/browser replay, demo reset or runtime change. Existing actual evidence and user-reported Store result reused with provenance; controlled improvement remains labeled fault injection. Performance and standalone extra test documents are N/A within approved hackathon scope. Disabled extensions remain N/A. Public file/secret check, diff whitespace and 8-document link/fence validation passed. README and state now reflect Code Generation approval and Build and Test execution completion.
+
+**Review request**: Build and Test 결과를 승인할까요? 승인 후 기존 README의 기능별 시연 촬영 준비를 바탕으로 이어갑니다. AI-DLC v1.0.1 Operations는 placeholder이며 운영 배포 범위를 새로 추가하지 않습니다. 결과 승인은 아직 대기 상태입니다.
+
+## 2026-09-09T04:47:49.682302+00:00 — Build and Test approval / workflow completion
+
+**User (verbatim)**: build and test 결과 승인. ai-dlc 남은 과정 알려줘.
+
+Build and Test 결과 승인을 기록했다. 저장소 v1.0.1 Operations 규칙을 확인했으며 Operations는 placeholder이고 실질 워크플로우는 Construction의 Build and Test에서 끝난다. 모든 적용 단계와 승인은 완료다. 남은 프로젝트 작업은 준비된 기능별 영상 촬영과 제출 정리이며 별도 AI-DLC 필수 단계나 운영 구축으로 추가하지 않는다. 이번 설명 요청으로 촬영을 시작하거나 제품 방향을 변경하지 않았다. 상태·단계 요약·README 승인 상태를 갱신했다.
