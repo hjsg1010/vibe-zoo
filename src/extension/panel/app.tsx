@@ -1,3 +1,4 @@
+import { AssetDetails } from "./asset-details.js";
 import { ActivityList, DiscoveryGuide } from "./activity.js";
 import { AssetImprovement } from "./improvement.js";
 import { Publish } from "../../store/publish.js";
@@ -412,6 +413,7 @@ export function Keeper() {
                         </span>
                       </div>
                       <p>{a.description}</p>
+                      <AssetDetails assetId={a.id} api={api} />
                       <AssetSettings
                         asset={a}
                         api={api}

@@ -133,6 +133,65 @@ it("enforces auth, origin, actual TLS/WSS binding, body limits and static paths 
     expect(session.status).toBe(200);
     expect(session.corsCredentials).toBe("true");
     const token = (JSON.parse(session.body) as { token: string }).token;
+    for (const owner of ["alice", "bob"]) {
+      if (owner === "bob")
+        repo.actor(
+          owner,
+          Auth.credentialHash("other-synthetic-credential-at-least-24"),
+        );
+      repo.createAsset({
+        id: `${owner}-asset`,
+        owner,
+        currentVersionId: `${owner}-active`,
+        previousVersionId: null,
+        name: "합성",
+        description: "합성",
+        defaults: {},
+        enabled: true,
+        revision: 0,
+        siteKey: "synthetic-site",
+      });
+      for (const suffix of ["active", "candidate"])
+        repo.saveVersion({
+          id: `${owner}-${suffix}`,
+          assetId: `${owner}-asset`,
+          owner,
+          kind: "tool",
+          siteKey: "synthetic-site",
+          evidence: "synthetic",
+          createdAt: 1,
+          content: {
+            name: `synthetic_${suffix}`,
+            description: "합성 목록",
+            inputContract: [],
+            adapter: {
+              operations: [{ kind: "observe" }],
+              postconditions: [
+                {
+                  locator: { by: "text", value: { literal: "합성 목록" } },
+                  assert: "visible",
+                },
+              ],
+            },
+          },
+        });
+    }
+    const detail = await call(
+      "/api/assets/alice-asset/details",
+      "GET",
+      undefined,
+      token,
+    );
+    expect(detail.status).toBe(200);
+    expect(JSON.parse(detail.body)).toMatchObject({
+      active: true,
+      version: { id: "alice-active" },
+    });
+    expect(
+      (await call("/api/assets/bob-asset/details", "GET", undefined, token))
+        .status,
+    ).toBe(404);
+    expect((await call("/api/assets/alice-asset/details")).status).toBe(401);
     ws = new WebSocket(`wss://127.0.0.1:${port}/bridge`, {
       ca,
       origin: extension,

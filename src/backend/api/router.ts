@@ -265,6 +265,31 @@ export class Router {
       });
       return true;
     }
+    const assetDetail = path.match(/^\/api\/assets\/([^/]+)\/details$/);
+    if (assetDetail && method === "GET") {
+      const asset = c.repo.asset(owner, assetDetail[1]!);
+      const version = asset.currentVersionId
+        ? c.repo.version(owner, asset.currentVersionId)
+        : c.repo.versions(owner, asset.id).at(-1);
+      invariant(version, "not_found");
+      const dependencies =
+        "steps" in version.content
+          ? version.content.steps.map((step) => {
+              const tool = c.repo.version(owner, step.toolVersionId);
+              return {
+                versionId: tool.id,
+                name: tool.content.name,
+                description: tool.content.description,
+              };
+            })
+          : [];
+      this.json(res, 200, {
+        version,
+        dependencies,
+        active: asset.currentVersionId === version.id,
+      });
+      return true;
+    }
     if (path === "/api/catalog" && method === "GET") {
       this.json(res, 200, {
         items: c.repo.db
