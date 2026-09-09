@@ -12,6 +12,15 @@ Release ZIP은 고정된 공개 Extension ID를 사용합니다. `npm run demo:s
 
 개발용 빌드는 기존대로 `dist/extension`입니다. `npm run release:extension`은 별도 `dist/release-extension`과 `dist/releases`에 설치 ZIP·체크섬·설치 안내를 만들며 현재 설치된 개발 폴더를 덮어쓰지 않습니다. Git에는 소스만, 설치 파일은 Release에 보관합니다. 패키징 명령에는 `zip`이 필요합니다(WSL/Ubuntu: `sudo apt install zip`).
 
+배포 담당자는 Actions의 **Package Keeper Extension**을 수동 실행해 검사된 ZIP 아티팩트를 받을 수 있습니다. 정식 Release는 게시 권한이 있는 로그인으로 아래처럼 등록합니다(Actions 기본 토큰의 Release 게시 권한 제한과 분리).
+
+```sh
+npm run release:extension
+gh release create v0.1.1 dist/releases/* --target main --title "Vibe Zoo Keeper 0.1.1" --notes-file docs/release-notes.md
+```
+
+이미 게시된 버전은 덮어쓰지 않고 다음 버전으로 배포합니다.
+
 ## 구현과 검증 상태
 
 | 기능 | 구현 | 실제 검증과 출처 |
